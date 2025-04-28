@@ -1,0 +1,33 @@
+Package: baymar
+Type: Package
+Title: Bayesian Matrix Autoregressions
+Version: 0.0.0.9000
+Date: 2025-04-28
+Authors@R:
+    c(person(given = "Young Geun",
+             family = "Kim",
+             email = "ygeunkimstat@gmail.com",
+             role = c("aut", "cre", "cph"),
+             comment = c(ORCID = "0000-0001-8651-1167")),
+      person(given = "Taeyoung",
+             family = "Park",
+             role = "ctb"))
+Maintainer: Who to complain to <yourfault@somewhere.net>
+Description: More about what it does (maybe more than one line).
+License: What license is it under?
+Imports: 
+    Rcpp,
+    bvhar
+LinkingTo: 
+    BH,
+    bvhar,
+    Rcpp,
+    RcppEigen,
+    RcppSpdlog,
+    RcppThread
+Remotes:
+    ygeunkim/bvhar@develop
+Encoding: UTF-8
+LazyData: true
+Roxygen: list(markdown = TRUE)
+RoxygenNote: 7.3.2
