@@ -2,4 +2,5 @@
 
 import(RcppEigen)
 importFrom(Rcpp,sourceCpp)
+importFrom(lifecycle,deprecated)
 useDynLib(baymar, .registration = TRUE)
