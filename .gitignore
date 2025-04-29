@@ -54,3 +54,4 @@ rsconnect/
 
 # VScode files
 .vscode/
+inst/doc
