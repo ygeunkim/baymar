@@ -27,16 +27,15 @@ inline void draw_coefsig(std::vector<Eigen::MatrixXd>& coef_sig, std::vector<Eig
 	for (const auto& y_t : y) {
 		post_iw_scl += y_t * other_params[1].inverse() * y_t.transpose();
 	}
-	Eigen::MatrixXd iw_lower = bvhar::sim_iw_tri(post_iw_scl, post_df, rng);
+	Eigen::MatrixXd iw_lower = bvhar::sim_iw_tri(post_iw_scl, post_df, rng).triangularView<Eigen::Lower>();
 	coef_sig[1] = iw_lower * iw_lower.transpose();
 	for (int i = 0; i < prior_mean.cols(); ++i) {
 		for (int j = 0; j < prior_mean.rows(); ++j) {
 			coef_sig[0].col(i)[j] = bvhar::normal_rand(rng);
 		}
-		// coef_sig[0].col(i) = llt_of_prec.solve(coef_sig[0].col(i));
 	}
-	coef_sig[0] = llt_of_prec.matrixU().solve(coef_sig[0]);
-	coef_sig[0] = iw_lower.triangularView<Eigen::Lower>().solve<Eigen::OnTheRight>(coef_sig[0]) + post_mean;
+	coef_sig[0] = llt_of_prec.matrixU().solve(coef_sig[0] * iw_lower);
+	// coef_sig[0] = iw_lower.triangularView<Eigen::Lower>().solve<Eigen::OnTheRight>(coef_sig[0]) + post_mean;
 	// coef_sig = bvhar::sim_mn_iw(post_mean, post_cov, post_iw_scl, post_df, true, rng);
 }
 
@@ -63,16 +62,16 @@ inline void draw_coefsig_col(std::vector<Eigen::MatrixXd>& coef_sig, std::vector
 		post_iw_scl += y_t.transpose() * other_params[1].inverse() * y_t;
 	}
 	// coef_sig = bvhar::sim_mn_iw(post_mean, post_cov, post_iw_scl, post_df, true, rng);
-	Eigen::MatrixXd iw_lower = bvhar::sim_iw_tri(post_iw_scl, post_df, rng);
+	Eigen::MatrixXd iw_lower = bvhar::sim_iw_tri(post_iw_scl, post_df, rng).triangularView<Eigen::Lower>();
 	coef_sig[1] = iw_lower * iw_lower.transpose();
 	for (int i = 0; i < prior_mean.cols(); ++i) {
 		for (int j = 0; j < prior_mean.rows(); ++j) {
 			coef_sig[0].col(i)[j] = bvhar::normal_rand(rng);
 		}
-		// coef_sig[0].col(i) = llt_of_prec.solve(coef_sig[0].col(i));
 	}
-	coef_sig[0] = llt_of_prec.matrixU().solve(coef_sig[0]);
-	coef_sig[0] = iw_lower.triangularView<Eigen::Lower>().solve<Eigen::OnTheRight>(coef_sig[0]) + post_mean;
+	coef_sig[0] = llt_of_prec.matrixU().solve(coef_sig[0] * iw_lower);
+	// coef_sig[0] = llt_of_prec.matrixU().solve(coef_sig[0]);
+	// coef_sig[0] = iw_lower.triangularView<Eigen::Lower>().solve<Eigen::OnTheRight>(coef_sig[0]) + post_mean;
 }
 
 } // namespace baymar
