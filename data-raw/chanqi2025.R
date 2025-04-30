@@ -40,6 +40,7 @@ for (id in 1:num_series) {
 unlink(c(temp_file, temp_xlsx))
 ts_wide <-
   purrr::reduce(ts_mat, left_join, by = c("state", "code", "date")) |>
+  filter(date < "2019-01-01")
   arrange(date)
 state_code <-
   ts_wide |>
@@ -71,7 +72,10 @@ date_na <-
   summarise(is_na = any(is.na(values)), .groups = "drop") |>
   filter(is_na) |>
   pull(date)
-ts_transform <- filter(ts_transform, !(date %in% date_na))
+ts_transform <-
+  ts_transform |>
+  filter(!(date %in% date_na)) |>
+  filter(date >= "2005-01-01")
 state_list <- state_code$state
 chanqi2025 <- array(
   dim = c(
