@@ -12,7 +12,7 @@
 #' Chan, J. C. C. & Qi, Y. (2024). Large Bayesian Tensor VARs with Stochastic Volatility. arXiv.
 #' 
 #' @importFrom Matrix bdiag
-#' @importFrom stats arima
+#' @importFrom stats ar.ols
 #' @importFrom purrr flatten
 #' @order 1
 #' @export
@@ -47,27 +47,41 @@ mar_bayes <- function(y,
     design[[i]] <- bdiag(y_list[i:(i + p - 1)])
   }
   S_r <- diag(n)
-  # diag(S_r) <- sapply(
-  #   1:n,
-  #   # function(i) arima(c(y[i,,]), order = c(4, 0, 0))$sigma2
-  #   function(i) forecast::Arima(c(y[i, , ]), order = c(4, 0, 0), include.mean = FALSE, method = "CSS")$sigma2
-  # )
+  diag(S_r) <- sapply(
+    1:n,
+    function(i) {
+      tryCatch(
+        {
+          # arima(c(y[i, , ]), order = c(4, 0, 0))$sigma2
+          ar.ols(c(y[i, , ]), aic = FALSE, order = 4)$var.pred
+        },
+        error = function(e) {
+          1
+        }
+      )
+    }
+  )
   A0 <- matrix(0L, nrow = n * p, ncol = n)
   kappa_A <- .1
   V_A <- matrix(0L, nrow = n * p, ncol = n * p)
-  # for (l in 1:p) {
-  #   idx <- c(1:n) + (l - 1) * n
-  #   diag(V_A)[idx] <- kappa_A / (l^2 * diag(S_r))
-  # }
   V_A <- kronecker(diag(1 / c(1:p)^2), diag(kappa_A / diag(S_r)))
   nu_r <- n + 2
-  # B0 <- do.call(rbind, lapply(1:p, function(x) diag(k))) # kp x k
   B0 <- kronecker(rep(1, p), diag(k)) # kp x k
   S_c <- diag(k)
-  # diag(S_c) <- sapply(
-  #   1:k,
-  #   function(i) arima(c(y[, i,]), order = c(4, 0, 0))$sigma2
-  # )
+  diag(S_c) <- sapply(
+    1:k,
+    function(i) {
+      tryCatch(
+        {
+          # arima(c(y[, i, ]), order = c(4, 0, 0))$sigma2
+          ar.ols(c(y[, i, ]), aic = FALSE, order = 4)$var.pred
+        },
+        error = function(e) {
+          1
+        }
+      )
+    }
+  )
   kappa_B <- .1
   V_B <- matrix(0L, nrow = k * p, ncol = k * p)
   # for (l in 1:p) {

@@ -19,7 +19,9 @@ Imports:
     Rcpp,
     bvhar,
     lifecycle,
-    purrr
+    purrr,
+    Matrix,
+    stats
 LinkingTo: 
     BH,
     bvhar,
