@@ -76,7 +76,7 @@ protected:
 	void addStep() { ++mcmc_step; }
 
 	void updateCoefCov() {
-		draw_coefsig(
+		draw_coefsig_row(
 			row_params, col_params,
 			row_prior_mean, row_prior_prec, row_iw_scl, row_iw_df,
 			num_design, num_col,
