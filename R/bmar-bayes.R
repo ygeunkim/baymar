@@ -12,7 +12,7 @@
 #' Chan, J. C. C. & Qi, Y. (2024). Large Bayesian Tensor VARs with Stochastic Volatility. arXiv.
 #' 
 #' @importFrom Matrix bdiag
-#' @importFrom stats ar.ols
+#' @importFrom stats ar.ols mean
 #' @importFrom purrr flatten
 #' @order 1
 #' @export
@@ -50,15 +50,13 @@ mar_bayes <- function(y,
   diag(S_r) <- sapply(
     1:n,
     function(i) {
-      tryCatch(
-        {
-          # arima(c(y[i, , ]), order = c(4, 0, 0))$sigma2
-          ar.ols(c(y[i, , ]), aic = FALSE, order = 4)$var.pred
-        },
-        error = function(e) {
-          1
+      sapply(
+        1:k,
+        function(j) {
+          ar.ols(y[i, j, ], aic = FALSE, order = 4)$var.pred
         }
-      )
+      ) |>
+        mean()
     }
   )
   A0 <- matrix(0L, nrow = n * p, ncol = n)
@@ -71,15 +69,13 @@ mar_bayes <- function(y,
   diag(S_c) <- sapply(
     1:k,
     function(i) {
-      tryCatch(
-        {
-          # arima(c(y[, i, ]), order = c(4, 0, 0))$sigma2
-          ar.ols(c(y[, i, ]), aic = FALSE, order = 4)$var.pred
-        },
-        error = function(e) {
-          1
+      sapply(
+        1:n,
+        function(j) {
+          ar.ols(y[j, i, ], aic = FALSE, order = 4)$var.pred
         }
-      )
+      ) |>
+        mean()
     }
   )
   kappa_B <- .1
