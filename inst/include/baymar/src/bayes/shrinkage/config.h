@@ -9,6 +9,7 @@ struct MatShrinkageParams;
 struct MatMinnParams;
 struct MatShrinkageInits;
 struct MatMinnInits;
+struct MatGlInits;
 
 struct MatShrinkageParams {
 	MatShrinkageParams() {}
@@ -41,6 +42,16 @@ struct MatMinnInits : public MatShrinkageInits {
 	MatMinnInits(BHRNG& rng)
 	: MatShrinkageInits(rng),
 		_kappa(bvhar::unif_rand(.001, 1, rng)) {}
+};
+
+struct MatGlInits : public MatShrinkageInits {
+	Eigen::VectorXd _local;
+	double _global;
+	
+	MatGlInits(LIST& init)
+	: MatShrinkageInits(init),
+		_local(CAST<Eigen::VectorXd>(init["local_sparsity"])),
+		_global(CAST_DOUBLE(init["global_sparsity"])) {}
 };
 
 } // namespace baymar
