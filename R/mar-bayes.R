@@ -14,7 +14,6 @@
 #' Chan, J. C. C. & Qi, Y. (2024). Large Bayesian Tensor VARs with Stochastic Volatility. arXiv.
 #' 
 #' @importFrom Matrix bdiag
-#' @importFrom stats ar.ols mean
 #' @importFrom purrr flatten
 #' @order 1
 #' @export
@@ -33,8 +32,6 @@ mar_bayes <- function(y,
   if (length(dim(y)) != 3) {
     stop("Array should be 3-dim: variable x region x time")
   }
-  validate_bmar_spec(row_spec, "row")
-  validate_bmar_spec(col_spec, "col")
   nrow_data <- dim(y)[1]
   ncol_data <- dim(y)[2]
   num_data <- dim(y)[3]
@@ -54,104 +51,53 @@ mar_bayes <- function(y,
   for (i in seq_along(response)) {
     design[[i]] <- bdiag(y_list[i:(i + p - 1)])
   }
-  S_r <- diag(nrow_data)
-  diag(S_r) <- sapply(
-    1:nrow_data,
-    function(i) {
-      sapply(
-        1:ncol_data,
-        function(j) {
-          ar.ols(y[i, j, ], aic = FALSE, order = 4)$var.pred
-        }
-      ) |>
-        mean()
-    }
+  param_prior <- validate_bmar_row_spec(
+    y = y,
+    p = p,
+    bayes_spec = row_spec,
+    nrow_data = nrow_data,
+    ncol_data = ncol_data,
+    nrow_row_coef = nrow_row_coef
   )
-  A0 <- matrix(0L, nrow = nrow_row_coef, ncol = nrow_data)
-  kappa_A <- .1
-  V_A <- matrix(0L, nrow = nrow_row_coef, ncol = nrow_row_coef)
-  V_A <- kronecker(diag(1 / c(1:p)^2), diag(kappa_A / diag(S_r)))
-  nu_r <- nrow_data + 2
-  B0 <- kronecker(rep(1, p), diag(ncol_data)) # kp x k
-  S_c <- diag(ncol_data)
-  diag(S_c) <- sapply(
-    1:ncol_data,
-    function(i) {
-      sapply(
-        1:nrow_data,
-        function(j) {
-          ar.ols(y[j, i, ], aic = FALSE, order = 4)$var.pred
-        }
-      ) |>
-        mean()
-    }
-  )
-  kappa_B <- .1
-  V_B <- matrix(0L, nrow = nrow_col_coef, ncol = nrow_col_coef)
-  V_B <- kronecker(diag(1 / c(1:p)^2), diag(kappa_B / diag(S_c)))
-  nu_c <- ncol_data + 2
-  param_prior <- list(
-    row_prior_mean = A0,
-    row_prior_prec = diag(1 / diag(V_A)),
-    row_iw_scl = S_r,
-    row_iw_df = nu_r,
-    col_prior_mean = B0,
-    col_prior_prec = diag(1 / diag(V_B)),
-    col_iw_scl = S_c,
-    col_iw_df = nu_c
+  param_prior <- append(
+    param_prior,
+    validate_bmar_col_spec(
+      y = y,
+      p = p,
+      bayes_spec = col_spec,
+      nrow_data = nrow_data,
+      ncol_data = ncol_data,
+      nrow_col_coef = nrow_col_coef
+    )
   )
   # Initialization
-  param_init <- lapply(
-    seq_len(num_chains),
-    function(x) {
-      init_cov <- diag(exp(runif(nrow_data, -1, 0)))
-      # init_cov <- matrix(exp(runif(n^2, -1, 0)), ncol = n)
-      # init_cov[lower.tri(init_cov)] <- t(init_cov)[lower.tri(init_cov)]
-      list(
-        row_init_coef = matrix(runif(nrow_row_coef * nrow_data, -1, 1), ncol = nrow_data),
-        row_init_lower = init_cov
-      )
-    }
+  param_init <- get_bmar_init(
+    num_chains = num_chains,
+    nrow_data = nrow_data,
+    ncol_data = ncol_data,
+    nrow_row_coef = nrow_row_coef,
+    nrow_col_coef = nrow_col_coef
   )
-  param_init <- lapply(
-    param_init,
-    function(init) {
-      init_cov <- diag(exp(runif(ncol_data, -1, 0)))
-      # init_cov <- matrix(exp(runif(k^2, -1, 0)), ncol = k)
-      # init_cov[lower.tri(init_cov)] <- t(init_cov)[lower.tri(init_cov)]
-      append(
-        init,
-        list(
-          col_init_coef = matrix(runif(nrow_col_coef * ncol_data, -1, 1), ncol = ncol_data),
-          col_init_lower = init_cov
-        )
-      )
-    }
+  row_prior <- validate_bmar_prior(row_spec)
+  col_prior <- validate_bmar_prior(col_spec)
+  row_init <- switch(
+    row_spec$prior,
+    "Minnesota" = { get_mat_minn_init(num_chains) },
+    stop("Wrong row prior")
   )
-  row_prior <- row_spec
-  col_prior <- col_spec
-  row_init <- lapply(
-    seq_len(num_chains),
-    function(x) {
-      list(
-        kappa = runif(1, 0, 1)
-      )
-    }
+  col_init <- switch(
+    col_spec$prior,
+    "Minnesota" = { get_mat_minn_init(num_chains) },
+    stop("Wrong column prior")
   )
-  col_init <- lapply(
-    seq_len(num_chains),
-    function(x) {
-      list(
-        kappa = runif(1, 0, 1)
-      )
-    }
-  )
+  row_prior_type <- get_prior_id(row_spec$prior)
+  col_prior_type <- get_prior_id(col_spec$prior)
   res <- estimate_bmar_mniw(
     num_chains = num_chains, num_iter = num_iter, num_burn = num_burn, thin = thinning,
     x = design, y = response,
     param_coef_sig = param_prior, coef_sig_init = param_init,
-    row_prior = row_prior, row_init = row_init, row_prior_type = 1,
-    col_prior = col_prior, col_init = col_init, col_prior_type = 1,
+    row_prior = row_prior, row_init = row_init, row_prior_type = row_prior_type,
+    col_prior = col_prior, col_init = col_init, col_prior_type = col_prior_type,
     seed_chain = sample.int(.Machine$integer.max, size = num_chains),
     display_progress = TRUE, nthreads = num_thread
   )
