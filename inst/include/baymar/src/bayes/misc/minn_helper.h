@@ -7,11 +7,12 @@
 namespace baymar {
 
 inline void minnesota_kappa(
-	double& kappa, Eigen::Ref<Eigen::MatrixXd> prior_mean, Eigen::Ref<Eigen::VectorXd> prec, std::vector<Eigen::MatrixXd>& params,
+	double& kappa, Eigen::Ref<Eigen::MatrixXd> prior_mean, Eigen::Ref<Eigen::VectorXd> prec,
+	Eigen::Ref<Eigen::MatrixXd> coef, Eigen::Ref<Eigen::MatrixXd> sig_lower,
 	const double gamma_shp, const double gamma_rate, BHRNG& rng
 ) {
 	prec.array() *= kappa;
-	Eigen::MatrixXd inv_sig_coef = params[1].triangularView<Eigen::Lower>().solve((params[0] - prior_mean).transpose());
+	Eigen::MatrixXd inv_sig_coef = sig_lower.triangularView<Eigen::Lower>().solve((coef - prior_mean).transpose());
 	kappa = bvhar::sim_gig(
 		gamma_shp - prior_mean.rows() * prior_mean.cols() / 2,
 		2 * gamma_rate,

@@ -2,7 +2,7 @@
 # Generator token: 10BE3573-1514-4C36-9D1C-5A225CD40393
 
 #' @noRd
-estimate_bmar_mniw <- function(num_chains, num_iter, num_burn, thin, x, y, row_prior_mean, row_prior_prec, row_iw_scl, row_iw_df, col_prior_mean, col_prior_prec, col_iw_scl, col_iw_df, init_row, init_col, seed_chain, nthreads) {
-    .Call(`_baymar_estimate_bmar_mniw`, num_chains, num_iter, num_burn, thin, x, y, row_prior_mean, row_prior_prec, row_iw_scl, row_iw_df, col_prior_mean, col_prior_prec, col_iw_scl, col_iw_df, init_row, init_col, seed_chain, nthreads)
+estimate_bmar_mniw <- function(num_chains, num_iter, num_burn, thin, x, y, param_coef_sig, coef_sig_init, row_prior, row_init, row_prior_type, col_prior, col_init, col_prior_type, seed_chain, display_progress, nthreads) {
+    .Call(`_baymar_estimate_bmar_mniw`, num_chains, num_iter, num_burn, thin, x, y, param_coef_sig, coef_sig_init, row_prior, row_init, row_prior_type, col_prior, col_init, col_prior_type, seed_chain, display_progress, nthreads)
 }
 

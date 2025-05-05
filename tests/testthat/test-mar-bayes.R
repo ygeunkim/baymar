@@ -7,6 +7,8 @@ test_that("multiplication works", {
     num_iter = 5,
     num_burn = 2,
     thinning = 1,
+    row_spec = set_minnesota(),
+    col_spec = set_minnesota(),
     num_thread = 1
   )
 })

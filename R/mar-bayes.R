@@ -6,6 +6,8 @@
 #' @param num_iter MCMC iteration number
 #' @param num_burn Number of burn-in (warm-up). Half of the iteration is the default choice.
 #' @param thinning Thinning every thinning-th iteration
+#' @param row_spec Row coefficient specification
+#' @param col_spec Column coefficient specification
 #' @param num_thread Number of threads
 #' 
 #' @references
@@ -22,6 +24,8 @@ mar_bayes <- function(y,
                       num_iter = 1000,
                       num_burn = floor(num_iter / 2),
                       thinning = 1,
+                      row_spec = set_minnesota(),
+                      col_spec = set_minnesota(),
                       num_thread = 1) {
   if (!is.array(y)) {
     stop("Provide array.")
@@ -29,29 +33,33 @@ mar_bayes <- function(y,
   if (length(dim(y)) != 3) {
     stop("Array should be 3-dim: variable x region x time")
   }
-  n <- dim(y)[1]
-  k <- dim(y)[2]
-  T <- dim(y)[3]
+  validate_bmar_spec(row_spec, "row")
+  validate_bmar_spec(col_spec, "col")
+  nrow_data <- dim(y)[1]
+  ncol_data <- dim(y)[2]
+  num_data <- dim(y)[3]
+  nrow_row_coef <- nrow_data * p
+  nrow_col_coef <- ncol_data * p
   if (is.null(dimnames(y))) {
     dimnames(y) <- list(
-      paste("row", seq_len(n), sep = "_"),
-      paste("col", seq_len(k), sep = "_"),
-      seq_len(T)
+      paste("row", seq_len(nrow_data), sep = "_"),
+      paste("col", seq_len(ncol_data), sep = "_"),
+      seq_len(num_data)
     )
   }
   var_names <- dimnames(y)
-  y_list <- lapply(seq_len(T), function(x) y[, , x])
+  y_list <- lapply(seq_len(num_data), function(x) y[, , x])
   response <- tail(y_list, length(y_list) - p) # Y_{p + 1}, ..., Y_T
   design <- list()
   for (i in seq_along(response)) {
     design[[i]] <- bdiag(y_list[i:(i + p - 1)])
   }
-  S_r <- diag(n)
+  S_r <- diag(nrow_data)
   diag(S_r) <- sapply(
-    1:n,
+    1:nrow_data,
     function(i) {
       sapply(
-        1:k,
+        1:ncol_data,
         function(j) {
           ar.ols(y[i, j, ], aic = FALSE, order = 4)$var.pred
         }
@@ -59,18 +67,18 @@ mar_bayes <- function(y,
         mean()
     }
   )
-  A0 <- matrix(0L, nrow = n * p, ncol = n)
+  A0 <- matrix(0L, nrow = nrow_row_coef, ncol = nrow_data)
   kappa_A <- .1
-  V_A <- matrix(0L, nrow = n * p, ncol = n * p)
+  V_A <- matrix(0L, nrow = nrow_row_coef, ncol = nrow_row_coef)
   V_A <- kronecker(diag(1 / c(1:p)^2), diag(kappa_A / diag(S_r)))
-  nu_r <- n + 2
-  B0 <- kronecker(rep(1, p), diag(k)) # kp x k
-  S_c <- diag(k)
+  nu_r <- nrow_data + 2
+  B0 <- kronecker(rep(1, p), diag(ncol_data)) # kp x k
+  S_c <- diag(ncol_data)
   diag(S_c) <- sapply(
-    1:k,
+    1:ncol_data,
     function(i) {
       sapply(
-        1:n,
+        1:nrow_data,
         function(j) {
           ar.ols(y[j, i, ], aic = FALSE, order = 4)$var.pred
         }
@@ -79,48 +87,73 @@ mar_bayes <- function(y,
     }
   )
   kappa_B <- .1
-  V_B <- matrix(0L, nrow = k * p, ncol = k * p)
-  # for (l in 1:p) {
-  #   idx <- c(1:k) + (l - 1) * k
-  #   diag(V_B)[idx] <- kappa_B / (l^2 * diag(S_c))
-  # }
+  V_B <- matrix(0L, nrow = nrow_col_coef, ncol = nrow_col_coef)
   V_B <- kronecker(diag(1 / c(1:p)^2), diag(kappa_B / diag(S_c)))
-  nu_c <- k + 2
+  nu_c <- ncol_data + 2
+  param_prior <- list(
+    row_prior_mean = A0,
+    row_prior_prec = diag(1 / diag(V_A)),
+    row_iw_scl = S_r,
+    row_iw_df = nu_r,
+    col_prior_mean = B0,
+    col_prior_prec = diag(1 / diag(V_B)),
+    col_iw_scl = S_c,
+    col_iw_df = nu_c
+  )
   # Initialization
-  init_row <- lapply(
+  param_init <- lapply(
     seq_len(num_chains),
     function(x) {
-      init_cov <- diag(exp(runif(n, -1, 0)))
+      init_cov <- diag(exp(runif(nrow_data, -1, 0)))
       # init_cov <- matrix(exp(runif(n^2, -1, 0)), ncol = n)
       # init_cov[lower.tri(init_cov)] <- t(init_cov)[lower.tri(init_cov)]
       list(
-        init_coef = matrix(runif(n * p * k, -1, 1), ncol = n),
-        init_cov = init_cov
+        row_init_coef = matrix(runif(nrow_row_coef * nrow_data, -1, 1), ncol = nrow_data),
+        row_init_lower = init_cov
       )
     }
   )
-  init_col <- lapply(
-    seq_len(num_chains),
-    function(x) {
-      init_cov <- diag(exp(runif(k, -1, 0)))
+  param_init <- lapply(
+    param_init,
+    function(init) {
+      init_cov <- diag(exp(runif(ncol_data, -1, 0)))
       # init_cov <- matrix(exp(runif(k^2, -1, 0)), ncol = k)
       # init_cov[lower.tri(init_cov)] <- t(init_cov)[lower.tri(init_cov)]
+      append(
+        init,
+        list(
+          col_init_coef = matrix(runif(nrow_col_coef * ncol_data, -1, 1), ncol = ncol_data),
+          col_init_lower = init_cov
+        )
+      )
+    }
+  )
+  row_prior <- row_spec
+  col_prior <- col_spec
+  row_init <- lapply(
+    seq_len(num_chains),
+    function(x) {
       list(
-        init_coef = matrix(runif(k^2 * p, -1, 1), ncol = k),
-        init_cov = init_cov
+        kappa = runif(1, 0, 1)
+      )
+    }
+  )
+  col_init <- lapply(
+    seq_len(num_chains),
+    function(x) {
+      list(
+        kappa = runif(1, 0, 1)
       )
     }
   )
   res <- estimate_bmar_mniw(
     num_chains = num_chains, num_iter = num_iter, num_burn = num_burn, thin = thinning,
     x = design, y = response,
-    row_prior_mean = A0, row_prior_prec = diag(1 / diag(V_A)), row_iw_scl = S_r, row_iw_df = nu_r,
-    col_prior_mean = B0, col_prior_prec = diag(1 / diag(V_B)), col_iw_scl = S_c, col_iw_df = nu_c,
-    # row_prior_mean = matrix(0, nrow = n * p, ncol = n), row_prior_prec = diag(n * p), row_iw_scl = diag(n), row_iw_df = n + 2,
-    # col_prior_mean = matrix(0, nrow = k * p, ncol = k), col_prior_prec = diag(k * p), col_iw_scl = diag(k), col_iw_df = k + 2,
-    init_row = init_row, init_col = init_col,
+    param_coef_sig = param_prior, coef_sig_init = param_init,
+    row_prior = row_prior, row_init = row_init, row_prior_type = 1,
+    col_prior = col_prior, col_init = col_init, col_prior_type = 1,
     seed_chain = sample.int(.Machine$integer.max, size = num_chains),
-    nthreads = num_thread
+    display_progress = TRUE, nthreads = num_thread
   )
   row_record <-
     lapply(res, function(x) tail(x$row_record, num_iter - num_burn)) |> # chain x iter x (coef_sig)
