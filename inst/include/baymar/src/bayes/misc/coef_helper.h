@@ -2,70 +2,63 @@
 #define BAYMAR_BAYES_MISC_COEF_HELPER_H
 
 #include <bvhar/utils>
+#include <type_traits>
 
 namespace baymar {
 
-inline void draw_coefsig_row(std::vector<Eigen::MatrixXd>& row_params, std::vector<Eigen::MatrixXd> col_params,
-												 		 Eigen::Ref<Eigen::MatrixXd> prior_mean, Eigen::Ref<Eigen::MatrixXd> prior_prec,
-												 		 Eigen::Ref<Eigen::MatrixXd> iw_scl,
-												 		 double iw_df, int num_mat, int other_dim,
-												 		 std::vector<Eigen::SparseMatrix<double>>& x, std::vector<Eigen::MatrixXd>& y,
-												 		 BHRNG& rng) {
+/**
+ * @brief Generate MNIW coefficient and LLT decomposition of Sigma
+ * 
+ * @tparam isRow Generate row or column
+ * @param params (Coefficient, Sigma)
+ * @param other_params Other (Coefficient, Sigma)
+ * @param prior_mean Prior MN mean of coefficient
+ * @param prior_prec Prior MN precision of coefficient
+ * @param iw_scl Prior IW scale of Sigma
+ * @param iw_df Prior IW shape of Sigma
+ * @param num_mat Number of matrix time series
+ * @param other_dim When row, column size. When column, row size.
+ * @param x X_t
+ * @param y Y_t
+ * @param rng boost rng
+ */
+template <bool isRow = true>
+inline void draw_coef_sig(
+	std::vector<Eigen::MatrixXd>& params, std::vector<Eigen::MatrixXd> other_params,
+	Eigen::Ref<Eigen::MatrixXd> prior_mean, Eigen::Ref<Eigen::MatrixXd> prior_prec,
+	Eigen::Ref<Eigen::MatrixXd> iw_scl,
+	double iw_df, int num_mat, int other_dim,
+	std::vector<Eigen::SparseMatrix<double>>& x, std::vector<Eigen::MatrixXd>& y,
+	BHRNG& rng
+) {
+	using is_row = std::integral_constant<bool, isRow>;
 	Eigen::MatrixXd post_cov = prior_prec;
-	for (const auto& x_t : x) {
-		post_cov += x_t * col_params[0] * col_params[1].inverse() * col_params[0].transpose() * x_t.transpose();
-	}
 	Eigen::MatrixXd post_solve = prior_prec * prior_mean;
+	Eigen::MatrixXd post_iw_scl = iw_scl + prior_mean.transpose() * prior_prec * prior_mean;
+	Eigen::MatrixXd inv_sig_coef_x, inv_sig_y;
 	for (int i = 0; i < num_mat; ++i) {
-		post_solve += x[i] * col_params[0] * col_params[1].inverse() * y[i].transpose();
+		if (is_row::value) {
+			inv_sig_coef_x = other_params[1].triangularView<Eigen::Lower>().solve(other_params[0].transpose() * x[i].transpose());
+			inv_sig_y = other_params[1].triangularView<Eigen::Lower>().solve(y[i].transpose());
+		} else {
+			inv_sig_coef_x = other_params[1].triangularView<Eigen::Lower>().solve(other_params[0].transpose() * x[i]);
+			inv_sig_y = other_params[1].triangularView<Eigen::Lower>().solve(y[i]);
+		}
+		post_cov += inv_sig_coef_x.transpose() * inv_sig_coef_x;
+		post_solve += inv_sig_coef_x.transpose() * inv_sig_y;
+		post_iw_scl += inv_sig_y.transpose() * inv_sig_y;
 	}
 	Eigen::LLT<Eigen::MatrixXd> llt_of_prec(post_cov.selfadjointView<Eigen::Lower>());
 	Eigen::MatrixXd post_mean = llt_of_prec.solve(post_solve);
 	double post_df = iw_df + num_mat * other_dim;
-	Eigen::MatrixXd post_iw_scl = iw_scl + prior_mean.transpose() * prior_prec * prior_mean - post_mean.transpose() * post_cov * post_mean;
-	for (const auto& y_t : y) {
-		post_iw_scl += y_t * col_params[1].inverse() * y_t.transpose();
-	}
-	Eigen::MatrixXd iw_lower = bvhar::sim_iw_tri(post_iw_scl, post_df, rng).triangularView<Eigen::Lower>();
-	row_params[1] = iw_lower * iw_lower.transpose();
+	params[1] = bvhar::sim_iw_tri(post_iw_scl, post_df, rng);
 	for (int i = 0; i < prior_mean.cols(); ++i) {
 		for (int j = 0; j < prior_mean.rows(); ++j) {
-			row_params[0].col(i)[j] = bvhar::normal_rand(rng);
+			params[0].col(i)[j] = bvhar::normal_rand(rng);
 		}
 	}
-	row_params[0] = llt_of_prec.matrixU().solve(row_params[0] * iw_lower.transpose());
-	row_params[0] += post_mean;
-}
-
-inline void draw_coefsig_col(std::vector<Eigen::MatrixXd>& col_params, std::vector<Eigen::MatrixXd> row_params,
-												 		 Eigen::Ref<Eigen::MatrixXd> prior_mean, Eigen::Ref<Eigen::MatrixXd> prior_prec,
-												 		 Eigen::Ref<Eigen::MatrixXd> iw_scl,
-												 		 double iw_df, int num_mat, int other_dim,
-												 		 std::vector<Eigen::SparseMatrix<double>>& x, std::vector<Eigen::MatrixXd>& y,
-												 		 BHRNG& rng) {
-	Eigen::MatrixXd post_cov = prior_prec;
-	for (const auto& x_t : x) {
-		post_cov += x_t.transpose() * row_params[0] * row_params[1].inverse() * row_params[0].transpose() * x_t;
-	}
-	Eigen::MatrixXd post_solve = prior_prec * prior_mean;
-	for (int i = 0; i < num_mat; ++i) {
-		post_solve += x[i].transpose() * row_params[0] * row_params[1].inverse() * y[i];
-	}
-	Eigen::LLT<Eigen::MatrixXd> llt_of_prec(post_cov.selfadjointView<Eigen::Lower>());
-	Eigen::MatrixXd post_mean = llt_of_prec.solve(post_solve);
-	double post_df = iw_df + num_mat * other_dim;
-	Eigen::MatrixXd post_iw_scl = iw_scl + prior_mean.transpose() * prior_prec * prior_mean - post_mean.transpose() * post_cov * post_mean;
-	for (const auto& y_t : y) {
-		post_iw_scl += y_t.transpose() * row_params[1].inverse() * y_t;
-	}
-	Eigen::MatrixXd iw_lower = bvhar::sim_iw_tri(post_iw_scl, post_df, rng).triangularView<Eigen::Lower>();
-	col_params[1] = iw_lower * iw_lower.transpose();
-	for (int i = 0; i < prior_mean.cols(); ++i) {
-		for (int j = 0; j < prior_mean.rows(); ++j) {
-			col_params[0].col(i)[j] = bvhar::normal_rand(rng);
-		}
-	}
-	col_params[0] = llt_of_prec.matrixU().solve(col_params[0] * iw_lower.transpose()) + post_mean;
+	params[0] = llt_of_prec.matrixU().solve(params[0] * params[1].transpose());
+	params[0] += post_mean;
 }
 
 } // namespace baymar

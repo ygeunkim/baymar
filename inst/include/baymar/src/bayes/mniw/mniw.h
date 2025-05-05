@@ -76,13 +76,13 @@ protected:
 	void addStep() { ++mcmc_step; }
 
 	void updateCoefCov() {
-		draw_coefsig_row(
+		draw_coef_sig<true>(
 			row_params, col_params,
 			row_prior_mean, row_prior_prec, row_iw_scl, row_iw_df,
 			num_design, num_col,
 			x, y, rng
 		);
-		draw_coefsig_col(
+		draw_coef_sig<false>(
 			col_params, row_params,
 			col_prior_mean, col_prior_prec, col_iw_scl, col_iw_df,
 			num_design, num_row,
@@ -91,8 +91,10 @@ protected:
 	}
 
 	void updateRecords() {
-		row_record[mcmc_step] = row_params;
-		col_record[mcmc_step] = col_params;
+		row_record[mcmc_step][0] = row_params[0];
+		row_record[mcmc_step][1] = row_params[1] * row_params[1].transpose();
+		col_record[mcmc_step][0] = col_params[0];
+		col_record[mcmc_step][1] = col_params[1] * col_params[1].transpose();
 	}
 };
 
