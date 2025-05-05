@@ -24,7 +24,7 @@ public:
 		// row_kappa(.1), col_kappa(.1),
 		row_prior_mean(params._row_mean), row_iw_scl(params._row_iw_scl),
 		col_prior_mean(params._col_mean), col_iw_scl(params._col_iw_scl),
-		row_prior_prec(params._row_prec.diagonal()), col_prior_prec(params._col_prec.diagonal()),
+		row_prior_prec(params._row_prec), col_prior_prec(params._col_prec),
 		row_iw_df(params._row_iw_df), col_iw_df(params._col_iw_df) {
 		updateRecords();
 	}
@@ -129,6 +129,8 @@ inline std::vector<std::unique_ptr<McmcMatMniw>> initialize_matmcmc(
 		LIST col_init_spec = col_init[i];
 		auto row_updater = initialize_matshrinkageupdater(num_iter, row_prior, row_init_spec, row_prior_type);
 		auto col_updater = initialize_matshrinkageupdater(num_iter, col_prior, col_init_spec, col_prior_type);
+		row_updater->initPrec(params._row_prec);
+		col_updater->initPrec(params._col_prec);
 		LIST init_spec = coef_sig_init[i];
 		MatMniwInits inits(init_spec);
 		mcmc_ptr[i] = std::make_unique<McmcMatMniw>(

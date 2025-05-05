@@ -12,6 +12,7 @@ class MatShrinkageUpdater {
 public:
 	MatShrinkageUpdater(int num_iter, const MatShrinkageParams& params, const MatShrinkageInits& inits) {}
 	virtual ~MatShrinkageUpdater() = default;
+	virtual void initPrec(Eigen::Ref<Eigen::VectorXd> prior_prec) {}
 	virtual void updatePrec(
 		Eigen::Ref<Eigen::VectorXd> prior_prec,
 		Eigen::Ref<Eigen::MatrixXd> coef, Eigen::Ref<Eigen::MatrixXd> sig_lower,
@@ -26,6 +27,9 @@ public:
 	: MatShrinkageUpdater(num_iter, params, inits),
 		shp(params._shp), rate(params._rate), kappa(inits._kappa) {}
 	virtual ~MatMinnUpdater() = default;
+	void initPrec(Eigen::Ref<Eigen::VectorXd> prior_prec) override {
+		prior_prec.array() /= kappa;
+	}
 	void updatePrec(
 		Eigen::Ref<Eigen::VectorXd> prior_prec,
 		Eigen::Ref<Eigen::MatrixXd> coef, Eigen::Ref<Eigen::MatrixXd> sig_lower,
