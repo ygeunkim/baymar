@@ -13,8 +13,8 @@ Rcpp::Rostream<false>& Rcpp::Rcerr = Rcpp::Rcpp_cerr_get();
 #endif
 
 // estimate_bmar_mniw
-Rcpp::List estimate_bmar_mniw(int num_chains, int num_iter, int num_burn, int thin, std::vector<Eigen::SparseMatrix<double>>& x, std::vector<Eigen::MatrixXd>& y, Eigen::MatrixXd row_prior_mean, Eigen::MatrixXd row_prior_prec, Eigen::MatrixXd row_iw_scl, double row_iw_df, Eigen::MatrixXd col_prior_mean, Eigen::MatrixXd col_prior_prec, Eigen::MatrixXd col_iw_scl, double col_iw_df, std::vector<std::vector<Eigen::MatrixXd>> init_row, std::vector<std::vector<Eigen::MatrixXd>> init_col, Eigen::VectorXi seed_chain, int nthreads);
-RcppExport SEXP _baymar_estimate_bmar_mniw(SEXP num_chainsSEXP, SEXP num_iterSEXP, SEXP num_burnSEXP, SEXP thinSEXP, SEXP xSEXP, SEXP ySEXP, SEXP row_prior_meanSEXP, SEXP row_prior_precSEXP, SEXP row_iw_sclSEXP, SEXP row_iw_dfSEXP, SEXP col_prior_meanSEXP, SEXP col_prior_precSEXP, SEXP col_iw_sclSEXP, SEXP col_iw_dfSEXP, SEXP init_rowSEXP, SEXP init_colSEXP, SEXP seed_chainSEXP, SEXP nthreadsSEXP) {
+Rcpp::List estimate_bmar_mniw(int num_chains, int num_iter, int num_burn, int thin, std::vector<Eigen::SparseMatrix<double>>& x, std::vector<Eigen::MatrixXd>& y, Rcpp::List param_coef_sig, Rcpp::List coef_sig_init, Rcpp::List row_prior, Rcpp::List row_init, int row_prior_type, Rcpp::List col_prior, Rcpp::List col_init, int col_prior_type, Eigen::VectorXi seed_chain, bool display_progress, int nthreads);
+RcppExport SEXP _baymar_estimate_bmar_mniw(SEXP num_chainsSEXP, SEXP num_iterSEXP, SEXP num_burnSEXP, SEXP thinSEXP, SEXP xSEXP, SEXP ySEXP, SEXP param_coef_sigSEXP, SEXP coef_sig_initSEXP, SEXP row_priorSEXP, SEXP row_initSEXP, SEXP row_prior_typeSEXP, SEXP col_priorSEXP, SEXP col_initSEXP, SEXP col_prior_typeSEXP, SEXP seed_chainSEXP, SEXP display_progressSEXP, SEXP nthreadsSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
@@ -24,25 +24,24 @@ BEGIN_RCPP
     Rcpp::traits::input_parameter< int >::type thin(thinSEXP);
     Rcpp::traits::input_parameter< std::vector<Eigen::SparseMatrix<double>>& >::type x(xSEXP);
     Rcpp::traits::input_parameter< std::vector<Eigen::MatrixXd>& >::type y(ySEXP);
-    Rcpp::traits::input_parameter< Eigen::MatrixXd >::type row_prior_mean(row_prior_meanSEXP);
-    Rcpp::traits::input_parameter< Eigen::MatrixXd >::type row_prior_prec(row_prior_precSEXP);
-    Rcpp::traits::input_parameter< Eigen::MatrixXd >::type row_iw_scl(row_iw_sclSEXP);
-    Rcpp::traits::input_parameter< double >::type row_iw_df(row_iw_dfSEXP);
-    Rcpp::traits::input_parameter< Eigen::MatrixXd >::type col_prior_mean(col_prior_meanSEXP);
-    Rcpp::traits::input_parameter< Eigen::MatrixXd >::type col_prior_prec(col_prior_precSEXP);
-    Rcpp::traits::input_parameter< Eigen::MatrixXd >::type col_iw_scl(col_iw_sclSEXP);
-    Rcpp::traits::input_parameter< double >::type col_iw_df(col_iw_dfSEXP);
-    Rcpp::traits::input_parameter< std::vector<std::vector<Eigen::MatrixXd>> >::type init_row(init_rowSEXP);
-    Rcpp::traits::input_parameter< std::vector<std::vector<Eigen::MatrixXd>> >::type init_col(init_colSEXP);
+    Rcpp::traits::input_parameter< Rcpp::List >::type param_coef_sig(param_coef_sigSEXP);
+    Rcpp::traits::input_parameter< Rcpp::List >::type coef_sig_init(coef_sig_initSEXP);
+    Rcpp::traits::input_parameter< Rcpp::List >::type row_prior(row_priorSEXP);
+    Rcpp::traits::input_parameter< Rcpp::List >::type row_init(row_initSEXP);
+    Rcpp::traits::input_parameter< int >::type row_prior_type(row_prior_typeSEXP);
+    Rcpp::traits::input_parameter< Rcpp::List >::type col_prior(col_priorSEXP);
+    Rcpp::traits::input_parameter< Rcpp::List >::type col_init(col_initSEXP);
+    Rcpp::traits::input_parameter< int >::type col_prior_type(col_prior_typeSEXP);
     Rcpp::traits::input_parameter< Eigen::VectorXi >::type seed_chain(seed_chainSEXP);
+    Rcpp::traits::input_parameter< bool >::type display_progress(display_progressSEXP);
     Rcpp::traits::input_parameter< int >::type nthreads(nthreadsSEXP);
-    rcpp_result_gen = Rcpp::wrap(estimate_bmar_mniw(num_chains, num_iter, num_burn, thin, x, y, row_prior_mean, row_prior_prec, row_iw_scl, row_iw_df, col_prior_mean, col_prior_prec, col_iw_scl, col_iw_df, init_row, init_col, seed_chain, nthreads));
+    rcpp_result_gen = Rcpp::wrap(estimate_bmar_mniw(num_chains, num_iter, num_burn, thin, x, y, param_coef_sig, coef_sig_init, row_prior, row_init, row_prior_type, col_prior, col_init, col_prior_type, seed_chain, display_progress, nthreads));
     return rcpp_result_gen;
 END_RCPP
 }
 
 static const R_CallMethodDef CallEntries[] = {
-    {"_baymar_estimate_bmar_mniw", (DL_FUNC) &_baymar_estimate_bmar_mniw, 18},
+    {"_baymar_estimate_bmar_mniw", (DL_FUNC) &_baymar_estimate_bmar_mniw, 17},
     {NULL, NULL, 0}
 };
 
