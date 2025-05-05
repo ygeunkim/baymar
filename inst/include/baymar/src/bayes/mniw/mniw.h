@@ -22,8 +22,10 @@ public:
 		row_record(num_iter + 1, std::vector<Eigen::MatrixXd>(2)), col_record(num_iter + 1, std::vector<Eigen::MatrixXd>(2)),
 		mcmc_step(0), rng(seed),
 		row_params(init_row), col_params(init_col),
-		row_prior_mean(row_prior_mean), row_prior_prec(row_prior_prec), row_iw_scl(row_iw_scl),
-		col_prior_mean(col_prior_mean), col_prior_prec(col_prior_prec), col_iw_scl(col_iw_scl),
+		row_kappa(.1), col_kappa(.1),
+		row_prior_mean(row_prior_mean), row_iw_scl(row_iw_scl),
+		col_prior_mean(col_prior_mean), col_iw_scl(col_iw_scl),
+		row_prior_prec(row_prior_prec.diagonal()), col_prior_prec(col_prior_prec.diagonal()),
 		row_iw_df(row_iw_df), col_iw_df(col_iw_df) {
 		updateRecords();
 	}
@@ -37,6 +39,7 @@ public:
 	void doPosteriorDraws() {
 		std::lock_guard<std::mutex> lock(mtx);
 		addStep();
+		updatePrec();
 		updateCoefCov();
 		updateRecords();
 	}
@@ -65,8 +68,10 @@ protected:
 	std::atomic<int> mcmc_step; // MCMC step
 	BHRNG rng; // RNG instance for multi-chain
 	std::vector<Eigen::MatrixXd> row_params, col_params;
-	Eigen::MatrixXd row_prior_mean, row_prior_prec, row_iw_scl;
-	Eigen::MatrixXd col_prior_mean, col_prior_prec, col_iw_scl;
+	double row_kappa, col_kappa;
+	Eigen::MatrixXd row_prior_mean, row_iw_scl;
+	Eigen::MatrixXd col_prior_mean, col_iw_scl;
+	Eigen::VectorXd row_prior_prec, col_prior_prec;
 	double row_iw_df, col_iw_df;
 
 	/**
@@ -74,6 +79,11 @@ protected:
 	 * 
 	 */
 	void addStep() { ++mcmc_step; }
+
+	void updatePrec() {
+		minnesota_kappa(row_kappa, row_prior_mean, row_prior_prec, row_params, 3.0, 2.0, rng);
+		minnesota_kappa(col_kappa, col_prior_mean, col_prior_prec, col_params, 3.0, 2.0, rng);
+	}
 
 	void updateCoefCov() {
 		draw_coef_sig<true>(

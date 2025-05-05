@@ -25,16 +25,16 @@ namespace baymar {
 template <bool isRow = true>
 inline void draw_coef_sig(
 	std::vector<Eigen::MatrixXd>& params, std::vector<Eigen::MatrixXd> other_params,
-	Eigen::Ref<Eigen::MatrixXd> prior_mean, Eigen::Ref<Eigen::MatrixXd> prior_prec,
+	Eigen::Ref<Eigen::MatrixXd> prior_mean, Eigen::Ref<Eigen::VectorXd> prior_prec,
 	Eigen::Ref<Eigen::MatrixXd> iw_scl,
 	double iw_df, int num_mat, int other_dim,
 	std::vector<Eigen::SparseMatrix<double>>& x, std::vector<Eigen::MatrixXd>& y,
 	BHRNG& rng
 ) {
 	using is_row = std::integral_constant<bool, isRow>;
-	Eigen::MatrixXd post_cov = prior_prec;
-	Eigen::MatrixXd post_solve = prior_prec * prior_mean;
-	Eigen::MatrixXd post_iw_scl = iw_scl + prior_mean.transpose() * prior_prec * prior_mean;
+	Eigen::MatrixXd post_cov = prior_prec.asDiagonal();
+	Eigen::MatrixXd post_solve = prior_prec.asDiagonal() * prior_mean;
+	Eigen::MatrixXd post_iw_scl = iw_scl + prior_mean.transpose() * prior_prec.asDiagonal() * prior_mean;
 	Eigen::MatrixXd inv_sig_coef_x, inv_sig_y;
 	for (int i = 0; i < num_mat; ++i) {
 		if (is_row::value) {
