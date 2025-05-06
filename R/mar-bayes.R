@@ -24,7 +24,7 @@ mar_bayes <- function(y,
                       num_burn = floor(num_iter / 2),
                       thinning = 1,
                       row_spec = set_minnesota(),
-                      col_spec = set_minnesota(),
+                      col_spec = row_spec,
                       num_thread = 1) {
   if (!is.array(y)) {
     stop("Provide array.")
@@ -83,11 +83,23 @@ mar_bayes <- function(y,
   row_init <- switch(
     row_spec$prior,
     "Minnesota" = { get_mat_minn_init(num_chains) },
+    "Horseshoe" = {
+      get_mat_hs_init(
+        num_chains = num_chains,
+        nrow_coef = nrow_row_coef
+      )
+    },
     stop("Wrong row prior")
   )
   col_init <- switch(
     col_spec$prior,
     "Minnesota" = { get_mat_minn_init(num_chains) },
+    "Horseshoe" = {
+      get_mat_hs_init(
+        num_chains = num_chains,
+        nrow_coef = nrow_col_coef
+      )
+    },
     stop("Wrong column prior")
   )
   row_prior_type <- get_prior_id(row_spec$prior)

@@ -17,7 +17,7 @@ inline void horseshoe_sparsity(
 	prec.array() *= global_sparsity;
 	global_sparsity = 1 / bvhar::gamma_rand(
 		(col_coef + 1) / 2,
-		1 / (1 / global_latent + (prod.diagonal().array() * prec.array()).sum()),
+		1 / (1 / global_latent + (prod.array() * prec.array()).sum()),
 		rng
 	);
 	prec.array() /= global_sparsity;

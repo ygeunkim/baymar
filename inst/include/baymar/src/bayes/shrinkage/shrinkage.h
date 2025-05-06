@@ -52,6 +52,11 @@ public:
 		latent_local(Eigen::VectorXd::Zero(local_lev.size())),
 		latent_global(0.0) {}
 	virtual ~MatHsUpdater() = default;
+	
+	void initPrec(Eigen::Ref<Eigen::VectorXd> prior_prec) override {
+		prior_prec.array() /= (global_lev * local_lev.array());
+	}
+
 	void updatePrec(
 		Eigen::Ref<Eigen::VectorXd> prior_prec,
 		Eigen::Ref<Eigen::MatrixXd> coef, Eigen::Ref<Eigen::MatrixXd> sig_lower,

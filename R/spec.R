@@ -30,3 +30,22 @@ is.matmnspec <- function(x) {
 is.bmarspec <- function(x) {
   inherits(x, "bmarspec")
 }
+
+#' Horseshoe Prior Specification
+#' 
+#' @order 1
+#' @export
+set_mar_horseshoe <- function() {
+  res <- list(
+    prior = "Horseshoe"
+  )
+  class(res) <- c("mathsspec", "bmarspec")
+  res
+}
+
+#' @rdname set_mar_horseshoe
+#' @param x Any object
+#' @export
+is.mathsspec <- function(x) {
+  inherits(x, "mathsspec")
+}

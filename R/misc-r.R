@@ -7,23 +7,25 @@ validate_bmar_row_spec <- function(y, p, bayes_spec, nrow_data, ncol_data, nrow_
   }
   prior_nm <- bayes_spec$prior
   A0 <- matrix(0L, nrow = nrow_row_coef, ncol = nrow_data)
+  S_r <- diag(nrow_data)
+  diag(S_r) <- sapply(
+    1:nrow_data,
+    function(i) {
+      sapply(
+        1:ncol_data,
+        function(j) {
+          ar.ols(y[i, j, ], aic = FALSE, order = 4)$var.pred
+        }
+      ) |>
+        mean()
+    }
+  )
+  nu_r <- nrow_data + 2
   if (prior_nm == "Minnesota") {
-    S_r <- diag(nrow_data)
-    diag(S_r) <- sapply(
-      1:nrow_data,
-      function(i) {
-        sapply(
-          1:ncol_data,
-          function(j) {
-            ar.ols(y[i, j, ], aic = FALSE, order = 4)$var.pred
-          }
-        ) |>
-          mean()
-      }
-    )
     kappa_A <- 1
     V_A <- kronecker(diag(1 / c(1:p)^2), diag(kappa_A / diag(S_r)))
-    nu_r <- nrow_data + 2
+  } else if (prior_nm == "Horseshoe") {
+    V_A <- diag(nrow_row_coef)
   }
   list(
     row_prior_mean = A0,
@@ -41,23 +43,25 @@ validate_bmar_col_spec <- function(y, p, bayes_spec, nrow_data, ncol_data, nrow_
   prior_nm <- bayes_spec$prior
   # B0 <- kronecker(rep(1, lag), diag(ncol_data)) # kp x k
   B0 <- matrix(0L, nrow = nrow_col_coef, ncol = ncol_data)
+  S_c <- diag(ncol_data)
+  diag(S_c) <- sapply(
+    1:ncol_data,
+    function(i) {
+      sapply(
+        1:nrow_data,
+        function(j) {
+          ar.ols(y[j, i, ], aic = FALSE, order = 4)$var.pred
+        }
+      ) |>
+        mean()
+    }
+  )
+  nu_c <- ncol_data + 2
   if (prior_nm == "Minnesota") {
-    S_c <- diag(ncol_data)
-    diag(S_c) <- sapply(
-      1:ncol_data,
-      function(i) {
-        sapply(
-          1:nrow_data,
-          function(j) {
-            ar.ols(y[j, i, ], aic = FALSE, order = 4)$var.pred
-          }
-        ) |>
-          mean()
-      }
-    )
     kappa_B <- 1
     V_B <- kronecker(diag(1 / c(1:p)^2), diag(kappa_B / diag(S_c)))
-    nu_c <- ncol_data + 2
+  } else if (prior_nm == "Horseshoe") {
+    V_B <- diag(nrow_col_coef)
   }
   list(
     col_prior_mean = B0,
@@ -73,15 +77,18 @@ validate_bmar_prior <- function(bayes_spec) {
   switch(
     prior_nm,
     "Minnesota" = bayes_spec,
+    "Horseshoe" = list(),
     stop("Wrong prior")
   )
 }
 
 #' @noRd
 get_prior_id <- function(prior_nm) {
-  switch(prior_nm,
+  switch(
+    prior_nm,
     "Minnesota" = 1,
-    1 # MN_VAR, MN_VHAR
+    "Horseshoe" = 3,
+    1
   )
 }
 
@@ -111,6 +118,22 @@ get_mat_minn_init <- function(num_chains) {
         init,
         list(
           kappa = runif(1, 0, 1)
+        )
+      )
+    }
+  )
+}
+
+#' @noRd
+get_mat_hs_init <- function(num_chains, nrow_coef) {
+  lapply(
+    seq_len(num_chains),
+    function(init) {
+      append(
+        init,
+        list(
+          local_sparsity = exp(runif(nrow_coef, -1, 1)),
+          global_sparsity = runif(1, 0, 1)
         )
       )
     }
