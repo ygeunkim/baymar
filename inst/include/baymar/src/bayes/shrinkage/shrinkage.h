@@ -7,6 +7,7 @@ namespace baymar {
 
 class MatShrinkageUpdater;
 class MatMinnUpdater;
+class MatHsUpdater;
 
 class MatShrinkageUpdater {
 public:
@@ -43,6 +44,37 @@ private:
 	double shp, rate, kappa;
 };
 
+class MatHsUpdater : public MatShrinkageUpdater {
+public:
+	MatHsUpdater(int num_iter, const MatShrinkageParams& params, const MatGlInits& inits)
+	: MatShrinkageUpdater(num_iter, params, inits),
+		local_lev(inits._local), global_lev(inits._global),
+		latent_local(Eigen::VectorXd::Zero(local_lev.size())),
+		latent_global(0.0) {}
+	virtual ~MatHsUpdater() = default;
+	
+	void initPrec(Eigen::Ref<Eigen::VectorXd> prior_prec) override {
+		prior_prec.array() /= (global_lev * local_lev.array());
+	}
+
+	void updatePrec(
+		Eigen::Ref<Eigen::VectorXd> prior_prec,
+		Eigen::Ref<Eigen::MatrixXd> coef, Eigen::Ref<Eigen::MatrixXd> sig_lower,
+		Eigen::Ref<Eigen::MatrixXd> prior_mean,
+		BHRNG& rng
+	) override {
+		bvhar::horseshoe_latent(latent_local, local_lev, rng);
+		bvhar::horseshoe_latent(latent_global, global_lev, rng);
+		horseshoe_sparsity(local_lev, global_lev, prior_prec, coef, sig_lower, latent_local, latent_global, rng);
+	}
+
+private:
+	Eigen::VectorXd local_lev;
+	double global_lev;
+	Eigen::VectorXd latent_local;
+	double latent_global;
+};
+
 inline std::unique_ptr<MatShrinkageUpdater> initialize_matshrinkageupdater(int num_iter, LIST& param_prior, LIST& param_init, int prior_type) {
 	std::unique_ptr<MatShrinkageUpdater> shrinkage_ptr;
 	switch (prior_type) {
@@ -51,6 +83,15 @@ inline std::unique_ptr<MatShrinkageUpdater> initialize_matshrinkageupdater(int n
 			MatMinnInits inits(param_init);
 			shrinkage_ptr = std::make_unique<MatMinnUpdater>(num_iter, params, inits);
 			return shrinkage_ptr;
+		}
+		case 3: {
+			MatShrinkageParams params(param_prior);
+			MatGlInits inits(param_init);
+			shrinkage_ptr = std::make_unique<MatHsUpdater>(num_iter, params, inits);
+			return shrinkage_ptr;
+		}
+		default: {
+			STOP("Not defined yet");
 		}
 	}
 	return shrinkage_ptr;

@@ -3,5 +3,6 @@
 
 #include "./coef_helper.h"
 #include "./minn_helper.h"
+#include "./hs_helper.h"
 
 #endif // BAYMAR_BAYES_MISC_DRAW_H
