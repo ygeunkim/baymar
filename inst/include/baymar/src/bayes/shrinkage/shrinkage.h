@@ -79,6 +79,15 @@ inline std::unique_ptr<MatShrinkageUpdater> initialize_matshrinkageupdater(int n
 			shrinkage_ptr = std::make_unique<MatMinnUpdater>(num_iter, params, inits);
 			return shrinkage_ptr;
 		}
+		case 3: {
+			MatShrinkageParams params(param_prior);
+			MatGlInits inits(param_init);
+			shrinkage_ptr = std::make_unique<MatHsUpdater>(num_iter, params, inits);
+			return shrinkage_ptr;
+		}
+		default: {
+			STOP("Not defined yet");
+		}
 	}
 	return shrinkage_ptr;
 }
