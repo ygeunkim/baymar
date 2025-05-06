@@ -7,7 +7,7 @@
 #'
 #' @order 1
 #' @export
-set_minnesota <- function(shape = 3, rate = 2) {
+set_mar_minnesota <- function(shape = 3, rate = 2) {
   res <- list(
     prior = "Minnesota",
     shape = shape,
@@ -17,14 +17,14 @@ set_minnesota <- function(shape = 3, rate = 2) {
   res
 }
 
-#' @rdname set_minnesota
+#' @rdname set_mar_minnesota
 #' @param x Any object
 #' @export
 is.matmnspec <- function(x) {
   inherits(x, "matmnspec")
 }
 
-#' @rdname set_minnesota
+#' @rdname set_mar_minnesota
 #' @param x Any object
 #' @export
 is.bmarspec <- function(x) {
