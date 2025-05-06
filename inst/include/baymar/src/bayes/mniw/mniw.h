@@ -7,18 +7,18 @@ namespace baymar {
 
 class McmcMatMniw;
 
-class McmcMatMniw {
+class McmcMatMniw : public bvhar::McmcAlgo {
 public:
 	McmcMatMniw(
 		const MatMniwParams& params, const MatMniwInits& inits,
 		std::unique_ptr<MatShrinkageUpdater>& row_updater, std::unique_ptr<MatShrinkageUpdater>& col_updater,
 		unsigned int seed
 	)
-	: x(params._x), y(params._y),
+	: bvhar::McmcAlgo(params, seed),
+		x(params._x), y(params._y),
 		row_updater(std::move(row_updater)), col_updater(std::move(col_updater)),
-		num_iter(params._iter), num_row(params._row), num_col(params._col), num_design(params._design),
+		num_row(params._row), num_col(params._col), num_design(params._design),
 		row_record(num_iter + 1, std::vector<Eigen::MatrixXd>(2)), col_record(num_iter + 1, std::vector<Eigen::MatrixXd>(2)),
-		mcmc_step(0), rng(seed),
 		row_coef(inits._init_row_coef), row_sig_lower(inits._init_row_lower),
 		col_coef(inits._init_col_coef), col_sig_lower(inits._init_col_lower),
 		// row_kappa(.1), col_kappa(.1),
@@ -30,13 +30,13 @@ public:
 	}
 	virtual ~McmcMatMniw() = default;
 	
-	void doWarmUp() {
+	void doWarmUp() override {
 		std::lock_guard<std::mutex> lock(mtx);
 		updatePrec();
 		updateCoefCov();
 	}
 
-	void doPosteriorDraws() {
+	void doPosteriorDraws() override {
 		std::lock_guard<std::mutex> lock(mtx);
 		addStep();
 		updatePrec();
@@ -44,7 +44,7 @@ public:
 		updateRecords();
 	}
 
-	LIST returnRecords() {
+	LIST returnRecords(int num_burn, int thin) override {
 		LIST res = CREATE_LIST(
 			// NAMED("A_record") = row_coef_record,
 			// NAMED("Sigr_record") = row_sig_record,
@@ -57,18 +57,14 @@ public:
 	}
 
 protected:
-	std::mutex mtx;
 	std::vector<Eigen::SparseMatrix<double>> x;
 	std::vector<Eigen::MatrixXd> y;
 	std::unique_ptr<MatShrinkageUpdater> row_updater;
 	std::unique_ptr<MatShrinkageUpdater> col_updater;
-	int num_iter;
 	int num_row;
 	int num_col;
 	int num_design;
 	std::vector<std::vector<Eigen::MatrixXd>> row_record, col_record;
-	std::atomic<int> mcmc_step; // MCMC step
-	BHRNG rng; // RNG instance for multi-chain
 	// std::vector<Eigen::MatrixXd> row_params, col_params;
 	Eigen::MatrixXd row_coef, row_sig_lower, col_coef, col_sig_lower;
 	// double row_kappa, col_kappa;
@@ -76,12 +72,6 @@ protected:
 	Eigen::MatrixXd col_prior_mean, col_iw_scl;
 	Eigen::VectorXd row_prior_prec, col_prior_prec;
 	double row_iw_df, col_iw_df;
-
-	/**
-	 * @brief Increment the MCMC step
-	 * 
-	 */
-	void addStep() { ++mcmc_step; }
 
 	void updatePrec() {
 		// minnesota_kappa(row_kappa, row_prior_mean, row_prior_prec, row_coef, row_sig_lower, 3.0, 2.0, rng);
@@ -140,7 +130,7 @@ inline std::vector<std::unique_ptr<McmcMatMniw>> initialize_matmcmc(
 	return mcmc_ptr;
 }
 
-class MatMcmcRun {
+class MatMcmcRun : public bvhar::McmcRun {
 public:
 	MatMcmcRun(
 		int num_chains, int num_iter, int num_burn, int thin,
@@ -150,8 +140,7 @@ public:
 		LIST& col_prior, LIST_OF_LIST& col_init, const int col_prior_type,
 		const Eigen::VectorXi& seed_chain, bool display_progress, int nthreads
 	)
-	: num_chains(num_chains), num_iter(num_iter), num_burn(num_burn), thin(thin), nthreads(nthreads),
-		display_progress(display_progress), mcmc_ptr(num_chains), res(num_chains) {
+	: bvhar::McmcRun(num_chains, num_iter, num_burn, thin, display_progress, nthreads) {
 		auto temp_mcmc = initialize_matmcmc(
 			num_chains, num_iter - num_burn, x, y,
 			param_coef_sig, coef_sig_init,
@@ -164,82 +153,6 @@ public:
 		}
 	}
 	virtual ~MatMcmcRun() = default;
-
-	/**
-	 * @brief Conduct multi-chain MCMC
-	 *
-	 */
-	void fit() {
-		if (num_chains == 1) {
-			runGibbs(0);
-		} else {
-		#ifdef _OPENMP
-			#pragma omp parallel for num_threads(nthreads)
-		#endif
-			for (int chain = 0; chain < num_chains; ++chain) {
-				runGibbs(chain);
-			}
-		}
-	}
-
-	/**
-	 * @brief Conduct multi-chain MCMC and return MCMC records of every chain
-	 *
-	 * @return LIST_OF_LIST `LIST_OF_LIST`
-	 */
-	LIST_OF_LIST returnRecords() {
-		fit();
-		return WRAP(res);
-	}
-
-private:
-	int num_chains;
-	int num_iter;
-	int num_burn;
-	int thin;
-	int nthreads;
-	bool display_progress;
-	std::vector<std::unique_ptr<McmcMatMniw>> mcmc_ptr;
-	std::vector<LIST> res;
-
-	/**
-	 * @brief Single chain MCMC
-	 *
-	 * @param chain Chain id
-	 */
-	void runGibbs(int chain) {
-		std::string log_name = fmt::format("Chain {}", chain + 1);
-		auto logger = spdlog::get(log_name);
-		if (logger == nullptr) {
-			logger = SPDLOG_SINK_MT(log_name);
-		}
-		logger->set_pattern("[%n] [Thread " + std::to_string(omp_get_thread_num()) + "] %v");
-		int logging_freq = num_iter / 20; // 5 percent
-		if (logging_freq == 0) {
-			logging_freq = 1;
-		}
-		for (int i = 0; i < num_burn; ++i) {
-			mcmc_ptr[chain]->doWarmUp();
-			if (display_progress && (i + 1) % logging_freq == 0) {
-				logger->info("{} / {} (Warmup)", i + 1, num_iter);
-			}
-		}
-		logger->flush();
-		for (int i = num_burn; i < num_iter; ++i) {
-			mcmc_ptr[chain]->doPosteriorDraws();
-			if (display_progress && (i + 1) % logging_freq == 0) {
-				logger->info("{} / {} (Sampling)", i + 1, num_iter);
-			}
-		}
-	#ifdef _OPENMP
-		#pragma omp critical
-	#endif
-		{
-			res[chain] = mcmc_ptr[chain]->returnRecords();
-		}
-		logger->flush();
-		spdlog::drop(log_name);
-	}
 };
 
 } // namespace baymar

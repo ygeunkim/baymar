@@ -24,7 +24,7 @@ Imports:
     stats
 LinkingTo: 
     BH,
-    bvhar,
+    bvhar (>= 2.2.2.9004),
     Rcpp,
     RcppEigen,
     RcppSpdlog,
