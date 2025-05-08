@@ -8,13 +8,14 @@
 #' @param thinning Thinning every thinning-th iteration
 #' @param row_spec Row coefficient specification
 #' @param col_spec Column coefficient specification
+#' @param verbose Progress log
 #' @param num_thread Number of threads
 #' 
 #' @references
 #' Chan, J. C. C. & Qi, Y. (2024). Large Bayesian Tensor VARs with Stochastic Volatility. arXiv.
 #' 
 #' @importFrom Matrix bdiag
-#' @importFrom purrr flatten
+#' @importFrom posterior as_draws_df bind_draws summarise_draws
 #' @order 1
 #' @export
 mar_bayes <- function(y,
@@ -25,6 +26,7 @@ mar_bayes <- function(y,
                       thinning = 1,
                       row_spec = set_mar_minnesota(),
                       col_spec = row_spec,
+                      verbose = FALSE,
                       num_thread = 1) {
   if (!is.array(y)) {
     stop("Provide array.")
@@ -111,37 +113,71 @@ mar_bayes <- function(y,
     row_prior = row_prior, row_init = row_init, row_prior_type = row_prior_type,
     col_prior = col_prior, col_init = col_init, col_prior_type = col_prior_type,
     seed_chain = sample.int(.Machine$integer.max, size = num_chains),
-    display_progress = TRUE, nthreads = num_thread
+    display_progress = verbose, nthreads = num_thread
   )
-  row_record <-
-    lapply(res, function(x) tail(x$row_record, num_iter - num_burn)) |> # chain x iter x (coef_sig)
-    flatten()
-  row_coef <- lapply(row_record, function(x) x[[1]])
-  row_sig <- lapply(row_record, function(x) x[[2]])
-  col_record <-
-    lapply(res, function(x) tail(x$col_record, num_iter - num_burn)) |> # chain x iter x (coef_sig)
-    flatten()
-  col_coef <- lapply(col_record, function(x) x[[1]])
-  col_sig <- lapply(col_record, function(x) x[[2]])
-  res$row_coef <- Reduce("+", row_coef) / length(row_coef)
-  rownames(res$row_coef) <- lapply(
+  res <- do.call(rbind, res)
+  rec_names <- colnames(res)
+  param_names <- gsub(pattern = "_record$", replacement = "", rec_names)
+  res <- apply(
+    res,
+    2,
+    function(x) {
+      if (is.vector(x[[1]])) {
+        return(as.matrix(unlist(x)))
+      }
+      do.call(rbind, x)
+    }
+  )
+  names(res) <- rec_names
+  row_coef <- matrix(colMeans(res$A_record), ncol = nrow_data)
+  col_coef <- matrix(colMeans(res$B_record), ncol = ncol_data)
+  row_sig <- diag(nrow_data)
+  row_sig[lower.tri(row_sig, diag = TRUE)] <- colMeans(res$SigmaR_record)
+  row_sig[upper.tri(row_sig, diag = FALSE)] <- row_sig[lower.tri(row_sig, diag = FALSE)]
+  col_sig <- diag(ncol_data)
+  col_sig[lower.tri(col_sig, diag = TRUE)] <- colMeans(res$SigmaC_record)
+  col_sig[upper.tri(col_sig, diag = FALSE)] <- col_sig[lower.tri(col_sig, diag = FALSE)]
+  is_symm <- grepl(pattern = "^Sigma", x = param_names)
+  num_col <- c(nrow_data, nrow_data, ncol_data, ncol_data)
+  res[rec_names] <- lapply(
+    seq_along(res[rec_names]),
+    function(id) {
+      split_matrix_chain(res[rec_names][[id]], chain = num_chains, varname = param_names[id], lag = ifelse(is_symm[id], 1, p), num_col = num_col[id], is_symm = is_symm[id])
+    }
+  )
+  res[rec_names] <- lapply(res[rec_names], as_draws_df)
+  res$param <- bind_draws(
+    res$A_record,
+    res$SigmaR_record,
+    res$B_record,
+    res$SigmaC_record
+  )
+  res[rec_names] <- NULL
+  res$param_names <- param_names
+  rownames(row_coef) <- lapply(
     1:p,
     function(lag) paste(var_names[[1]], lag, sep = "_")
   ) |>
     unlist()
-  colnames(res$row_coef) <- var_names[[1]]
-  res$row_sig <- Reduce("+", row_sig) / length(row_sig)
-  rownames(res$row_sig) <- var_names[[1]]
-  colnames(res$row_sig) <- var_names[[1]]
-  res$col_coef <- Reduce("+", col_coef) / length(col_coef)
-  rownames(res$col_coef) <- lapply(
+  colnames(row_coef) <- var_names[[1]]
+  rownames(row_sig) <- var_names[[1]]
+  colnames(row_sig) <- var_names[[1]]
+  rownames(col_coef) <- lapply(
     1:p,
     function(lag) paste(var_names[[2]], lag, sep = "_")
   ) |>
     unlist()
-  colnames(res$col_coef) <- var_names[[2]]
-  res$col_sig <- Reduce("+", col_sig) / length(col_sig)
-  rownames(res$col_sig) <- var_names[[2]]
-  colnames(res$col_sig) <- var_names[[2]]
-  res[c("row_coef", "row_sig", "col_coef", "col_sig")]
+  colnames(col_coef) <- var_names[[2]]
+  rownames(col_sig) <- var_names[[2]]
+  colnames(col_sig) <- var_names[[2]]
+  res$coefficients <- list(
+    row = row_coef,
+    col = col_coef
+  )
+  res$covmat <- list(
+    row = row_sig,
+    col = col_sig
+  )
+  class(res) <- "marbayes"
+  res
 }

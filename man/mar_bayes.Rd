@@ -13,6 +13,7 @@ mar_bayes(
   thinning = 1,
   row_spec = set_mar_minnesota(),
   col_spec = row_spec,
+  verbose = FALSE,
   num_thread = 1
 )
 }
@@ -32,6 +33,8 @@ mar_bayes(
 \item{row_spec}{Row coefficient specification}
 
 \item{col_spec}{Column coefficient specification}
+
+\item{verbose}{Progress log}
 
 \item{num_thread}{Number of threads}
 }
