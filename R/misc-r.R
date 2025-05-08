@@ -14,7 +14,7 @@ validate_bmar_row_spec <- function(y, p, bayes_spec, nrow_data, ncol_data, nrow_
       sapply(
         1:ncol_data,
         function(j) {
-          ar.ols(y[i, j, ], aic = FALSE, order = 4)$var.pred
+          ar.ols(y[i, j, ], aic = FALSE, order.max = 4)$var.pred
         }
       ) |>
         mean()
@@ -50,7 +50,7 @@ validate_bmar_col_spec <- function(y, p, bayes_spec, nrow_data, ncol_data, nrow_
       sapply(
         1:nrow_data,
         function(j) {
-          ar.ols(y[j, i, ], aic = FALSE, order = 4)$var.pred
+          ar.ols(y[j, i, ], aic = FALSE, order.max = 4)$var.pred
         }
       ) |>
         mean()

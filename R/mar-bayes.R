@@ -15,6 +15,7 @@
 #' Chan, J. C. C. & Qi, Y. (2024). Large Bayesian Tensor VARs with Stochastic Volatility. arXiv.
 #' 
 #' @importFrom Matrix bdiag
+#' @importFrom utils tail
 #' @importFrom posterior as_draws_df bind_draws summarise_draws
 #' @order 1
 #' @export
