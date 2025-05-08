@@ -5,3 +5,4 @@
 ^LICENSE\.md$
 ^\.vscode$
 ^data-raw$
+^\.github$

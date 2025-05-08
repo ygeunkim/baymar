@@ -5,14 +5,33 @@
 
 <!-- badges: start -->
 
+[![R-CMD-check](https://github.com/ygeunkim/baymar/actions/workflows/R-CMD-check.yaml/badge.svg)](https://github.com/ygeunkim/baymar/actions/workflows/R-CMD-check.yaml)
+[![CRAN
+status](https://www.r-pkg.org/badges/version/baymar)](https://CRAN.R-project.org/package=baymar)
 <!-- badges: end -->
 
 The goal of baymar is to …
 
 ## Installation
 
-You can install the development version of baymar like so:
+``` r
+# install.packages("remotes")
+remotes::install_github("ygeunkim/baymar")
+```
+
+### Development version
+
+<!-- dev badges: start -->
+
+[![dev-r-cmd-check](https://github.com/ygeunkim/baymar/actions/workflows/R-CMD-check.yaml/badge.svg?branch=develop)](https://github.com/ygeunkim/baymar/actions/workflows/R-CMD-check.yaml?query=branch%3Adevelop)
+[![Development version
+updated](https://img.shields.io/github/last-commit/ygeunkim/baymar/develop?label=dev%20updated)](https://github.com/ygeunkim/baymar/tree/develop)
+<!-- dev badges: end -->
+
+You can install the development version from [develop
+branch](https://github.com/ygeunkim/baymar/tree/develop).
 
 ``` r
-# FILL THIS IN! HOW CAN PEOPLE INSTALL YOUR DEV PACKAGE?
+# install.packages("remotes")
+remotes::install_github("ygeunkim/baymar@develop")
 ```
