@@ -14,7 +14,7 @@ validate_bmar_row_spec <- function(y, p, bayes_spec, nrow_data, ncol_data, nrow_
       sapply(
         1:ncol_data,
         function(j) {
-          ar.ols(y[i, j, ], aic = FALSE, order = 4)$var.pred
+          ar.ols(y[i, j, ], aic = FALSE, order.max = 4)$var.pred
         }
       ) |>
         mean()
@@ -50,7 +50,7 @@ validate_bmar_col_spec <- function(y, p, bayes_spec, nrow_data, ncol_data, nrow_
       sapply(
         1:nrow_data,
         function(j) {
-          ar.ols(y[j, i, ], aic = FALSE, order = 4)$var.pred
+          ar.ols(y[j, i, ], aic = FALSE, order.max = 4)$var.pred
         }
       ) |>
         mean()
@@ -138,4 +138,35 @@ get_mat_hs_init <- function(num_chains, nrow_coef) {
       )
     }
   )
+}
+
+#' Split matrix draw
+#' 
+#' @noRd 
+split_matrix_chain <- function(x, chain = 1, varname = "A", lag = 1, num_col, is_symm = FALSE) {
+  index <- expand.grid(seq_len(lag * num_col), seq_len(num_col))
+  if (is_symm) {
+    index <- index[apply(index, 1, function(x) x[1] >= x[2]), ]
+  }
+  index <- apply(index, 1, function(x) sprintf("[%s]", paste(x, collapse = ",")))
+  # if (lag > 0) {
+  #   index <- paste0(rep(1:lag, each = length(index)), index)
+  # }
+  if (chain == 1) {
+    colnames(x) <- paste0(varname, index)
+    return(x)
+  } else {
+    # rbind(chain1, chain2, ...)
+    num_row <- nrow(x) / chain
+    res <-
+      t(x) |>
+      array(dim = c(ncol(x), num_row, chain)) |>
+      aperm(c(2, 3, 1))
+    dimnames(res) <- list(
+      iteration = seq_len(num_row),
+      chain = seq_len(chain),
+      variable = paste0(varname, index)
+    )
+  }
+  res
 }

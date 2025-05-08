@@ -6,7 +6,7 @@
 \alias{baymar-package}
 \title{baymar: Bayesian Matrix Autoregressions}
 \description{
-More about what it does (maybe more than one line).
+Tools to model and forecast matrix-valued time series including Bayesian Matrix autoregressive (BMAR) model.
 }
 \author{
 \strong{Maintainer}: Young Geun Kim \email{ygeunkimstat@gmail.com} (\href{https://orcid.org/0000-0001-8651-1167}{ORCID}) [copyright holder]
