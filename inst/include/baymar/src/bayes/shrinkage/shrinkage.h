@@ -24,25 +24,38 @@ public:
 
 class MatMinnUpdater : public MatShrinkageUpdater {
 public:
-	MatMinnUpdater(int num_iter, const MatMinnParams& params, const MatMinnInits& inits)
-	: MatShrinkageUpdater(num_iter, params, inits),
-		shp(params._shp), rate(params._rate), kappa(inits._kappa) {}
+	MatMinnUpdater(int num_iter, const MatMinnParams& params, const MatShrinkageInits& inits)
+	: MatShrinkageUpdater(num_iter, params, inits), kappa(params._kappa) {}
 	virtual ~MatMinnUpdater() = default;
 	void initPrec(Eigen::Ref<Eigen::VectorXd> prior_prec) override {
 		prior_prec.array() /= kappa;
 	}
-	void updatePrec(
-		Eigen::Ref<Eigen::VectorXd> prior_prec,
-		Eigen::Ref<Eigen::MatrixXd> coef, Eigen::Ref<Eigen::MatrixXd> sig_lower,
-		Eigen::Ref<Eigen::MatrixXd> prior_mean,
-		BHRNG& rng
-	) override {
-		minnesota_kappa(kappa, prior_mean, prior_prec, coef, sig_lower, shp, rate, rng);
-	}
 
 private:
-	double shp, rate, kappa;
+	double kappa;
 };
+
+class MatHierMinnUpdater : public MatShrinkageUpdater {
+	public:
+		MatHierMinnUpdater(int num_iter, const MatHierMinnParams& params, const MatHierMinnInits& inits)
+		: MatShrinkageUpdater(num_iter, params, inits),
+			shp(params._shp), rate(params._rate), kappa(inits._kappa) {}
+		virtual ~MatHierMinnUpdater() = default;
+		void initPrec(Eigen::Ref<Eigen::VectorXd> prior_prec) override {
+			prior_prec.array() /= kappa;
+		}
+		void updatePrec(
+			Eigen::Ref<Eigen::VectorXd> prior_prec,
+			Eigen::Ref<Eigen::MatrixXd> coef, Eigen::Ref<Eigen::MatrixXd> sig_lower,
+			Eigen::Ref<Eigen::MatrixXd> prior_mean,
+			BHRNG& rng
+		) override {
+			minnesota_kappa(kappa, prior_mean, prior_prec, coef, sig_lower, shp, rate, rng);
+		}
+	
+	private:
+		double shp, rate, kappa;
+	};
 
 class MatHsUpdater : public MatShrinkageUpdater {
 public:
@@ -80,7 +93,7 @@ inline std::unique_ptr<MatShrinkageUpdater> initialize_matshrinkageupdater(int n
 	switch (prior_type) {
 		case 1: {
 			MatMinnParams params(param_prior);
-			MatMinnInits inits(param_init);
+			MatShrinkageInits inits(param_init);
 			shrinkage_ptr = std::make_unique<MatMinnUpdater>(num_iter, params, inits);
 			return shrinkage_ptr;
 		}
@@ -88,6 +101,12 @@ inline std::unique_ptr<MatShrinkageUpdater> initialize_matshrinkageupdater(int n
 			MatShrinkageParams params(param_prior);
 			MatGlInits inits(param_init);
 			shrinkage_ptr = std::make_unique<MatHsUpdater>(num_iter, params, inits);
+			return shrinkage_ptr;
+		}
+		case 4: {
+			MatHierMinnParams params(param_prior);
+			MatHierMinnInits inits(param_init);
+			shrinkage_ptr = std::make_unique<MatHierMinnUpdater>(num_iter, params, inits);
 			return shrinkage_ptr;
 		}
 		default: {

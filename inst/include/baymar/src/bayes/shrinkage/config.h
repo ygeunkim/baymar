@@ -7,8 +7,9 @@ namespace baymar {
 
 struct MatShrinkageParams;
 struct MatMinnParams;
+struct MatHierMinnParams;
 struct MatShrinkageInits;
-struct MatMinnInits;
+struct MatHierMinnInits;
 struct MatGlInits;
 
 struct MatShrinkageParams {
@@ -17,9 +18,17 @@ struct MatShrinkageParams {
 };
 
 struct MatMinnParams : public MatShrinkageParams {
-	double _shp, _rate;
+	double _kappa;
 
 	MatMinnParams(LIST& priors)
+	: MatShrinkageParams(priors),
+		_kappa(CAST_DOUBLE(priors["kappa"])) {}
+};
+
+struct MatHierMinnParams : public MatShrinkageParams {
+	double _shp, _rate;
+
+	MatHierMinnParams(LIST& priors)
 	: MatShrinkageParams(priors),
 		_shp(CAST_DOUBLE(priors["shape"])),
 		_rate(CAST_DOUBLE(priors["rate"])) {}
@@ -32,14 +41,14 @@ struct MatShrinkageInits {
 	MatShrinkageInits(BHRNG& rng) {}
 };
 
-struct MatMinnInits : public MatShrinkageInits {
+struct MatHierMinnInits : public MatShrinkageInits {
 	double _kappa;
 
-	MatMinnInits(LIST& init)
+	MatHierMinnInits(LIST& init)
 	: MatShrinkageInits(init),
 		_kappa(CAST_DOUBLE(init["kappa"])) {}
 	
-	MatMinnInits(BHRNG& rng)
+	MatHierMinnInits(BHRNG& rng)
 	: MatShrinkageInits(rng),
 		_kappa(bvhar::unif_rand(.001, 1, rng)) {}
 };

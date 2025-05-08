@@ -1,4 +1,6 @@
-#' Fitting BMAR(p) with Minnesota Prior
+#' Fitting Bayesian MAR
+#' 
+#' This function fits Bayesian Matrix Autoregressive (BMAR) model with various priors.
 #' 
 #' @param y Matrix-valued time series data
 #' @param p VAR lag (Default: 1)
@@ -85,24 +87,26 @@ mar_bayes <- function(y,
   col_prior <- validate_bmar_prior(col_spec)
   row_init <- switch(
     row_spec$prior,
-    "Minnesota" = { get_mat_minn_init(num_chains) },
+    "Minnesota" = get_empty_init(num_chains),
     "Horseshoe" = {
       get_mat_hs_init(
         num_chains = num_chains,
         nrow_coef = nrow_row_coef
       )
     },
+    "MN_Hierarchical" = get_mat_minn_init(num_chains),
     stop("Wrong row prior")
   )
   col_init <- switch(
     col_spec$prior,
-    "Minnesota" = { get_mat_minn_init(num_chains) },
+    "Minnesota" = get_empty_init(num_chains),
     "Horseshoe" = {
       get_mat_hs_init(
         num_chains = num_chains,
         nrow_coef = nrow_col_coef
       )
     },
+    "MN_Hierarchical" = get_mat_minn_init(num_chains),
     stop("Wrong column prior")
   )
   row_prior_type <- get_prior_id(row_spec$prior)
