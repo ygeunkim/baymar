@@ -59,9 +59,9 @@ struct MatMniwRecords {
 		row_coef_record.row(id) = row_coef.reshaped();
 		col_coef_record.row(id) = col_coef.reshaped();
 		int lower_id = 0;
-		for (int i = 0; i < row_sig_lower.cols(); ++i) {
-			for (int j = 0; j <= i; ++j) {
-				// If 3x3: (0, 0) -> (1, 0) -> (1, 1) -> (2, 0) -> (2, 1) -> (2, 2)
+		for (int j = 0; j < row_sig_lower.cols(); ++j) {
+			for (int i = j; i < row_sig_lower.cols(); ++i) {
+				// If 3x3: (0, 0) -> (1, 0) -> (2, 0) -> (1, 1) -> (2, 1) -> (2, 2)
 				// Can be assigned in R:
 				// matrix[lower.tri(matrix, diag = TRUE)] <- row_vector
 				// matrix[upper.tri(matrix, diag = FALSE)] <- matrix[lower.tri(matrix, diag = FALSE)]
@@ -69,8 +69,8 @@ struct MatMniwRecords {
 			}
 		}
 		lower_id = 0;
-		for (int i = 0; i < col_sig_lower.cols(); ++i) {
-			for (int j = 0; j <= i; ++j) {
+		for (int j = 0; j < col_sig_lower.cols(); ++j) {
+			for (int i = j; i < col_sig_lower.cols(); ++i) {
 				col_sigma_record(id, lower_id++) = col_sig_lower.row(i).head(j + 1).dot(col_sig_lower.row(j).head(j + 1));
 			}
 		}
