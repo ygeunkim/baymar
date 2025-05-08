@@ -2,18 +2,40 @@
 #'
 #' `r lifecycle::badge("experimental")` Set Minnesota prior.
 #'
-#' @param shape Shape for Gamma prior
-#' @param rate Rate for Gamma prior
+#' @param kappa Shrinkage hyperparameter of MN scale
 #'
 #' @order 1
 #' @export
-set_mar_minnesota <- function(shape = 3, rate = 2) {
+set_mar_minnesota <- function(kappa = set_kappa()) {
+  if (!(
+    is.kappaspec(kappa) ||
+      (is.numeric(kappa) && length(kappa) == 1)
+  )) {
+    stop("'kappa' should be length-one numeric or kappaspec.")
+  }
   res <- list(
     prior = "Minnesota",
+    kappa = kappa
+  )
+  class(res) <- c("matmnspec", "bmarspec")
+  res
+}
+
+#' @rdname set_mar_minnesota
+#' 
+#' Set Gamma prior for kappa of Minnesota prior
+#' 
+#' @param shape Shape for Gamma prior
+#' @param rate Rate for Gamma prior
+#' 
+#' @order 1
+#' @export 
+set_kappa <- function(shape = 3, rate = 2) {
+  res <- list(
     shape = shape,
     rate = rate
   )
-  class(res) <- c("matmnspec", "bmarspec")
+  class(res) <- "kappaspec"
   res
 }
 
@@ -29,6 +51,13 @@ is.matmnspec <- function(x) {
 #' @export
 is.bmarspec <- function(x) {
   inherits(x, "bmarspec")
+}
+
+#' @rdname set_mar_minnesota
+#' @param x Any object
+#' @export
+is.kappaspec <- function(x) {
+  inherits(x, "kappaspec")
 }
 
 #' Horseshoe Prior Specification

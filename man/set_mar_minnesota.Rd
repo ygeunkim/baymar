@@ -4,18 +4,19 @@
 \alias{set_mar_minnesota}
 \alias{is.matmnspec}
 \alias{is.bmarspec}
+\alias{is.kappaspec}
 \title{Minnesota Prior Specification}
 \usage{
-set_mar_minnesota(shape = 3, rate = 2)
+set_mar_minnesota(kappa = set_kappa())
 
 is.matmnspec(x)
 
 is.bmarspec(x)
+
+is.kappaspec(x)
 }
 \arguments{
-\item{shape}{Shape for Gamma prior}
-
-\item{rate}{Rate for Gamma prior}
+\item{kappa}{Shrinkage hyperparameter of MN scale}
 
 \item{x}{Any object}
 }
