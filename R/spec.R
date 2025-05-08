@@ -14,14 +14,14 @@ set_mar_minnesota <- function(kappa = set_kappa()) {
     stop("'kappa' should be length-one numeric or kappaspec.")
   }
   res <- list(
-    prior = "Minnesota",
+    prior = ifelse(is.kappaspec(kappa), "MN_Hierarchical", "Minnesota"),
     kappa = kappa
   )
   class(res) <- c("matmnspec", "bmarspec")
   res
 }
 
-#' @rdname set_mar_minnesota
+#' Hyperprior for kappa of Minnesota prior
 #' 
 #' Set Gamma prior for kappa of Minnesota prior
 #' 

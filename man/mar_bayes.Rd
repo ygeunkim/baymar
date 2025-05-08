@@ -2,7 +2,7 @@
 % Please edit documentation in R/mar-bayes.R
 \name{mar_bayes}
 \alias{mar_bayes}
-\title{Fitting BMAR(p) with Minnesota Prior}
+\title{Fitting Bayesian MAR}
 \usage{
 mar_bayes(
   y,
@@ -39,7 +39,7 @@ mar_bayes(
 \item{num_thread}{Number of threads}
 }
 \description{
-Fitting BMAR(p) with Minnesota Prior
+This function fits Bayesian Matrix Autoregressive (BMAR) model with various priors.
 }
 \references{
 Chan, J. C. C. & Qi, Y. (2024). Large Bayesian Tensor VARs with Stochastic Volatility. arXiv.

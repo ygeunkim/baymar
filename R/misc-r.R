@@ -21,12 +21,8 @@ validate_bmar_row_spec <- function(y, p, bayes_spec, nrow_data, ncol_data, nrow_
     }
   )
   nu_r <- nrow_data + 2
-  if (prior_nm == "Minnesota") {
-    kappa_A <- bayes_spec$kappa
-    if (is.kappaspec(bayes_spec$kappa)) {
-      kappa_A <- 1
-    }
-    V_A <- kronecker(diag(1 / c(1:p)^2), diag(kappa_A / diag(S_r)))
+  if (prior_nm == "Minnesota" || prior_nm == "MN_Hierarchical") {
+    V_A <- kronecker(diag(1 / c(1:p)^2), diag(1 / diag(S_r)))
   } else if (prior_nm == "Horseshoe") {
     V_A <- diag(nrow_row_coef)
   }
@@ -60,12 +56,8 @@ validate_bmar_col_spec <- function(y, p, bayes_spec, nrow_data, ncol_data, nrow_
     }
   )
   nu_c <- ncol_data + 2
-  if (prior_nm == "Minnesota") {
-    kappa_B <- bayes_spec$kappa
-    if (is.kappaspec(bayes_spec$kappa)) {
-      kappa_B <- 1
-    }
-    V_B <- kronecker(diag(1 / c(1:p)^2), diag(kappa_B / diag(S_c)))
+  if (prior_nm == "Minnesota" || prior_nm == "MN_Hierarchical") {
+    V_B <- kronecker(diag(1 / c(1:p)^2), diag(1 / diag(S_c)))
   } else if (prior_nm == "Horseshoe") {
     V_B <- diag(nrow_col_coef)
   }
@@ -82,14 +74,13 @@ validate_bmar_prior <- function(bayes_spec) {
   prior_nm <- bayes_spec$prior
   switch(
     prior_nm,
-    "Minnesota" = {
-      if (is.kappaspec(bayes_spec$kappa)) {
-        bayes_spec$shape <- bayes_spec$kapp$shape
-        bayes_spec$rate <- bayes_spec$kapp$rate
-      }
+    "Minnesota" = bayes_spec,
+    "Horseshoe" = list(),
+    "MN_Hierarchical" = {
+      bayes_spec$shape <- bayes_spec$kapp$shape
+      bayes_spec$rate <- bayes_spec$kapp$rate
       bayes_spec
     },
-    "Horseshoe" = list(),
     stop("Wrong prior")
   )
 }
@@ -100,6 +91,7 @@ get_prior_id <- function(prior_nm) {
     prior_nm,
     "Minnesota" = 1,
     "Horseshoe" = 3,
+    "MN_Hierarchical" = 4,
     1
   )
 }
@@ -117,6 +109,16 @@ get_bmar_init <- function(num_chains, nrow_data, ncol_data, nrow_row_coef, nrow_
         col_init_coef = matrix(runif(nrow_col_coef * ncol_data, -1, 1), ncol = ncol_data),
         col_init_lower = diag(exp(runif(ncol_data, -1, 0)))
       )
+    }
+  )
+}
+
+#' @noRd 
+get_empty_init <- function(num_chains) {
+  lapply(
+    seq_len(num_chains),
+    function(init) {
+      append(init, list())
     }
   )
 }
