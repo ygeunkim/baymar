@@ -21,7 +21,7 @@ public:
 		row_record(num_iter + 1, std::vector<Eigen::MatrixXd>(2)), col_record(num_iter + 1, std::vector<Eigen::MatrixXd>(2)),
 		row_coef(inits._init_row_coef), row_sig_lower(inits._init_row_lower),
 		col_coef(inits._init_col_coef), col_sig_lower(inits._init_col_lower),
-		// mniw_record(std::make_unique<MatMniwRecords>(num_iter, num_row, num_col, row_coef.rows(), col_coef.rows())),
+		mniw_record(std::make_unique<MatMniwRecords>(num_iter, num_row, num_col, row_coef.rows(), col_coef.rows())),
 		row_prior_mean(params._row_mean), row_iw_scl(params._row_iw_scl),
 		col_prior_mean(params._col_mean), col_iw_scl(params._col_iw_scl),
 		row_prior_prec(params._row_prec), col_prior_prec(params._col_prec),
@@ -45,14 +45,22 @@ public:
 	}
 
 	LIST returnRecords(int num_burn, int thin) override {
-		LIST res = CREATE_LIST(
-			// NAMED("A_record") = row_coef_record,
-			// NAMED("Sigr_record") = row_sig_record,
-			// NAMED("B_record") = col_coef_record,
-			// NAMED("Sigc_record") = col_sig_record
-			NAMED("row_record") = WRAP(row_record),
-			NAMED("col_record") = WRAP(col_record)
-		);
+		// LIST res = CREATE_LIST(
+		// 	// NAMED("A_record") = row_coef_record,
+		// 	// NAMED("Sigr_record") = row_sig_record,
+		// 	// NAMED("B_record") = col_coef_record,
+		// 	// NAMED("Sigc_record") = col_sig_record
+		// 	NAMED("row_record") = WRAP(row_record),
+		// 	NAMED("col_record") = WRAP(col_record)
+		// );
+		LIST res = mniw_record->returnListRecords();
+		for (auto& record : res) {
+			if (IS_MATRIX(ACCESS_LIST(record, res))) {
+				ACCESS_LIST(record, res) = bvhar::thin_record(CAST<Eigen::MatrixXd>(ACCESS_LIST(record, res)), num_iter, num_burn, thin);
+			} else {
+				ACCESS_LIST(record, res) = bvhar::thin_record(CAST<Eigen::VectorXd>(ACCESS_LIST(record, res)), num_iter, num_burn, thin);
+			}
+		}
 		return res;
 	}
 
@@ -66,7 +74,7 @@ protected:
 	int num_design;
 	std::vector<std::vector<Eigen::MatrixXd>> row_record, col_record;
 	Eigen::MatrixXd row_coef, row_sig_lower, col_coef, col_sig_lower;
-	// std::unique_ptr<MatMniwRecords> mniw_record;
+	std::unique_ptr<MatMniwRecords> mniw_record;
 	Eigen::MatrixXd row_prior_mean, row_iw_scl;
 	Eigen::MatrixXd col_prior_mean, col_iw_scl;
 	Eigen::VectorXd row_prior_prec, col_prior_prec;
@@ -95,11 +103,11 @@ protected:
 	}
 
 	void updateRecords() {
-		row_record[mcmc_step][0] = row_coef;
-		row_record[mcmc_step][1] = row_sig_lower * row_sig_lower.transpose();
-		col_record[mcmc_step][0] = col_coef;
-		col_record[mcmc_step][1] = col_sig_lower * col_sig_lower.transpose();
-		// mniw_record->assignRecords(mcmc_step, row_coef, row_sig_lower, col_coef, col_sig_lower);
+		// row_record[mcmc_step][0] = row_coef;
+		// row_record[mcmc_step][1] = row_sig_lower * row_sig_lower.transpose();
+		// col_record[mcmc_step][0] = col_coef;
+		// col_record[mcmc_step][1] = col_sig_lower * col_sig_lower.transpose();
+		mniw_record->assignRecords(mcmc_step, row_coef, row_sig_lower, col_coef, col_sig_lower);
 	}
 };
 
