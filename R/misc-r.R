@@ -154,6 +154,26 @@ get_mat_hs_init <- function(num_chains, nrow_coef) {
   )
 }
 
+#' Validate coefficient and covariance
+#'
+#' @noRd
+validate_coef_sig <- function(coef, sig) {
+  coef_name <- deparse(substitute(coef))
+  sig_name <- deparse(substitute(sig))
+  if (!is.matrix(coef)) {
+    stop(sprintf("'%s' should be a matrix.", coef_name))
+  }
+  if (!is.matrix(sig)) {
+    stop(sprintf("'%s' should be a matrix.", sig_name))
+  }
+  if (nrow(sig) != ncol(sig)) {
+    stop(sprintf("'%s' should be square matrix.", sig_name))
+  }
+  if (ncol(coef) != ncol(sig)) {
+    stop(sprintf("'%s' and '%s' should have the same number of columns", coef_name, sig_name))
+  }
+}
+
 #' Split matrix draw
 #' 
 #' @noRd 

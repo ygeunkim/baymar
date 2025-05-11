@@ -1,0 +1,6 @@
+#ifndef BAYMAR_UTILS_H
+#define BAYMAR_UTILS_H
+
+#include "src/math/design.h"
+
+#endif // BAYMAR_UTILS_H
