@@ -39,9 +39,9 @@ BEGIN_RCPP
     return rcpp_result_gen;
 END_RCPP
 }
-// sim_mar
-std::vector<Eigen::MatrixXd> sim_mar(int num_sim, int num_burn, Eigen::SparseMatrix<double> init, Eigen::MatrixXd row_coef, Eigen::MatrixXd col_coef, Eigen::MatrixXd row_sig, Eigen::MatrixXd col_sig);
-RcppExport SEXP _baymar_sim_mar(SEXP num_simSEXP, SEXP num_burnSEXP, SEXP initSEXP, SEXP row_coefSEXP, SEXP col_coefSEXP, SEXP row_sigSEXP, SEXP col_sigSEXP) {
+// sim_mar_export
+std::vector<Eigen::MatrixXd> sim_mar_export(int num_sim, int num_burn, Eigen::SparseMatrix<double> init, Eigen::MatrixXd row_coef, Eigen::MatrixXd col_coef, Eigen::MatrixXd row_sig, Eigen::MatrixXd col_sig);
+RcppExport SEXP _baymar_sim_mar_export(SEXP num_simSEXP, SEXP num_burnSEXP, SEXP initSEXP, SEXP row_coefSEXP, SEXP col_coefSEXP, SEXP row_sigSEXP, SEXP col_sigSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
@@ -52,14 +52,14 @@ BEGIN_RCPP
     Rcpp::traits::input_parameter< Eigen::MatrixXd >::type col_coef(col_coefSEXP);
     Rcpp::traits::input_parameter< Eigen::MatrixXd >::type row_sig(row_sigSEXP);
     Rcpp::traits::input_parameter< Eigen::MatrixXd >::type col_sig(col_sigSEXP);
-    rcpp_result_gen = Rcpp::wrap(sim_mar(num_sim, num_burn, init, row_coef, col_coef, row_sig, col_sig));
+    rcpp_result_gen = Rcpp::wrap(sim_mar_export(num_sim, num_burn, init, row_coef, col_coef, row_sig, col_sig));
     return rcpp_result_gen;
 END_RCPP
 }
 
 static const R_CallMethodDef CallEntries[] = {
     {"_baymar_estimate_bmar_mniw", (DL_FUNC) &_baymar_estimate_bmar_mniw, 17},
-    {"_baymar_sim_mar", (DL_FUNC) &_baymar_sim_mar, 7},
+    {"_baymar_sim_mar_export", (DL_FUNC) &_baymar_sim_mar_export, 7},
     {NULL, NULL, 0}
 };
 
