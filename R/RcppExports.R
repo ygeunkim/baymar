@@ -7,6 +7,11 @@ estimate_bmar_mniw <- function(num_chains, num_iter, num_burn, thin, x, y, param
 }
 
 #' @noRd
+forecast_bmar_mniw <- function(num_chains, lag, step, response_mat, num_data, fit_record, seed_chain, nthreads) {
+    .Call(`_baymar_forecast_bmar_mniw`, num_chains, lag, step, response_mat, num_data, fit_record, seed_chain, nthreads)
+}
+
+#' @noRd
 sim_mar_export <- function(num_sim, num_burn, init, row_coef, col_coef, row_sig, col_sig) {
     .Call(`_baymar_sim_mar_export`, num_sim, num_burn, init, row_coef, col_coef, row_sig, col_sig)
 }

@@ -1,7 +1,7 @@
 #ifndef BAYMAR_BAYES_MNIW_CONFIG_H
 #define BAYMAR_BAYES_MNIW_CONFIG_H
 
-#include <bvhar/triangular> // add another one for base in bvhar later
+#include <bvhar/base>
 #include "../shrinkage/shrinkage.h"
 
 namespace baymar {
@@ -50,6 +50,13 @@ struct MatMniwRecords {
 		row_sigma_record(num_iter + 1, num_row * (num_row + 1) / 2),
 		col_coef_record(num_iter + 1, nrow_col_coef * num_col),
 		col_sigma_record(num_iter + 1, num_col * (num_col + 1) / 2) {}
+	
+	MatMniwRecords(
+		const Eigen::MatrixXd& row_coef_record, const Eigen::MatrixXd& row_sigma_record,
+		const Eigen::MatrixXd& col_coef_record, const Eigen::MatrixXd& col_sigma_record
+	)
+	: row_coef_record(row_coef_record), row_sigma_record(row_sigma_record),
+		col_coef_record(col_coef_record), col_sigma_record(col_sigma_record) {}
 	
 	void assignRecords(
 		int id,

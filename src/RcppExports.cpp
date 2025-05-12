@@ -39,6 +39,24 @@ BEGIN_RCPP
     return rcpp_result_gen;
 END_RCPP
 }
+// forecast_bmar_mniw
+Rcpp::List forecast_bmar_mniw(int num_chains, int lag, int step, Eigen::MatrixXd response_mat, int num_data, Rcpp::List fit_record, Eigen::VectorXi seed_chain, int nthreads);
+RcppExport SEXP _baymar_forecast_bmar_mniw(SEXP num_chainsSEXP, SEXP lagSEXP, SEXP stepSEXP, SEXP response_matSEXP, SEXP num_dataSEXP, SEXP fit_recordSEXP, SEXP seed_chainSEXP, SEXP nthreadsSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< int >::type num_chains(num_chainsSEXP);
+    Rcpp::traits::input_parameter< int >::type lag(lagSEXP);
+    Rcpp::traits::input_parameter< int >::type step(stepSEXP);
+    Rcpp::traits::input_parameter< Eigen::MatrixXd >::type response_mat(response_matSEXP);
+    Rcpp::traits::input_parameter< int >::type num_data(num_dataSEXP);
+    Rcpp::traits::input_parameter< Rcpp::List >::type fit_record(fit_recordSEXP);
+    Rcpp::traits::input_parameter< Eigen::VectorXi >::type seed_chain(seed_chainSEXP);
+    Rcpp::traits::input_parameter< int >::type nthreads(nthreadsSEXP);
+    rcpp_result_gen = Rcpp::wrap(forecast_bmar_mniw(num_chains, lag, step, response_mat, num_data, fit_record, seed_chain, nthreads));
+    return rcpp_result_gen;
+END_RCPP
+}
 // sim_mar_export
 std::vector<Eigen::MatrixXd> sim_mar_export(int num_sim, int num_burn, Eigen::SparseMatrix<double> init, Eigen::MatrixXd row_coef, Eigen::MatrixXd col_coef, Eigen::MatrixXd row_sig, Eigen::MatrixXd col_sig);
 RcppExport SEXP _baymar_sim_mar_export(SEXP num_simSEXP, SEXP num_burnSEXP, SEXP initSEXP, SEXP row_coefSEXP, SEXP col_coefSEXP, SEXP row_sigSEXP, SEXP col_sigSEXP) {
@@ -59,6 +77,7 @@ END_RCPP
 
 static const R_CallMethodDef CallEntries[] = {
     {"_baymar_estimate_bmar_mniw", (DL_FUNC) &_baymar_estimate_bmar_mniw, 17},
+    {"_baymar_forecast_bmar_mniw", (DL_FUNC) &_baymar_forecast_bmar_mniw, 8},
     {"_baymar_sim_mar_export", (DL_FUNC) &_baymar_sim_mar_export, 7},
     {NULL, NULL, 0}
 };

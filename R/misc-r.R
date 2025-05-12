@@ -204,3 +204,20 @@ split_matrix_chain <- function(x, chain = 1, varname = "A", lag = 1, num_col, is
   }
   res
 }
+
+#' @noRd 
+get_bmar_records <- function(object, split_chain = FALSE) {
+  num_chains <- 1
+  if (split_chain) {
+    num_chains <- object$chain
+  }
+  lapply(
+    object$param_names,
+    function(x) {
+      subset_draws(object$param, variable = x) |>
+        as_draws_matrix() |>
+        split.data.frame(gl(num_chains, nrow(object$param) / num_chains))
+    }
+  ) |>
+    setNames(paste(object$param_names, "record", sep = "_"))
+}

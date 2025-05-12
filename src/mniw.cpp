@@ -18,3 +18,11 @@ Rcpp::List estimate_bmar_mniw(int num_chains, int num_iter, int num_burn, int th
 	);
 	return mcmc_run->returnRecords();
 }
+
+//' @noRd
+// [[Rcpp::export]]
+Rcpp::List forecast_bmar_mniw(int num_chains, int lag, int step, Eigen::MatrixXd response_mat, int num_data,
+													 	 	Rcpp::List fit_record, Eigen::VectorXi seed_chain, int nthreads) {
+	auto forecaster = std::make_unique<baymar::MatMniwForecastRun>(num_chains, lag, step, response_mat, num_data, fit_record, seed_chain, nthreads);
+	return Rcpp::wrap(forecaster->returnForecast());
+}

@@ -2,5 +2,6 @@
 #define BAYMAR_MNIW_H
 
 #include "src/bayes/mniw/mniw.h"
+#include "src/bayes/mniw/forecaster.h"
 
 #endif // BAYMAR_MNIW_H
