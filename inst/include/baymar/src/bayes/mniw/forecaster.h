@@ -96,6 +96,27 @@ protected:
 	void updateLpl(int h, const Eigen::MatrixXd& valid_vec) override {}
 };
 
+inline std::vector<std::unique_ptr<MatMniwForecaster>> initialize_matmniwforecaster(
+	int num_chains, int lag, int step, const Eigen::MatrixXd& y, int num_data,
+	LIST& fit_record, Eigen::Ref<const Eigen::VectorXi> seed_chain, int nthreads
+) {
+	PY_LIST row_coef_record = fit_record["A_record"];
+	PY_LIST row_sigma_record = fit_record["SigmaR_record"];
+	PY_LIST col_coef_record = fit_record["B_record"];
+	PY_LIST col_sigma_record = fit_record["SigmaC_record"];
+	std::vector<std::unique_ptr<MatMniwForecaster>> forecaster(num_chains);
+	for (int i = 0; i < num_chains; ++i) {
+		MatMniwRecords mat_record(
+			CAST<Eigen::MatrixXd>(row_coef_record[i]),
+			CAST<Eigen::MatrixXd>(row_sigma_record[i]),
+			CAST<Eigen::MatrixXd>(col_coef_record[i]),
+			CAST<Eigen::MatrixXd>(col_sigma_record[i])
+		);
+		forecaster[i] = std::make_unique<MatMniwForecaster>(mat_record, step, y, num_data, lag, static_cast<unsigned int>(seed_chain[i]));
+	}
+	return forecaster;
+}
+
 class MatMniwForecastRun : public bvhar::McmcForecastRun<Eigen::MatrixXd, Eigen::MatrixXd> {
 public:
 	MatMniwForecastRun(
@@ -103,18 +124,9 @@ public:
 		LIST& fit_record, const Eigen::VectorXi& seed_chain, int nthreads
 	)
 	: bvhar::McmcForecastRun<Eigen::MatrixXd, Eigen::MatrixXd>(num_chains, lag, step, nthreads) {
-		PY_LIST row_coef_record = fit_record["A_record"];
-		PY_LIST row_sigma_record = fit_record["SigmaR_record"];
-		PY_LIST col_coef_record = fit_record["B_record"];
-		PY_LIST col_sigma_record = fit_record["SigmaC_record"];
+		auto temp_forecaster = initialize_matmniwforecaster(num_chains, lag, step, y, num_data, fit_record, seed_chain, nthreads);
 		for (int i = 0; i < num_chains; ++i) {
-			MatMniwRecords mat_record(
-				CAST<Eigen::MatrixXd>(row_coef_record[i]),
-				CAST<Eigen::MatrixXd>(row_sigma_record[i]),
-				CAST<Eigen::MatrixXd>(col_coef_record[i]),
-				CAST<Eigen::MatrixXd>(col_sigma_record[i])
-			);
-			forecaster[i] = std::make_unique<MatMniwForecaster>(mat_record, step, y, num_data, lag, static_cast<unsigned int>(seed_chain[i]));
+			forecaster[i] = std::move(temp_forecaster[i]);
 		}
 	}
 	virtual ~MatMniwForecastRun() = default;
