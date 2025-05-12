@@ -4,12 +4,14 @@
 \alias{predict.marbayes}
 \title{Forecasting MAR}
 \usage{
-\method{predict}{marbayes}(object, n_ahead, num_thread = 1, med = FALSE, ...)
+\method{predict}{marbayes}(object, n_ahead, level = 0.05, num_thread = 1, med = FALSE, ...)
 }
 \arguments{
 \item{object}{Model object}
 
 \item{n_ahead}{step to forecast}
+
+\item{level}{Specify alpha of confidence interval level 100(1 - alpha) percentage. By default, .05.}
 
 \item{num_thread}{Number of threads}
 
