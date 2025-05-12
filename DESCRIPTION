@@ -17,7 +17,7 @@ Description: Tools to model and forecast matrix-valued time series
 License: GPL (>= 3)
 Imports: 
     Rcpp,
-    bvhar (>= 2.2.2.9004),
+    bvhar,
     lifecycle,
     Matrix,
     stats,
@@ -25,7 +25,7 @@ Imports:
     utils
 LinkingTo: 
     BH (>= 1.87.0-0),
-    bvhar (>= 2.2.2.9004),
+    bvhar (>= 2.2.2.9006),
     Rcpp (>= 0.10.0),
     RcppEigen (>= 0.3.4.0.0),
     RcppSpdlog,
