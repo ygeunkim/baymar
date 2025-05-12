@@ -183,6 +183,9 @@ mar_bayes <- function(y,
     row = row_sig,
     col = col_sig
   )
+  res$y <- y
+  res$chain <- num_chains
+  res$p <- p
   class(res) <- "marbayes"
   res
 }
