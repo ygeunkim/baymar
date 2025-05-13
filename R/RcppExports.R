@@ -12,6 +12,16 @@ forecast_bmar_mniw <- function(num_chains, lag, step, response_mat, num_data, fi
 }
 
 #' @noRd
+roll_bmar_mniw <- function(y, lag, num_data, num_chains, num_iter, num_burn, thin, fit_record, run_mcmc, param_coef_sig, coef_sig_init, row_prior, row_init, row_prior_type, col_prior, col_init, col_prior_type, step, y_test, seed_chain, seed_forecast, display_progress, nthreads) {
+    .Call(`_baymar_roll_bmar_mniw`, y, lag, num_data, num_chains, num_iter, num_burn, thin, fit_record, run_mcmc, param_coef_sig, coef_sig_init, row_prior, row_init, row_prior_type, col_prior, col_init, col_prior_type, step, y_test, seed_chain, seed_forecast, display_progress, nthreads)
+}
+
+#' @noRd
+expand_bmar_mniw <- function(y, lag, num_data, num_chains, num_iter, num_burn, thin, fit_record, run_mcmc, param_coef_sig, coef_sig_init, row_prior, row_init, row_prior_type, col_prior, col_init, col_prior_type, step, y_test, seed_chain, seed_forecast, display_progress, nthreads) {
+    .Call(`_baymar_expand_bmar_mniw`, y, lag, num_data, num_chains, num_iter, num_burn, thin, fit_record, run_mcmc, param_coef_sig, coef_sig_init, row_prior, row_init, row_prior_type, col_prior, col_init, col_prior_type, step, y_test, seed_chain, seed_forecast, display_progress, nthreads)
+}
+
+#' @noRd
 sim_mar_export <- function(num_sim, num_burn, init, row_coef, col_coef, row_sig, col_sig) {
     .Call(`_baymar_sim_mar_export`, num_sim, num_burn, init, row_coef, col_coef, row_sig, col_sig)
 }

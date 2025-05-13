@@ -205,6 +205,7 @@ split_matrix_chain <- function(x, chain = 1, varname = "A", lag = 1, num_col, is
   res
 }
 
+#' @importFrom stats setNames
 #' @noRd 
 get_bmar_records <- function(object, split_chain = FALSE) {
   num_chains <- 1
@@ -220,4 +221,26 @@ get_bmar_records <- function(object, split_chain = FALSE) {
     }
   ) |>
     setNames(paste(object$param_names, "record", sep = "_"))
+}
+
+#' @noRd
+process_mar_forecast_draws <- function(x, n_ahead, nrow_data, ncol_data, num_draw) {
+  do.call(cbind, x) |> # (n * h) x (k * num_draw)
+    split.data.frame(gl(n_ahead, nrow_data)) |>
+    lapply(
+      function(x) {
+        split.data.frame(t(x), gl(num_draw, ncol_data)) |>
+          lapply(t)
+      }
+    ) |>
+    lapply(simplify2array)
+}
+
+#' @noRd
+process_mar_ourforecast_draws <- function(x, n_ahead, ncol_data, num_draw) {
+  do.call(cbind, x) |>
+    t() |>
+    split.data.frame(gl(num_draw, ncol_data)) |>
+    lapply(t) |>
+    simplify2array()
 }
