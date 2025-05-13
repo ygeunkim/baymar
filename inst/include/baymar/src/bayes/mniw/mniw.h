@@ -64,6 +64,10 @@ public:
 		return res;
 	}
 
+	MatMniwRecords returnStructRecords(int num_burn, int thin) const {
+		return mniw_record->returnRecords(num_iter, num_burn, thin);
+	}
+
 protected:
 	std::vector<Eigen::SparseMatrix<double>> x;
 	std::vector<Eigen::MatrixXd> y;

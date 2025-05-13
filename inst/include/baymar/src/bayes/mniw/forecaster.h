@@ -8,6 +8,8 @@ namespace baymar {
 
 class MatMniwForecaster;
 class MatMniwForecastRun;
+template <bool isUpdate> class MatMniwOutForecastRun;
+template <bool isUpdate> class MatMniwRollForecastRun;
 
 class MatMniwForecaster : public bvhar::BayesForecaster<Eigen::MatrixXd, Eigen::MatrixXd> {
 public:
@@ -130,6 +132,191 @@ public:
 		}
 	}
 	virtual ~MatMniwForecastRun() = default;
+};
+
+template <bool isUpdate = true>
+class MatMniwOutForecastRun : public bvhar::McmcOutForecastRun<Eigen::MatrixXd, Eigen::MatrixXd, isUpdate> {
+public:
+	MatMniwOutForecastRun(
+		const Eigen::MatrixXd& y, int num_data, int lag,
+		int num_chains, int num_iter, int num_burn, int thin, LIST& fit_record,
+		LIST& param_coef_sig, LIST_OF_LIST& coef_sig_init,
+		LIST& row_prior, LIST_OF_LIST& row_init, const int row_prior_type,
+		LIST& col_prior, LIST_OF_LIST& col_init, const int col_prior_type,
+		int step, const Eigen::MatrixXd& y_test,
+		const Eigen::MatrixXi& seed_chain, const Eigen::VectorXi& seed_forecast, bool display_progress, int nthreads
+	)
+	: bvhar::McmcOutForecastRun<Eigen::MatrixXd, Eigen::MatrixXd, isUpdate>(
+			num_data, lag, num_chains, num_iter, num_burn, thin, step, y_test, false,
+			seed_chain, seed_forecast, display_progress, nthreads
+		),
+		num_row(y.rows() / num_data), num_col(y.cols()), nrow_row_coef(num_row * lag), nrow_col_coef(num_col * lag) {}
+	virtual ~MatMniwOutForecastRun() = default;
+
+protected:
+	int num_row, num_col, nrow_row_coef, nrow_col_coef;
+	using bvhar::McmcOutForecastRun<Eigen::MatrixXd, Eigen::MatrixXd, isUpdate>::num_window;
+	using bvhar::McmcOutForecastRun<Eigen::MatrixXd, Eigen::MatrixXd, isUpdate>::num_test;
+	using bvhar::McmcOutForecastRun<Eigen::MatrixXd, Eigen::MatrixXd, isUpdate>::num_horizon;
+	using bvhar::McmcOutForecastRun<Eigen::MatrixXd, Eigen::MatrixXd, isUpdate>::step;
+	using bvhar::McmcOutForecastRun<Eigen::MatrixXd, Eigen::MatrixXd, isUpdate>::lag;
+	using bvhar::McmcOutForecastRun<Eigen::MatrixXd, Eigen::MatrixXd, isUpdate>::num_chains;
+	using bvhar::McmcOutForecastRun<Eigen::MatrixXd, Eigen::MatrixXd, isUpdate>::num_iter;
+	using bvhar::McmcOutForecastRun<Eigen::MatrixXd, Eigen::MatrixXd, isUpdate>::num_burn;
+	using bvhar::McmcOutForecastRun<Eigen::MatrixXd, Eigen::MatrixXd, isUpdate>::thin;
+	using bvhar::McmcOutForecastRun<Eigen::MatrixXd, Eigen::MatrixXd, isUpdate>::nthreads;
+	// using bvhar::McmcOutForecastRun<Eigen::MatrixXd, Eigen::MatrixXd, isUpdate>::get_lpl;
+	using bvhar::McmcOutForecastRun<Eigen::MatrixXd, Eigen::MatrixXd, isUpdate>::display_progress;
+	using bvhar::McmcOutForecastRun<Eigen::MatrixXd, Eigen::MatrixXd, isUpdate>::seed_forecast;
+	using bvhar::McmcOutForecastRun<Eigen::MatrixXd, Eigen::MatrixXd, isUpdate>::roll_mat;
+	// using bvhar::McmcOutForecastRun<Eigen::MatrixXd, Eigen::MatrixXd, isUpdate>::roll_y0;
+	using bvhar::McmcOutForecastRun<Eigen::MatrixXd, Eigen::MatrixXd, isUpdate>::y_test;
+	using bvhar::McmcOutForecastRun<Eigen::MatrixXd, Eigen::MatrixXd, isUpdate>::model;
+	using bvhar::McmcOutForecastRun<Eigen::MatrixXd, Eigen::MatrixXd, isUpdate>::forecaster;
+	using bvhar::McmcOutForecastRun<Eigen::MatrixXd, Eigen::MatrixXd, isUpdate>::out_forecast;
+	using bvhar::McmcOutForecastRun<Eigen::MatrixXd, Eigen::MatrixXd, isUpdate>::lpl_record;
+
+	Eigen::MatrixXd getValid() override {
+		return y_test.bottomRows(num_row);
+	}
+
+	void initialize(
+		const Eigen::MatrixXd& y, LIST& fit_record,
+		LIST& param_coef_sig, LIST_OF_LIST& coef_sig_init,
+		LIST& row_prior, LIST_OF_LIST& row_init, const int row_prior_type,
+		LIST& col_prior, LIST_OF_LIST& col_init, const int col_prior_type,
+		const Eigen::MatrixXi& seed_chain
+	) {
+		initData(y);
+		initForecaster(fit_record);
+		using is_mcmc = std::integral_constant<bool, isUpdate>;
+		if (is_mcmc::value) {
+			initMcmc(
+				param_coef_sig, coef_sig_init, row_prior, row_init, row_prior_type, col_prior, col_init, col_prior_type,
+				seed_chain
+			);
+		}
+	}
+
+	virtual void initData(const Eigen::MatrixXd& y) = 0;
+
+	// virtual std::vector<Eigen::SparseMatrix<double>> buildDesign(int window) = 0;
+
+	virtual void initMcmc(
+		LIST& param_coef_sig, LIST_OF_LIST& coef_sig_init,
+		LIST& row_prior, LIST_OF_LIST& row_init, const int row_prior_type,
+		LIST& col_prior, LIST_OF_LIST& col_init, const int col_prior_type,
+		const Eigen::MatrixXi& seed_chain
+	) = 0;
+
+	virtual void initForecaster(LIST& fit_record) = 0;
+};
+
+template <bool isUpdate = true>
+class MatMniwRollForecastRun : public MatMniwOutForecastRun<isUpdate> {
+public:
+	MatMniwRollForecastRun(
+		const Eigen::MatrixXd& y, int num_data, int lag,
+		int num_chains, int num_iter, int num_burn, int thin, LIST& fit_record,
+		LIST& param_coef_sig, LIST_OF_LIST& coef_sig_init,
+		LIST& row_prior, LIST_OF_LIST& row_init, const int row_prior_type,
+		LIST& col_prior, LIST_OF_LIST& col_init, const int col_prior_type,
+		int step, const Eigen::MatrixXd& y_test,
+		const Eigen::MatrixXi& seed_chain, const Eigen::VectorXi& seed_forecast, bool display_progress, int nthreads
+	)
+	: MatMniwOutForecastRun<isUpdate>(
+			y, num_data, lag,
+			param_coef_sig, coef_sig_init, row_prior, row_init, row_prior_type, col_prior, col_init, col_prior_type,
+			step, y_test, seed_chain, seed_forecast, display_progress, nthreads
+		) {
+		initialize(
+			y, fit_record,
+			param_coef_sig, coef_sig_init,
+			row_prior, row_init, row_prior_type, col_prior, col_init, col_prior_type,
+			seed_chain
+		);
+	}
+	virtual ~MatMniwRollForecastRun() = default;
+
+protected:
+	using MatMniwOutForecastRun<isUpdate>::num_window;
+	using MatMniwOutForecastRun<isUpdate>::num_row;
+	using MatMniwOutForecastRun<isUpdate>::num_col;
+	using MatMniwOutForecastRun<isUpdate>::num_test;
+	using MatMniwOutForecastRun<isUpdate>::num_horizon;
+	using MatMniwOutForecastRun<isUpdate>::step;
+	using MatMniwOutForecastRun<isUpdate>::lag;
+	using MatMniwOutForecastRun<isUpdate>::num_chains;
+	using MatMniwOutForecastRun<isUpdate>::num_iter;
+	using MatMniwOutForecastRun<isUpdate>::num_burn;
+	using MatMniwOutForecastRun<isUpdate>::thin;
+	using MatMniwOutForecastRun<isUpdate>::nthreads;
+	using MatMniwOutForecastRun<isUpdate>::seed_forecast;
+	using MatMniwOutForecastRun<isUpdate>::roll_mat;
+	// using MatMniwOutForecastRun<isUpdate>::roll_y0;
+	using MatMniwOutForecastRun<isUpdate>::y_test;
+	using MatMniwOutForecastRun<isUpdate>::model;
+	using MatMniwOutForecastRun<isUpdate>::forecaster;
+	// using MatMniwOutForecastRun<isUpdate>::buildDesign;
+	using MatMniwOutForecastRun<isUpdate>::initialize;
+
+	void initData(const Eigen::MatrixXd y) override {
+		Eigen::MatrixXd tot_mat((num_window + num_test) * num_row, num_col);
+		tot_mat << y,
+							 y_test;
+		for (int i = 0; i < num_horizon; ++i) {
+			roll_mat[i] = tot_mat.middleRows(i * num_row, num_window);
+			// roll_y0[i] = roll_mat[i].bottomRows(num_window - num_row * lag);
+		}
+	}
+
+	// std::vector<Eigen::SparseMatrix<double>> buildDesign(int window) override {
+	// 	return build_mar_design(roll_mat[window], num_window, lag);
+	// }
+
+	void initMcmc(
+		LIST& param_coef_sig, LIST_OF_LIST& coef_sig_init,
+		LIST& row_prior, LIST_OF_LIST& row_init, const int row_prior_type,
+		LIST& col_prior, LIST_OF_LIST& col_init, const int col_prior_type,
+		const Eigen::MatrixXi& seed_chain
+	) override {
+		for (int window = 0; window < num_horizon; ++window) {
+			std::vector<Eigen::MatrixXd> response = marmatrix_to_vector(roll_mat[window], num_row, lag);
+			std::vector<Eigen::SparseMatrix<double>> design = build_mar_design(roll_mat[window], num_window, lag);
+			auto temp_mcmc = initialize_matmcmc(
+				num_chains, num_iter - num_burn, design, response,
+				param_coef_sig, coef_sig_init, row_prior, row_init, row_prior_type,
+				col_prior, col_init, col_prior_type,
+				seed_chain.row(window)
+			);
+			for (int i = 0; i < num_chains; ++i) {
+				model[window][i] = std::move(temp_mcmc[i]);
+			}
+		}
+	}
+
+	void initForecaster(LIST& fit_record) override {
+		using is_mcmc = std::integral_constant<bool, isUpdate>;
+		if (is_mcmc::value) {
+			auto temp_forecaster = initialize_matmniwforecaster(num_chains, lag, step, roll_mat[0], num_window, fit_record, seed_forecast, nthreads);
+			for (int i = 0; i < num_chains; ++i) {
+				forecaster[0][i] = std::move(temp_forecaster[i]);
+			}
+		} else {
+			for (int window = 0; window < num_horizon; ++window) {
+				auto temp_forecaster = initialize_matmniwforecaster(num_chains, lag, step, roll_mat[window], num_window, fit_record, seed_forecast, nthreads);
+				for (int i = 0; i < num_chains; ++i) {
+					forecaster[window][i] = std::move(temp_forecaster[i]);
+				}
+			}
+		}
+	}
+
+	void updateForecaster(int window, int chain) override {
+		auto* mcmc_mniw = dynamic_cast<McmcMatMniw*>(model[window][chain].get());
+		MatMniwRecords mniw_record = mcmc_mniw->returnStructRecords(0, thin);
+		forecaster[window][chain] = std::make_unique<MatMniwForecaster>(mniw_record, step, roll_mat[window], num_window, lag, static_cast<unsigned int>(seed_forecast[chain]));
+	}
 };
 
 } // namespace baymar

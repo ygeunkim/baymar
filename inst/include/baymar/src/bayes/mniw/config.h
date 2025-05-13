@@ -91,6 +91,15 @@ struct MatMniwRecords {
 			NAMED("SigmaC_record") = col_sigma_record
 		);
 	}
+
+	MatMniwRecords returnRecords(int num_iter, int num_burn, int thin) {
+		return MatMniwRecords(
+			bvhar::thin_record(row_coef_record, num_iter, num_burn, thin).derived(),
+			bvhar::thin_record(row_sigma_record, num_iter, num_burn, thin).derived(),
+			bvhar::thin_record(col_coef_record, num_iter, num_burn, thin).derived(),
+			bvhar::thin_record(col_sigma_record, num_iter, num_burn, thin).derived()
+		);
+	}
 };
 
 } // namespace baymar
