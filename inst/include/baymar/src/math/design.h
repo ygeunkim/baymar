@@ -16,29 +16,32 @@ inline Eigen::SparseMatrix<double> build_blk_design(const std::vector<Eigen::Mat
 	return dense_x.sparseView();
 }
 
-inline std::vector<Eigen::SparseMatrix<double>> build_mar_design(const std::vector<Eigen::MatrixXd>& y, int lag) {
-	int num_row = y[0].rows();
-	int num_col = y[0].cols();
-	int num_design = y.size();
-	std::vector<Eigen::SparseMatrix<double>> x(num_design);
-	for (int i = 0; i < num_design; ++i) {
-		Eigen::MatrixXd dense_x(num_row * lag, num_col * lag);
-		for (int j = i; j < i + lag; ++j) {
-			dense_x.block(j * num_row, j * num_col, num_row, num_col) = y[j];
-		}
-		x[i] = dense_x.sparseView();
-	}
-	return x;
-}
+// inline std::vector<Eigen::SparseMatrix<double>> build_mar_design(const std::vector<Eigen::MatrixXd>& y, int lag) {
+// 	int num_row = y[0].rows();
+// 	int num_col = y[0].cols();
+// 	int num_design = y.size();
+// 	std::vector<Eigen::SparseMatrix<double>> x(num_design);
+// 	for (int i = 0; i < num_design; ++i) {
+// 		Eigen::MatrixXd dense_x(num_row * lag, num_col * lag);
+// 		for (int j = i; j < i + lag; ++j) {
+// 			dense_x.block(j * num_row, j * num_col, num_row, num_col) = y[j];
+// 		}
+// 		x[i] = dense_x.sparseView();
+// 	}
+// 	return x;
+// }
 
-inline std::vector<Eigen::SparseMatrix<double>> build_mar_design(const Eigen::MatrixXd& y, int num_design, int lag) {
-	int num_row = y.rows() / num_design;
-	int num_col = y.cols() / num_design;
+inline std::vector<Eigen::SparseMatrix<double>> build_mar_design(const Eigen::MatrixXd& y, int num_design, int num_row, int num_col, int lag) {
+	// int num_row = y.rows() / num_design;
+	// int num_col = y.cols() / num_design;
 	std::vector<Eigen::SparseMatrix<double>> x(num_design);
 	for (int i = 0; i < num_design; ++i) {
 		Eigen::MatrixXd dense_x(num_row * lag, num_col * lag);
-		for (int j = i; j < i + lag; ++j) {
-			dense_x.block(j * num_row, j * num_col, num_row, num_col) = y.middleRows(j * num_row, num_row);
+		// for (int j = i; j < i + lag; ++j) {
+		// 	dense_x.block(j * num_row, j * num_col, num_row, num_col) = y.middleRows(j * num_row, num_row);
+		// }
+		for (int j = 0; j < lag; ++j) {
+			dense_x.block(j * num_row, j * num_col, num_row, num_col) = y.middleRows((i + j) * num_row, num_row);
 		}
 		x[i] = dense_x.sparseView();
 	}
@@ -49,8 +52,8 @@ inline std::vector<Eigen::SparseMatrix<double>> build_mar_design(const Eigen::Ma
 inline std::vector<Eigen::MatrixXd> marmatrix_to_vector(const Eigen::MatrixXd& y, int num_row, int lag) {
 	int num_design = y.rows() / num_row - lag;
 	std::vector<Eigen::MatrixXd> response(num_design);
-	for (int i = 0; i < lag; ++i) {
-		response[i] = y.middleRows(num_row * (lag + i), num_row * lag);
+	for (int i = 0; i < num_design; ++i) {
+		response[i] = y.middleRows(num_row * (lag + i), num_row);
 	}
 	return response;
 }

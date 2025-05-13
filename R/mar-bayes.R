@@ -183,8 +183,20 @@ mar_bayes <- function(y,
     row = row_sig,
     col = col_sig
   )
+  res$spec <- list(
+    row = row_spec,
+    col = col_spec
+  )
+  res$init <- list(
+    param = param_init,
+    row = row_init,
+    col = col_init
+  )
   res$y <- y
   res$chain <- num_chains
+  res$iter <- num_iter
+  res$burn <- num_burn
+  res$thin <- thinning
   res$p <- p
   class(res) <- "marbayes"
   res
