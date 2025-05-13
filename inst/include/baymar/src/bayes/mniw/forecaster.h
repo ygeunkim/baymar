@@ -10,6 +10,7 @@ class MatMniwForecaster;
 class MatMniwForecastRun;
 template <bool isUpdate> class MatMniwOutForecastRun;
 template <bool isUpdate> class MatMniwRollForecastRun;
+template <bool isUpdate> class MatMniwExpandForecastRun;
 
 class MatMniwForecaster : public bvhar::BayesForecaster<Eigen::MatrixXd, Eigen::MatrixXd> {
 public:
@@ -263,6 +264,12 @@ protected:
 	// 		}
 	// 	}
 	// }
+
+	void updateForecaster(int window, int chain) override {
+		auto* mcmc_mniw = dynamic_cast<McmcMatMniw*>(model[window][chain].get());
+		MatMniwRecords mniw_record = mcmc_mniw->returnStructRecords(0, thin);
+		forecaster[window][chain] = std::make_unique<MatMniwForecaster>(mniw_record, step, roll_mat[window], num_window, lag, static_cast<unsigned int>(seed_forecast[chain]));
+	}
 };
 
 template <bool isUpdate = true>
@@ -297,20 +304,8 @@ protected:
 	using MatMniwOutForecastRun<isUpdate>::num_col;
 	using MatMniwOutForecastRun<isUpdate>::num_test;
 	using MatMniwOutForecastRun<isUpdate>::num_horizon;
-	using MatMniwOutForecastRun<isUpdate>::step;
-	using MatMniwOutForecastRun<isUpdate>::lag;
-	using MatMniwOutForecastRun<isUpdate>::num_chains;
-	using MatMniwOutForecastRun<isUpdate>::num_iter;
-	using MatMniwOutForecastRun<isUpdate>::num_burn;
-	using MatMniwOutForecastRun<isUpdate>::thin;
-	// using MatMniwOutForecastRun<isUpdate>::nthreads;
-	using MatMniwOutForecastRun<isUpdate>::seed_forecast;
 	using MatMniwOutForecastRun<isUpdate>::roll_mat;
-	// using MatMniwOutForecastRun<isUpdate>::roll_y0;
 	using MatMniwOutForecastRun<isUpdate>::y_test;
-	using MatMniwOutForecastRun<isUpdate>::model;
-	using MatMniwOutForecastRun<isUpdate>::forecaster;
-	// using MatMniwOutForecastRun<isUpdate>::buildDesign;
 	using MatMniwOutForecastRun<isUpdate>::initialize;
 
 	void initData(const Eigen::MatrixXd y) override {
@@ -326,11 +321,51 @@ protected:
 	// std::vector<Eigen::SparseMatrix<double>> buildDesign(int window) override {
 	// 	return build_mar_design(roll_mat[window], num_window, lag);
 	// }
+};
 
-	void updateForecaster(int window, int chain) override {
-		auto* mcmc_mniw = dynamic_cast<McmcMatMniw*>(model[window][chain].get());
-		MatMniwRecords mniw_record = mcmc_mniw->returnStructRecords(0, thin);
-		forecaster[window][chain] = std::make_unique<MatMniwForecaster>(mniw_record, step, roll_mat[window], num_window, lag, static_cast<unsigned int>(seed_forecast[chain]));
+template <bool isUpdate = true>
+class MatMniwExpandForecastRun : public MatMniwOutForecastRun<isUpdate> {
+public:
+	MatMniwExpandForecastRun(
+		const Eigen::MatrixXd& y, int num_data, int lag,
+		int num_chains, int num_iter, int num_burn, int thin, LIST& fit_record,
+		LIST& param_coef_sig, LIST_OF_LIST& coef_sig_init,
+		LIST& row_prior, LIST_OF_LIST& row_init, const int row_prior_type,
+		LIST& col_prior, LIST_OF_LIST& col_init, const int col_prior_type,
+		int step, const Eigen::MatrixXd& y_test,
+		const Eigen::MatrixXi& seed_chain, const Eigen::VectorXi& seed_forecast, bool display_progress, int nthreads
+	)
+	: MatMniwOutForecastRun<isUpdate>(
+			y, num_data, lag,
+			param_coef_sig, coef_sig_init, row_prior, row_init, row_prior_type, col_prior, col_init, col_prior_type,
+			step, y_test, seed_chain, seed_forecast, display_progress, nthreads
+		) {
+		initialize(
+			y, fit_record,
+			param_coef_sig, coef_sig_init,
+			row_prior, row_init, row_prior_type, col_prior, col_init, col_prior_type,
+			seed_chain
+		);
+	}
+	virtual ~MatMniwExpandForecastRun() = default;
+
+protected:
+	using MatMniwOutForecastRun<isUpdate>::num_window;
+	using MatMniwOutForecastRun<isUpdate>::num_row;
+	using MatMniwOutForecastRun<isUpdate>::num_col;
+	using MatMniwOutForecastRun<isUpdate>::num_test;
+	using MatMniwOutForecastRun<isUpdate>::num_horizon;
+	using MatMniwOutForecastRun<isUpdate>::roll_mat;
+	using MatMniwOutForecastRun<isUpdate>::y_test;
+	using MatMniwOutForecastRun<isUpdate>::initialize;
+
+	void initData(const Eigen::MatrixXd y) override {
+		Eigen::MatrixXd tot_mat((num_window + num_test) * num_row, num_col);
+		tot_mat << y,
+							 y_test;
+		for (int i = 0; i < num_horizon; ++i) {
+			roll_mat[i] = tot_mat.topRows(i * num_row + num_window);
+		}
 	}
 };
 
