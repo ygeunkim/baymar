@@ -188,13 +188,37 @@ protected:
 		const Eigen::MatrixXi& seed_chain
 	) {
 		initData(y);
-		initForecaster(fit_record);
+		// initForecaster(fit_record);
 		using is_mcmc = std::integral_constant<bool, isUpdate>;
 		if (is_mcmc::value) {
-			initMcmc(
-				param_coef_sig, coef_sig_init, row_prior, row_init, row_prior_type, col_prior, col_init, col_prior_type,
-				seed_chain
-			);
+			// initMcmc(
+			// 	param_coef_sig, coef_sig_init, row_prior, row_init, row_prior_type, col_prior, col_init, col_prior_type,
+			// 	seed_chain
+			// );
+			for (int window = 0; window < num_horizon; ++window) {
+				std::vector<Eigen::MatrixXd> response = marmatrix_to_vector(roll_mat[window], num_row, lag);
+				std::vector<Eigen::SparseMatrix<double>> design = build_mar_design(roll_mat[window], num_window, lag);
+				auto temp_mcmc = initialize_matmcmc(
+					num_chains, num_iter - num_burn, design, response,
+					param_coef_sig, coef_sig_init, row_prior, row_init, row_prior_type,
+					col_prior, col_init, col_prior_type,
+					seed_chain.row(window)
+				);
+				for (int i = 0; i < num_chains; ++i) {
+					model[window][i] = std::move(temp_mcmc[i]);
+				}
+			}
+			auto temp_forecaster = initialize_matmniwforecaster(num_chains, lag, step, roll_mat[0], num_window, fit_record, seed_forecast, nthreads);
+			for (int i = 0; i < num_chains; ++i) {
+				forecaster[0][i] = std::move(temp_forecaster[i]);
+			}
+		} else {
+			for (int window = 0; window < num_horizon; ++window) {
+				auto temp_forecaster = initialize_matmniwforecaster(num_chains, lag, step, roll_mat[window], num_window, fit_record, seed_forecast, nthreads);
+				for (int i = 0; i < num_chains; ++i) {
+					forecaster[window][i] = std::move(temp_forecaster[i]);
+				}
+			}
 		}
 	}
 
@@ -202,14 +226,43 @@ protected:
 
 	// virtual std::vector<Eigen::SparseMatrix<double>> buildDesign(int window) = 0;
 
-	virtual void initMcmc(
-		LIST& param_coef_sig, LIST_OF_LIST& coef_sig_init,
-		LIST& row_prior, LIST_OF_LIST& row_init, const int row_prior_type,
-		LIST& col_prior, LIST_OF_LIST& col_init, const int col_prior_type,
-		const Eigen::MatrixXi& seed_chain
-	) = 0;
+	// void initMcmc(
+	// 	LIST& param_coef_sig, LIST_OF_LIST& coef_sig_init,
+	// 	LIST& row_prior, LIST_OF_LIST& row_init, const int row_prior_type,
+	// 	LIST& col_prior, LIST_OF_LIST& col_init, const int col_prior_type,
+	// 	const Eigen::MatrixXi& seed_chain
+	// ) {
+	// 	for (int window = 0; window < num_horizon; ++window) {
+	// 		std::vector<Eigen::MatrixXd> response = marmatrix_to_vector(roll_mat[window], num_row, lag);
+	// 		std::vector<Eigen::SparseMatrix<double>> design = build_mar_design(roll_mat[window], num_window, lag);
+	// 		auto temp_mcmc = initialize_matmcmc(
+	// 			num_chains, num_iter - num_burn, design, response,
+	// 			param_coef_sig, coef_sig_init, row_prior, row_init, row_prior_type,
+	// 			col_prior, col_init, col_prior_type,
+	// 			seed_chain.row(window)
+	// 		);
+	// 		for (int i = 0; i < num_chains; ++i) {
+	// 			model[window][i] = std::move(temp_mcmc[i]);
+	// 		}
+	// 	}
+	// }
 
-	virtual void initForecaster(LIST& fit_record) = 0;
+	// void initForecaster(LIST& fit_record) {
+	// 	using is_mcmc = std::integral_constant<bool, isUpdate>;
+	// 	if (is_mcmc::value) {
+	// 		auto temp_forecaster = initialize_matmniwforecaster(num_chains, lag, step, roll_mat[0], num_window, fit_record, seed_forecast, nthreads);
+	// 		for (int i = 0; i < num_chains; ++i) {
+	// 			forecaster[0][i] = std::move(temp_forecaster[i]);
+	// 		}
+	// 	} else {
+	// 		for (int window = 0; window < num_horizon; ++window) {
+	// 			auto temp_forecaster = initialize_matmniwforecaster(num_chains, lag, step, roll_mat[window], num_window, fit_record, seed_forecast, nthreads);
+	// 			for (int i = 0; i < num_chains; ++i) {
+	// 				forecaster[window][i] = std::move(temp_forecaster[i]);
+	// 			}
+	// 		}
+	// 	}
+	// }
 };
 
 template <bool isUpdate = true>
@@ -250,7 +303,7 @@ protected:
 	using MatMniwOutForecastRun<isUpdate>::num_iter;
 	using MatMniwOutForecastRun<isUpdate>::num_burn;
 	using MatMniwOutForecastRun<isUpdate>::thin;
-	using MatMniwOutForecastRun<isUpdate>::nthreads;
+	// using MatMniwOutForecastRun<isUpdate>::nthreads;
 	using MatMniwOutForecastRun<isUpdate>::seed_forecast;
 	using MatMniwOutForecastRun<isUpdate>::roll_mat;
 	// using MatMniwOutForecastRun<isUpdate>::roll_y0;
@@ -273,44 +326,6 @@ protected:
 	// std::vector<Eigen::SparseMatrix<double>> buildDesign(int window) override {
 	// 	return build_mar_design(roll_mat[window], num_window, lag);
 	// }
-
-	void initMcmc(
-		LIST& param_coef_sig, LIST_OF_LIST& coef_sig_init,
-		LIST& row_prior, LIST_OF_LIST& row_init, const int row_prior_type,
-		LIST& col_prior, LIST_OF_LIST& col_init, const int col_prior_type,
-		const Eigen::MatrixXi& seed_chain
-	) override {
-		for (int window = 0; window < num_horizon; ++window) {
-			std::vector<Eigen::MatrixXd> response = marmatrix_to_vector(roll_mat[window], num_row, lag);
-			std::vector<Eigen::SparseMatrix<double>> design = build_mar_design(roll_mat[window], num_window, lag);
-			auto temp_mcmc = initialize_matmcmc(
-				num_chains, num_iter - num_burn, design, response,
-				param_coef_sig, coef_sig_init, row_prior, row_init, row_prior_type,
-				col_prior, col_init, col_prior_type,
-				seed_chain.row(window)
-			);
-			for (int i = 0; i < num_chains; ++i) {
-				model[window][i] = std::move(temp_mcmc[i]);
-			}
-		}
-	}
-
-	void initForecaster(LIST& fit_record) override {
-		using is_mcmc = std::integral_constant<bool, isUpdate>;
-		if (is_mcmc::value) {
-			auto temp_forecaster = initialize_matmniwforecaster(num_chains, lag, step, roll_mat[0], num_window, fit_record, seed_forecast, nthreads);
-			for (int i = 0; i < num_chains; ++i) {
-				forecaster[0][i] = std::move(temp_forecaster[i]);
-			}
-		} else {
-			for (int window = 0; window < num_horizon; ++window) {
-				auto temp_forecaster = initialize_matmniwforecaster(num_chains, lag, step, roll_mat[window], num_window, fit_record, seed_forecast, nthreads);
-				for (int i = 0; i < num_chains; ++i) {
-					forecaster[window][i] = std::move(temp_forecaster[i]);
-				}
-			}
-		}
-	}
 
 	void updateForecaster(int window, int chain) override {
 		auto* mcmc_mniw = dynamic_cast<McmcMatMniw*>(model[window][chain].get());
