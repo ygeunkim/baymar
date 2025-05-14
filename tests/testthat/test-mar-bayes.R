@@ -1,5 +1,6 @@
 help_bmar_fit <- function(row_spec, col_spec) {
   toy_data <- chanqi2025[1:3, 1:5, 1:10]
+  set.seed(1)
   mar_bayes(
     toy_data,
     p = 2,
@@ -14,16 +15,13 @@ help_bmar_fit <- function(row_spec, col_spec) {
 }
 
 test_that("Minnesota Prior", {
-  set.seed(1)
   fit_test <- help_bmar_fit(set_mar_minnesota(kappa = .1), set_mar_minnesota(kappa = .1))
 })
 
 test_that("Horseshoe Prior", {
-  set.seed(1)
   fit_test <- help_bmar_fit(set_mar_horseshoe(), set_mar_horseshoe())
 })
 
 test_that("Hierarchical Minnesota Prior", {
-  set.seed(1)
   fit_test <- help_bmar_fit(set_mar_minnesota(), set_mar_minnesota())
 })
