@@ -47,7 +47,10 @@ private:
 
 class MatMniwForecaster : public bvhar::BayesForecaster<Eigen::MatrixXd, Eigen::MatrixXd> {
 public:
-	MatMniwForecaster(const MatMniwRecords& records, int step, const Eigen::MatrixXd& y, int num_data, int lag, unsigned int seed)
+	MatMniwForecaster(
+		const MatMniwRecords& records, int step, const Eigen::MatrixXd& y, int num_data, int lag, unsigned int seed,
+		Optional<std::unique_ptr<MatMniwExogenForecaster>> exogen_forecaster = NULLOPT
+	)
 	: bvhar::BayesForecaster<Eigen::MatrixXd, Eigen::MatrixXd>(step, y, lag, records.row_coef_record.rows(), seed),
 		mat_record(std::make_unique<MatMniwRecords>(records)),
 		num_row(y.rows() / num_data), num_col(y.cols()), nrow_row_coef(num_row * lag), nrow_col_coef(num_col * lag),
@@ -57,6 +60,9 @@ public:
 		col_sig_lower(Eigen::MatrixXd::Identity(num_col, num_col)),
 		error_mat(Eigen::MatrixXd::Zero(num_row, num_col)) {
 		initLagged();
+		if (exogen_forecaster) {
+			exogen_updater = std::move(*exogen_forecaster);
+		}
 	}
 	virtual ~MatMniwForecaster() = default;
 	
@@ -70,6 +76,7 @@ public:
 
 protected:
 	std::unique_ptr<MatMniwRecords> mat_record;
+	std::unique_ptr<MatMniwExogenForecaster> exogen_updater;
 	int num_row, num_col, nrow_row_coef, nrow_col_coef;
 	Eigen::MatrixXd row_coef, row_sig_lower, col_coef, col_sig_lower, error_mat;
 
