@@ -65,6 +65,26 @@ BEGIN_RCPP
     return rcpp_result_gen;
 END_RCPP
 }
+// forecast_bmarx_mniw
+Rcpp::List forecast_bmarx_mniw(int num_chains, int lag, int step, Eigen::MatrixXd response_mat, int num_data, Rcpp::List fit_record, Eigen::VectorXi seed_chain, Eigen::MatrixXd exogen, int exogen_lag, int nthreads);
+RcppExport SEXP _baymar_forecast_bmarx_mniw(SEXP num_chainsSEXP, SEXP lagSEXP, SEXP stepSEXP, SEXP response_matSEXP, SEXP num_dataSEXP, SEXP fit_recordSEXP, SEXP seed_chainSEXP, SEXP exogenSEXP, SEXP exogen_lagSEXP, SEXP nthreadsSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< int >::type num_chains(num_chainsSEXP);
+    Rcpp::traits::input_parameter< int >::type lag(lagSEXP);
+    Rcpp::traits::input_parameter< int >::type step(stepSEXP);
+    Rcpp::traits::input_parameter< Eigen::MatrixXd >::type response_mat(response_matSEXP);
+    Rcpp::traits::input_parameter< int >::type num_data(num_dataSEXP);
+    Rcpp::traits::input_parameter< Rcpp::List >::type fit_record(fit_recordSEXP);
+    Rcpp::traits::input_parameter< Eigen::VectorXi >::type seed_chain(seed_chainSEXP);
+    Rcpp::traits::input_parameter< Eigen::MatrixXd >::type exogen(exogenSEXP);
+    Rcpp::traits::input_parameter< int >::type exogen_lag(exogen_lagSEXP);
+    Rcpp::traits::input_parameter< int >::type nthreads(nthreadsSEXP);
+    rcpp_result_gen = Rcpp::wrap(forecast_bmarx_mniw(num_chains, lag, step, response_mat, num_data, fit_record, seed_chain, exogen, exogen_lag, nthreads));
+    return rcpp_result_gen;
+END_RCPP
+}
 // roll_bmar_mniw
 Rcpp::List roll_bmar_mniw(Eigen::MatrixXd y, int lag, int num_data, int num_chains, int num_iter, int num_burn, int thin, Rcpp::List fit_record, bool run_mcmc, Rcpp::List param_coef_sig, Rcpp::List coef_sig_init, Rcpp::List row_prior, Rcpp::List row_init, int row_prior_type, Rcpp::List col_prior, Rcpp::List col_init, int col_prior_type, int step, Eigen::MatrixXd y_test, Eigen::MatrixXi seed_chain, Eigen::VectorXi seed_forecast, bool display_progress, int nthreads);
 RcppExport SEXP _baymar_roll_bmar_mniw(SEXP ySEXP, SEXP lagSEXP, SEXP num_dataSEXP, SEXP num_chainsSEXP, SEXP num_iterSEXP, SEXP num_burnSEXP, SEXP thinSEXP, SEXP fit_recordSEXP, SEXP run_mcmcSEXP, SEXP param_coef_sigSEXP, SEXP coef_sig_initSEXP, SEXP row_priorSEXP, SEXP row_initSEXP, SEXP row_prior_typeSEXP, SEXP col_priorSEXP, SEXP col_initSEXP, SEXP col_prior_typeSEXP, SEXP stepSEXP, SEXP y_testSEXP, SEXP seed_chainSEXP, SEXP seed_forecastSEXP, SEXP display_progressSEXP, SEXP nthreadsSEXP) {
@@ -152,6 +172,7 @@ END_RCPP
 static const R_CallMethodDef CallEntries[] = {
     {"_baymar_estimate_bmar_mniw", (DL_FUNC) &_baymar_estimate_bmar_mniw, 25},
     {"_baymar_forecast_bmar_mniw", (DL_FUNC) &_baymar_forecast_bmar_mniw, 8},
+    {"_baymar_forecast_bmarx_mniw", (DL_FUNC) &_baymar_forecast_bmarx_mniw, 10},
     {"_baymar_roll_bmar_mniw", (DL_FUNC) &_baymar_roll_bmar_mniw, 23},
     {"_baymar_expand_bmar_mniw", (DL_FUNC) &_baymar_expand_bmar_mniw, 23},
     {"_baymar_sim_mar_export", (DL_FUNC) &_baymar_sim_mar_export, 7},

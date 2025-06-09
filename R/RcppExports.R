@@ -12,6 +12,11 @@ forecast_bmar_mniw <- function(num_chains, lag, step, response_mat, num_data, fi
 }
 
 #' @noRd
+forecast_bmarx_mniw <- function(num_chains, lag, step, response_mat, num_data, fit_record, seed_chain, exogen, exogen_lag, nthreads) {
+    .Call(`_baymar_forecast_bmarx_mniw`, num_chains, lag, step, response_mat, num_data, fit_record, seed_chain, exogen, exogen_lag, nthreads)
+}
+
+#' @noRd
 roll_bmar_mniw <- function(y, lag, num_data, num_chains, num_iter, num_burn, thin, fit_record, run_mcmc, param_coef_sig, coef_sig_init, row_prior, row_init, row_prior_type, col_prior, col_init, col_prior_type, step, y_test, seed_chain, seed_forecast, display_progress, nthreads) {
     .Call(`_baymar_roll_bmar_mniw`, y, lag, num_data, num_chains, num_iter, num_burn, thin, fit_record, run_mcmc, param_coef_sig, coef_sig_init, row_prior, row_init, row_prior_type, col_prior, col_init, col_prior_type, step, y_test, seed_chain, seed_forecast, display_progress, nthreads)
 }

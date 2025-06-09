@@ -66,6 +66,18 @@ Rcpp::List forecast_bmar_mniw(int num_chains, int lag, int step, Eigen::MatrixXd
 
 //' @noRd
 // [[Rcpp::export]]
+Rcpp::List forecast_bmarx_mniw(int num_chains, int lag, int step, Eigen::MatrixXd response_mat, int num_data,
+													 	 	 Rcpp::List fit_record, Eigen::VectorXi seed_chain,
+															 Eigen::MatrixXd exogen, int exogen_lag, int nthreads) {
+	auto forecaster = std::make_unique<baymar::MatMniwForecastRun>(
+		num_chains, lag, step, response_mat, num_data, fit_record, seed_chain, nthreads,
+		exogen, exogen_lag
+	);
+	return Rcpp::wrap(forecaster->returnForecast());
+}
+
+//' @noRd
+// [[Rcpp::export]]
 Rcpp::List roll_bmar_mniw(Eigen::MatrixXd y, int lag, int num_data, int num_chains, int num_iter, int num_burn, int thin,
 													Rcpp::List fit_record, bool run_mcmc,
 													Rcpp::List param_coef_sig, Rcpp::List coef_sig_init,

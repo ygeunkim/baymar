@@ -5,6 +5,7 @@
 #' @param object Model object
 #' @param n_ahead step to forecast
 #' @param level Specify alpha of confidence interval level 100(1 - alpha) percentage. By default, .05.
+#' @param newxreg New values for exogenous matrices.
 #' @param num_thread Number of threads
 #' @param med `r lifecycle::badge("experimental")` If `TRUE`, use median of forecast draws instead of mean (default).
 #' @param ... not used
@@ -12,7 +13,7 @@
 #' @importFrom stats median sd quantile
 #' @order 1
 #' @export
-predict.marbayes <- function(object, n_ahead, level = .05, num_thread = 1, med = FALSE, ...) {
+predict.marbayes <- function(object, n_ahead, level = .05, newxreg, num_thread = 1, med = FALSE, ...) {
   fit_record <- get_bmar_records(object, TRUE)
   nrow_data <- dim(object$y)[1]
   ncol_data <- dim(object$y)[2]
@@ -20,16 +21,38 @@ predict.marbayes <- function(object, n_ahead, level = .05, num_thread = 1, med =
   var_names <- dimnames(object$y)
   var_names[[3]] <- 1:n_ahead
   y_list <- lapply(seq_len(num_data), function(x) object$y[, , x])
-  pred_res <- forecast_bmar_mniw(
-    num_chains = object$chain,
-    lag = object$p,
-    step = n_ahead,
-    response_mat = do.call(rbind, y_list),
-    num_data = length(y_list),
-    fit_record = fit_record,
-    seed_chain = sample.int(.Machine$integer.max, size = object$chain),
-    nthreads = num_thread
-  )
+  if (!is.null(eval.parent(object$call$exogen))) {
+    newxreg_list <- validate_newxmat(newxreg = newxreg, n_ahead = n_ahead)
+    exogen_list <-
+      lapply(seq_len(dim(object$exogen_data)[3]), function(x) object$exogen_data[, , x]) |> 
+      tail(object$s)
+    pred_res <- forecast_bmarx_mniw(
+      num_chains = object$chain,
+      lag = object$p,
+      step = n_ahead,
+      response_mat = do.call(rbind, y_list),
+      num_data = length(y_list),
+      fit_record = fit_record,
+      seed_chain = sample.int(.Machine$integer.max, size = object$chain),
+      exogen = rbind(
+        do.call(rbind, exogen_list),
+        do.call(rbind, newxreg_list)
+      ),
+      exogen_lag = object$s,
+      nthreads = num_thread
+    )
+  } else {
+    pred_res <- forecast_bmar_mniw(
+      num_chains = object$chain,
+      lag = object$p,
+      step = n_ahead,
+      response_mat = do.call(rbind, y_list),
+      num_data = length(y_list),
+      fit_record = fit_record,
+      seed_chain = sample.int(.Machine$integer.max, size = object$chain),
+      nthreads = num_thread
+    )
+  }
   num_draw <- nrow(object$param)
   # y_distn <-
   #   do.call(cbind, pred_res) |> # (n * h) x (k * num_draw)

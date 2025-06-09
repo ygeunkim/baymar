@@ -1,3 +1,20 @@
+#' @noRd
+validate_newxmat <- function(newxreg, n_ahead) {
+  if (missing(newxreg) || is.null(newxreg)) {
+    stop("'newxreg' should be supplied when using MARX model.")
+  }
+  if (!is.array(newxreg)) {
+    stop("Provide array for 'newxreg'.")
+  }
+  if (length(dim(newxreg)) != 3) {
+    stop("Array should be 3-dim: variable x region x time")
+  }
+  if (dim(newxreg)[3] != n_ahead) {
+    stop("The length of 'newxreg' should be the same as 'n_ahead'")
+  }
+  lapply(seq_len(n_ahead), function(x) newxreg[, , x])
+}
+
 #' Validate prior specification
 #' @importFrom stats ar.ols
 #' @noRd
