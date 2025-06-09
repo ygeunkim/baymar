@@ -12,12 +12,16 @@ public:
 	McmcMatMniw(
 		const MatMniwParams& params, const MatMniwInits& inits,
 		std::unique_ptr<MatShrinkageUpdater>& row_updater, std::unique_ptr<MatShrinkageUpdater>& col_updater,
-		unsigned int seed
+		unsigned int seed,
+		Optional<std::unique_ptr<MatShrinkageUpdater>> row_exogen = NULLOPT,
+		Optional<std::unique_ptr<MatShrinkageUpdater>> col_exogen = NULLOPT
 	)
 	: bvhar::McmcAlgo(params, seed),
 		x(params._x), y(params._y),
 		row_updater(std::move(row_updater)), col_updater(std::move(col_updater)),
 		num_row(params._row), num_col(params._col), num_design(params._design),
+		nrow_row_coef(params._row_row_coef), nrow_col_coef(params._row_col_coef),
+		nrow_row_exogen(params._row_exogen), nrow_col_exogen(params._col_exogen),
 		row_record(num_iter + 1, std::vector<Eigen::MatrixXd>(2)), col_record(num_iter + 1, std::vector<Eigen::MatrixXd>(2)),
 		row_coef(inits._init_row_coef), row_sig_lower(inits._init_row_lower),
 		col_coef(inits._init_col_coef), col_sig_lower(inits._init_col_lower),
@@ -26,6 +30,12 @@ public:
 		col_prior_mean(params._col_mean), col_iw_scl(params._col_iw_scl),
 		row_prior_prec(params._row_prec), col_prior_prec(params._col_prec),
 		row_iw_df(params._row_iw_df), col_iw_df(params._col_iw_df) {
+		if (row_exogen) {
+			exogen_row_updater = std::move(*row_exogen);
+		}
+		if (col_exogen) {
+			exogen_col_updater = std::move(*col_exogen);
+		}
 		updateRecords();
 	}
 	virtual ~McmcMatMniw() = default;
@@ -73,9 +83,12 @@ protected:
 	std::vector<Eigen::MatrixXd> y;
 	std::unique_ptr<MatShrinkageUpdater> row_updater;
 	std::unique_ptr<MatShrinkageUpdater> col_updater;
+	std::unique_ptr<MatShrinkageUpdater> exogen_row_updater;
+	std::unique_ptr<MatShrinkageUpdater> exogen_col_updater;
 	int num_row;
 	int num_col;
 	int num_design;
+	int nrow_row_coef, nrow_col_coef, nrow_row_exogen, nrow_col_exogen;
 	std::vector<std::vector<Eigen::MatrixXd>> row_record, col_record;
 	Eigen::MatrixXd row_coef, row_sig_lower, col_coef, col_sig_lower;
 	std::unique_ptr<MatMniwRecords> mniw_record;
@@ -85,8 +98,14 @@ protected:
 	double row_iw_df, col_iw_df;
 
 	void updatePrec() {
-		row_updater->updatePrec(row_prior_prec, row_coef, row_sig_lower, row_prior_mean, rng);
-		col_updater->updatePrec(col_prior_prec, col_coef, col_sig_lower, col_prior_mean, rng);
+		row_updater->updatePrec(row_prior_prec.head(nrow_row_coef), row_coef.topRows(nrow_row_coef), row_sig_lower, row_prior_mean, rng);
+		col_updater->updatePrec(col_prior_prec.head(nrow_col_coef), col_coef.topRows(nrow_col_coef), col_sig_lower, col_prior_mean, rng);
+		if (exogen_row_updater) {
+			exogen_row_updater->updatePrec(row_prior_prec.tail(nrow_row_exogen), row_coef.bottomRows(nrow_row_exogen), row_sig_lower, row_prior_mean, rng);
+		}
+		if (exogen_col_updater) {
+			exogen_col_updater->updatePrec(row_prior_prec.tail(nrow_col_exogen), row_coef.bottomRows(nrow_col_exogen), row_sig_lower, row_prior_mean, rng);
+		}
 	}
 
 	void updateCoefCov() {
@@ -120,7 +139,9 @@ inline std::vector<std::unique_ptr<McmcMatMniw>> initialize_matmcmc(
 	LIST& param_coef_sig, LIST_OF_LIST& coef_sig_init,
 	LIST& row_prior, LIST_OF_LIST& row_init, const int row_prior_type,
 	LIST& col_prior, LIST_OF_LIST& col_init, const int col_prior_type,
-  Eigen::Ref<const Eigen::VectorXi> seed_chain
+  Eigen::Ref<const Eigen::VectorXi> seed_chain,
+	Optional<LIST> row_exogen_prior = NULLOPT, Optional<LIST_OF_LIST> row_exogen_init = NULLOPT, Optional<int> row_exogen_prior_type = NULLOPT,
+	Optional<LIST> col_exogen_prior = NULLOPT, Optional<LIST_OF_LIST> col_exogen_init = NULLOPT, Optional<int> col_exogen_prior_type = NULLOPT
 ) {
 	std::vector<std::unique_ptr<McmcMatMniw>> mcmc_ptr(num_chains);
 	MatMniwParams params(num_iter, x, y, param_coef_sig);
@@ -129,13 +150,26 @@ inline std::vector<std::unique_ptr<McmcMatMniw>> initialize_matmcmc(
 		LIST col_init_spec = col_init[i];
 		auto row_updater = initialize_matshrinkageupdater(num_iter, row_prior, row_init_spec, row_prior_type);
 		auto col_updater = initialize_matshrinkageupdater(num_iter, col_prior, col_init_spec, col_prior_type);
-		row_updater->initPrec(params._row_prec);
-		col_updater->initPrec(params._col_prec);
+		row_updater->initPrec(params._row_prec.head(params._row_row_coef));
+		col_updater->initPrec(params._col_prec.head(params._row_col_coef));
 		LIST init_spec = coef_sig_init[i];
 		MatMniwInits inits(init_spec);
-		mcmc_ptr[i] = std::make_unique<McmcMatMniw>(
-			params, inits, row_updater, col_updater, static_cast<unsigned int>(seed_chain[i])
-		);
+		if (row_exogen_prior_type && col_exogen_prior_type) {
+			LIST row_exogen_init_spec = (*row_exogen_init)[i];
+			auto row_exogen_updater = initialize_matshrinkageupdater(num_iter, *row_exogen_prior, row_exogen_init_spec, *row_exogen_prior_type);
+			row_exogen_updater->initPrec(params._row_prec.head(params._row_exogen));
+			LIST col_exogen_init_spec = (*col_exogen_init)[i];
+			auto col_exogen_updater = initialize_matshrinkageupdater(num_iter, *col_exogen_prior, col_exogen_init_spec, *col_exogen_prior_type);
+			col_exogen_updater->initPrec(params._col_prec.head(params._col_exogen));
+			mcmc_ptr[i] = std::make_unique<McmcMatMniw>(
+				params, inits, row_updater, col_updater, static_cast<unsigned int>(seed_chain[i]),
+				std::move(row_exogen_updater), std::move(col_exogen_updater)
+			);
+		} else {
+			mcmc_ptr[i] = std::make_unique<McmcMatMniw>(
+				params, inits, row_updater, col_updater, static_cast<unsigned int>(seed_chain[i])
+			);
+		}
 	}
 	return mcmc_ptr;
 }

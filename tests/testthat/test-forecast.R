@@ -1,6 +1,6 @@
 help_bmar_pred <- function(row_spec, col_spec) {
   toy_data <- chanqi2025[1:3, 1:5, 1:10]
-  set.seed(1)
+  set.seed(2)
   fit_test <- mar_bayes(
     toy_data,
     p = 2,
