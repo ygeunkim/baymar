@@ -301,6 +301,7 @@ mar_bayes <- function(y,
     res$exogen_row_id <- row_exogen_id
     res$exogen_col_id <- col_exogen_id
   }
+  res$call <- match.call()
   res$y <- y
   res$chain <- num_chains
   res$iter <- num_iter

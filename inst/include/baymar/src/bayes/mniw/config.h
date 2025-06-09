@@ -60,11 +60,24 @@ struct MatMniwRecords {
 		col_sigma_record(num_iter + 1, num_col * (num_col + 1) / 2) {}
 	
 	MatMniwRecords(
-		const Eigen::MatrixXd& row_coef_record, const Eigen::MatrixXd& row_sigma_record,
-		const Eigen::MatrixXd& col_coef_record, const Eigen::MatrixXd& col_sigma_record
+		const Eigen::MatrixXd& coef_row_record, const Eigen::MatrixXd& row_sigma_record,
+		const Eigen::MatrixXd& coef_col_record, const Eigen::MatrixXd& col_sigma_record
 	)
-	: row_coef_record(row_coef_record), row_sigma_record(row_sigma_record),
-		col_coef_record(col_coef_record), col_sigma_record(col_sigma_record) {}
+	: row_coef_record(coef_row_record), row_sigma_record(row_sigma_record),
+		col_coef_record(coef_col_record), col_sigma_record(col_sigma_record) {}
+	
+	MatMniwRecords(
+		const Eigen::MatrixXd& coef_row_record, const Eigen::MatrixXd& row_sigma_record,
+		const Eigen::MatrixXd& coef_col_record, const Eigen::MatrixXd& col_sigma_record,
+		const Eigen::MatrixXd& exogen_row_coef_record, const Eigen::MatrixXd& exogen_col_coef_record
+	)
+	: row_coef_record(Eigen::MatrixXd::Zero(coef_row_record.rows(), coef_row_record.cols() + exogen_row_coef_record.cols())),
+		row_sigma_record(row_sigma_record),
+		col_coef_record(Eigen::MatrixXd::Zero(coef_col_record.rows(), coef_col_record.cols() + exogen_col_coef_record.cols())),
+		col_sigma_record(col_sigma_record) {
+		row_coef_record << coef_row_record, exogen_row_coef_record;
+		col_coef_record << coef_col_record, exogen_col_coef_record;
+	}
 	
 	void assignRecords(
 		int id,
@@ -131,6 +144,36 @@ struct MatMniwRecords {
 		);
 	}
 };
+
+inline void initialize_matmniw_record(
+	std::unique_ptr<MatMniwRecords>& record, int chain_id, LIST& fit_record,
+	STRING& a_name, STRING& sigr_name, STRING& b_name, STRING& sigc_name,
+	Optional<STRING> c_name = NULLOPT, Optional<STRING> d_name = NULLOPT
+) {
+	PY_LIST row_coef_list = fit_record[a_name];
+	PY_LIST row_sigma_list = fit_record[sigr_name];
+	PY_LIST col_coef_list = fit_record[b_name];
+	PY_LIST col_sigma_list = fit_record[sigc_name];
+	if (c_name && d_name) {
+		PY_LIST exogen_row_list = fit_record[*c_name];
+		PY_LIST exogen_col_list = fit_record[*d_name];
+		record = std::make_unique<MatMniwRecords>(
+			CAST<Eigen::MatrixXd>(row_coef_list[chain_id]),
+			CAST<Eigen::MatrixXd>(row_sigma_list[chain_id]),
+			CAST<Eigen::MatrixXd>(col_coef_list[chain_id]),
+			CAST<Eigen::MatrixXd>(col_sigma_list[chain_id]),
+			CAST<Eigen::MatrixXd>(exogen_row_list[chain_id]),
+			CAST<Eigen::MatrixXd>(exogen_col_list[chain_id])
+		);
+	} else {
+		record = std::make_unique<MatMniwRecords>(
+			CAST<Eigen::MatrixXd>(row_coef_list[chain_id]),
+			CAST<Eigen::MatrixXd>(row_sigma_list[chain_id]),
+			CAST<Eigen::MatrixXd>(col_coef_list[chain_id]),
+			CAST<Eigen::MatrixXd>(col_sigma_list[chain_id])
+		);
+	}
+}
 
 } // namespace baymar
 

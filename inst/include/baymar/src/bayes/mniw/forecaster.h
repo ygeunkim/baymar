@@ -103,19 +103,19 @@ inline std::vector<std::unique_ptr<MatMniwForecaster>> initialize_matmniwforecas
 	int num_chains, int lag, int step, const Eigen::MatrixXd& y, int num_data,
 	LIST& fit_record, Eigen::Ref<const Eigen::VectorXi> seed_chain, int nthreads
 ) {
-	PY_LIST row_coef_record = fit_record["A_record"];
-	PY_LIST row_sigma_record = fit_record["SigmaR_record"];
-	PY_LIST col_coef_record = fit_record["B_record"];
-	PY_LIST col_sigma_record = fit_record["SigmaC_record"];
+	// PY_LIST row_coef_record = fit_record["A_record"];
+	// PY_LIST row_sigma_record = fit_record["SigmaR_record"];
+	// PY_LIST col_coef_record = fit_record["B_record"];
+	// PY_LIST col_sigma_record = fit_record["SigmaC_record"];
+	STRING a_name = "A_record";
+	STRING sigr_name = "SigmaR_record";
+	STRING b_name = "B_record";
+	STRING sigc_name = "SigmaC_record";
 	std::vector<std::unique_ptr<MatMniwForecaster>> forecaster(num_chains);
 	for (int i = 0; i < num_chains; ++i) {
-		MatMniwRecords mat_record(
-			CAST<Eigen::MatrixXd>(row_coef_record[i]),
-			CAST<Eigen::MatrixXd>(row_sigma_record[i]),
-			CAST<Eigen::MatrixXd>(col_coef_record[i]),
-			CAST<Eigen::MatrixXd>(col_sigma_record[i])
-		);
-		forecaster[i] = std::make_unique<MatMniwForecaster>(mat_record, step, y, num_data, lag, static_cast<unsigned int>(seed_chain[i]));
+		std::unique_ptr<MatMniwRecords> mat_record;
+		initialize_matmniw_record(mat_record, i, fit_record, a_name, sigr_name, b_name, sigc_name);
+		forecaster[i] = std::make_unique<MatMniwForecaster>(*mat_record, step, y, num_data, lag, static_cast<unsigned int>(seed_chain[i]));
 	}
 	return forecaster;
 }
