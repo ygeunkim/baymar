@@ -62,7 +62,7 @@ inline std::vector<Eigen::MatrixXd> marmatrix_to_vector(const Eigen::MatrixXd& y
 inline Eigen::MatrixXd build_dense_design(const Eigen::MatrixXd& y, int lag) {
 	int num_row = y.rows() / lag;
 	int num_col = y.cols();
-	Eigen::MatrixXd dense_x(num_row * lag, num_col * lag);
+	Eigen::MatrixXd dense_x = Eigen::MatrixXd::Zero(num_row * lag, num_col * lag);
 	for (int i = 0; i < lag; ++i) {
 		dense_x.block(i * num_row, i * num_col, num_row, num_col) = y.middleRows(i * num_row, num_row);
 	}

@@ -6,11 +6,44 @@
 
 namespace baymar {
 
+class MatMniwExogenForecaster;
 class MatMniwForecaster;
 class MatMniwForecastRun;
 template <bool isUpdate> class MatMniwOutForecastRun;
 template <bool isUpdate> class MatMniwRollForecastRun;
 template <bool isUpdate> class MatMniwExpandForecastRun;
+
+class MatMniwExogenForecaster : public bvhar::ExogenForecaster<Eigen::MatrixXd, Eigen::MatrixXd> {
+public:
+	MatMniwExogenForecaster(int lag, const Eigen::MatrixXd& exogen, int num_row, int num_col)
+	: bvhar::ExogenForecaster<Eigen::MatrixXd, Eigen::MatrixXd>(lag, exogen),
+		nrow_exogen(exogen.rows()), ncol_exogen(exogen.cols()),
+		nrow_row_exogen((lag + 1) * nrow_exogen), nrow_col_exogen((lag + 1) * ncol_exogen),
+		num_row(num_row), num_col(num_col),
+		row_coef(nrow_row_exogen, num_row), col_coef(nrow_col_exogen, num_col) {
+		// last_pvec = Eigen::MatrixXd::Zero((lag + 1) * nrow_exogen, (lag + 1) * ncol_exogen);
+		// exogen: x_(T - s), ..., x_(T + h)
+		// last_pvec = x_(T + h), ..., x_(T + h - s)
+		last_pvec = Eigen::MatrixXd::Zero(nrow_exogen, ncol_exogen);
+	}
+	virtual ~MatMniwExogenForecaster() = default;
+	
+	void appendForecast(Eigen::MatrixXd& point_forecast, const int h) override {
+		for (int i = 0; i < lag + 1; ++i) {
+			last_pvec = exogen.middleRows((h + i) * nrow_exogen, nrow_exogen);
+			point_forecast += row_coef.middleRows(i * num_row, num_row).transpose() * last_pvec * col_coef.middleRows(i * num_col, num_col);
+		}
+	}
+
+	void updateCoefmat(const Eigen::VectorXd& row_coef_record, const Eigen::VectorXd& col_coef_record) {
+		row_coef = bvhar::unvectorize(row_coef_record.tail(nrow_row_exogen), num_row);
+		col_coef = bvhar::unvectorize(col_coef_record.tail(nrow_col_exogen), num_col);
+	}
+
+private:
+	int nrow_exogen, ncol_exogen, nrow_row_exogen, nrow_col_exogen, num_row, num_col;
+	Eigen::MatrixXd row_coef, col_coef;
+};
 
 class MatMniwForecaster : public bvhar::BayesForecaster<Eigen::MatrixXd, Eigen::MatrixXd> {
 public:
