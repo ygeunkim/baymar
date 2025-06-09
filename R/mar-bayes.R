@@ -216,6 +216,16 @@ mar_bayes <- function(y,
   names(res) <- rec_names
   row_coef <- matrix(colMeans(res$A_record), ncol = nrow_data)
   col_coef <- matrix(colMeans(res$B_record), ncol = ncol_data)
+  if (!is.null(exogen)) {
+    row_coef <- rbind(
+      row_coef,
+      matrix(colMeans(res$C_record), ncol = nrow_data)
+    )
+    col_coef <- rbind(
+      col_coef,
+      matrix(colMeans(res$D_record), ncol = ncol_data)
+    )
+  }
   row_sig <- diag(nrow_data)
   row_sig[lower.tri(row_sig, diag = TRUE)] <- colMeans(res$SigmaR_record)
   row_sig[upper.tri(row_sig, diag = FALSE)] <- row_sig[lower.tri(row_sig, diag = FALSE)]
@@ -223,12 +233,17 @@ mar_bayes <- function(y,
   col_sig[lower.tri(col_sig, diag = TRUE)] <- colMeans(res$SigmaC_record)
   col_sig[upper.tri(col_sig, diag = FALSE)] <- col_sig[lower.tri(col_sig, diag = FALSE)]
   is_symm <- grepl(pattern = "^Sigma", x = param_names)
-  num_col <- c(nrow_data, nrow_data, ncol_data, ncol_data)
-  return(str(res))
+  num_col <- c(nrow_data, nrow_data, ncol_data, ncol_data, nrow_data, ncol_data)
+  num_row <- c(nrow_row_coef, nrow_data, nrow_col_coef, ncol_data, nrow_exogen_row_coef, nrow_exogen_col_coef)
+  # num_row <- c(nrow_row_coef + nrow_exogen_row_coef, nrow_data, nrow_col_coef + nrow_exogen_col_coef, ncol_data)
   res[rec_names] <- lapply(
     seq_along(res[rec_names]),
     function(id) {
-      split_matrix_chain(res[rec_names][[id]], chain = num_chains, varname = param_names[id], lag = ifelse(is_symm[id], 1, p), num_col = num_col[id], is_symm = is_symm[id])
+      split_matrix_chain(
+        res[rec_names][[id]],
+        chain = num_chains, varname = param_names[id],
+        num_row = num_row[id], num_col = num_col[id], is_symm = is_symm[id]
+      )
     }
   )
   res[rec_names] <- lapply(res[rec_names], as_draws_df)
@@ -238,6 +253,13 @@ mar_bayes <- function(y,
     res$B_record,
     res$SigmaC_record
   )
+  if (!is.null(exogen)) {
+    res$param <- bind_draws(
+      res$param,
+      res$C_record,
+      res$D_record
+    )
+  }
   res[rec_names] <- NULL
   res$param_names <- param_names
   rownames(row_coef) <- name_row_lag
@@ -265,6 +287,20 @@ mar_bayes <- function(y,
     row = row_init,
     col = col_init
   )
+  if (!is.null(exogen)) {
+    res$spec <- append(
+      res$spec,
+      list(exogen_row = exogen_row_spec, exogen_col = exogen_col_spec)
+    )
+    res$init <- append(
+      res$init,
+      list(exogen_row = row_exogen_init, exogen_col = col_exogen_init)
+    )
+    res$exogen_data <- exogen
+    res$s <- s
+    res$exogen_row_id <- row_exogen_id
+    res$exogen_col_id <- col_exogen_id
+  }
   res$y <- y
   res$chain <- num_chains
   res$iter <- num_iter

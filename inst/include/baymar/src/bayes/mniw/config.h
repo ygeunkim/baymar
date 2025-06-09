@@ -69,10 +69,18 @@ struct MatMniwRecords {
 	void assignRecords(
 		int id,
 		const Eigen::MatrixXd row_coef, const Eigen::MatrixXd row_sig_lower,
-		const Eigen::MatrixXd col_coef, const Eigen::MatrixXd col_sig_lower
+		const Eigen::MatrixXd col_coef, const Eigen::MatrixXd col_sig_lower,
+		int nrow_row_coef, int num_row, int nrow_row_exogen,
+		int nrow_col_coef, int num_col, int nrow_col_exogen
 	) {
-		row_coef_record.row(id) = row_coef.reshaped();
-		col_coef_record.row(id) = col_coef.reshaped();
+		row_coef_record.row(id).head(nrow_row_coef * num_row) = row_coef.topRows(nrow_row_coef).reshaped();
+		col_coef_record.row(id).head(nrow_col_coef * num_col) = col_coef.topRows(nrow_col_coef).reshaped();
+		if (nrow_row_exogen > 0) {
+			row_coef_record.row(id).tail(nrow_row_exogen * num_row) = row_coef.bottomRows(nrow_row_exogen).reshaped();
+		}
+		if (nrow_col_exogen > 0) {
+			col_coef_record.row(id).tail(nrow_col_exogen * num_col) = col_coef.bottomRows(nrow_col_exogen).reshaped();
+		}
 		int lower_id = 0;
 		for (int j = 0; j < row_sig_lower.cols(); ++j) {
 			for (int i = j; i < row_sig_lower.cols(); ++i) {
@@ -91,14 +99,27 @@ struct MatMniwRecords {
 		}
 	}
 
-	LIST returnListRecords() {
-		// Add nrow_row_coef, nrow_col_coef, nrow_row_exogen, nrow_col_exogen for separate records
-		return CREATE_LIST(
-			NAMED("A_record") = row_coef_record,
+	LIST returnListRecords(
+		int nrow_row_coef, int num_row, int nrow_row_exogen,
+		int nrow_col_coef, int num_col, int nrow_col_exogen
+	) {
+		LIST res = CREATE_LIST(
+			NAMED("A_record") = row_coef_record.leftCols(num_row * nrow_row_coef),
 			NAMED("SigmaR_record") = row_sigma_record,
-			NAMED("B_record") = col_coef_record,
+			NAMED("B_record") = col_coef_record.leftCols(num_col * nrow_col_coef),
 			NAMED("SigmaC_record") = col_sigma_record
 		);
+		if (nrow_row_exogen > 0) {
+			res["C_record"] = row_coef_record.rightCols(num_row * nrow_row_exogen);
+			res["D_record"] = col_coef_record.rightCols(num_col * nrow_col_exogen);
+		}
+		// return CREATE_LIST(
+		// 	NAMED("A_record") = row_coef_record,
+		// 	NAMED("SigmaR_record") = row_sigma_record,
+		// 	NAMED("B_record") = col_coef_record,
+		// 	NAMED("SigmaC_record") = col_sigma_record
+		// );
+		return res;
 	}
 
 	MatMniwRecords returnRecords(int num_iter, int num_burn, int thin) {

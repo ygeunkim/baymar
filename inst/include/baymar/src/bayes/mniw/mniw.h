@@ -63,7 +63,7 @@ public:
 		// 	NAMED("row_record") = WRAP(row_record),
 		// 	NAMED("col_record") = WRAP(col_record)
 		// );
-		LIST res = mniw_record->returnListRecords();
+		LIST res = mniw_record->returnListRecords(nrow_row_coef, num_row, nrow_row_exogen, nrow_col_coef, num_col, nrow_col_exogen);
 		for (auto& record : res) {
 			if (IS_MATRIX(ACCESS_LIST(record, res))) {
 				ACCESS_LIST(record, res) = bvhar::thin_record(CAST<Eigen::MatrixXd>(ACCESS_LIST(record, res)), num_iter, num_burn, thin);
@@ -130,7 +130,11 @@ protected:
 		// row_record[mcmc_step][1] = row_sig_lower * row_sig_lower.transpose();
 		// col_record[mcmc_step][0] = col_coef;
 		// col_record[mcmc_step][1] = col_sig_lower * col_sig_lower.transpose();
-		mniw_record->assignRecords(mcmc_step, row_coef, row_sig_lower, col_coef, col_sig_lower);
+		mniw_record->assignRecords(
+			mcmc_step, row_coef, row_sig_lower, col_coef, col_sig_lower,
+			nrow_row_coef, num_row, nrow_row_exogen,
+			nrow_col_coef, num_col, nrow_col_exogen
+		);
 	}
 };
 

@@ -53,14 +53,6 @@ Rcpp::List estimate_bmar_mniw(int num_chains, int num_iter, int num_burn, int th
 			seed_chain, display_progress, nthreads
 		);
 	}();
-	// auto mcmc_run = std::make_unique<baymar::MatMcmcRun>(
-	// 	num_chains, num_iter, num_burn, thin,
-	// 	x, y,
-	// 	param_coef_sig, coef_sig_init,
-	// 	row_prior, row_init, row_prior_type,
-	// 	col_prior, col_init, col_prior_type,
-	// 	seed_chain, display_progress, nthreads
-	// );
 	return mcmc_run->returnRecords();
 }
 
