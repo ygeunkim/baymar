@@ -44,7 +44,7 @@ test_that("Hierarchical Minnesota Prior", {
   expect_no_error(
     fit_test <- help_bmar_fit(set_mar_minnesota(), set_mar_minnesota())
   )
-  # expect_no_error(
-  #   fit_x_test <- help_bmar_fit(set_mar_minnesota(), set_mar_minnesota(), set_mar_minnesota(), set_mar_minnesota())
-  # )
+  expect_no_error(
+    fit_x_test <- help_bmar_fit(set_mar_minnesota(), set_mar_minnesota(), set_mar_minnesota(), set_mar_minnesota())
+  )
 })

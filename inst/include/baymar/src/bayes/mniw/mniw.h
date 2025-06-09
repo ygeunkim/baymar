@@ -98,13 +98,37 @@ protected:
 	double row_iw_df, col_iw_df;
 
 	void updatePrec() {
-		row_updater->updatePrec(row_prior_prec.head(nrow_row_coef), row_coef.topRows(nrow_row_coef), row_sig_lower, row_prior_mean, rng);
-		col_updater->updatePrec(col_prior_prec.head(nrow_col_coef), col_coef.topRows(nrow_col_coef), col_sig_lower, col_prior_mean, rng);
+		row_updater->updatePrec(
+			row_prior_prec.head(nrow_row_coef),
+			row_coef.topRows(nrow_row_coef),
+			row_sig_lower,
+			row_prior_mean.topRows(nrow_row_coef),
+			rng
+		);
+		col_updater->updatePrec(
+			col_prior_prec.head(nrow_col_coef),
+			col_coef.topRows(nrow_col_coef),
+			col_sig_lower,
+			col_prior_mean.topRows(nrow_col_coef),
+			rng
+		);
 		if (exogen_row_updater) {
-			exogen_row_updater->updatePrec(row_prior_prec.tail(nrow_row_exogen), row_coef.bottomRows(nrow_row_exogen), row_sig_lower, row_prior_mean, rng);
+			exogen_row_updater->updatePrec(
+				row_prior_prec.tail(nrow_row_exogen),
+				row_coef.bottomRows(nrow_row_exogen),
+				row_sig_lower,
+				row_prior_mean.bottomRows(nrow_row_exogen),
+				rng
+			);
 		}
 		if (exogen_col_updater) {
-			exogen_col_updater->updatePrec(row_prior_prec.tail(nrow_col_exogen), row_coef.bottomRows(nrow_col_exogen), row_sig_lower, row_prior_mean, rng);
+			exogen_col_updater->updatePrec(
+				row_prior_prec.tail(nrow_col_exogen),
+				row_coef.bottomRows(nrow_col_exogen),
+				row_sig_lower,
+				row_prior_mean.bottomRows(nrow_col_exogen),
+				rng
+			);
 		}
 	}
 
