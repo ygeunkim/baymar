@@ -36,8 +36,8 @@ public:
 	}
 
 	void updateCoefmat(const Eigen::VectorXd& row_coef_record, const Eigen::VectorXd& col_coef_record) {
-		row_coef = bvhar::unvectorize(row_coef_record.tail(nrow_row_exogen), num_row);
-		col_coef = bvhar::unvectorize(col_coef_record.tail(nrow_col_exogen), num_col);
+		row_coef = bvhar::unvectorize(row_coef_record.tail(nrow_row_exogen * num_row), num_row);
+		col_coef = bvhar::unvectorize(col_coef_record.tail(nrow_col_exogen * num_col), num_col);
 	}
 
 private:
@@ -161,10 +161,14 @@ inline std::vector<std::unique_ptr<MatMniwForecaster>> initialize_matmniwforecas
 	std::vector<std::unique_ptr<MatMniwForecaster>> forecaster(num_chains);
 	for (int i = 0; i < num_chains; ++i) {
 		std::unique_ptr<MatMniwRecords> mat_record;
-		initialize_matmniw_record(mat_record, i, fit_record, a_name, sigr_name, b_name, sigc_name);
 		Optional<std::unique_ptr<MatMniwExogenForecaster>> exogen_updater = NULLOPT;
 		if (exogen) {
+			STRING c_name = "C_record";
+			STRING d_name = "D_record";
 			exogen_updater = std::make_unique<MatMniwExogenForecaster>(*exogen_lag, *exogen, y.rows() / num_data, y.cols());
+			initialize_matmniw_record(mat_record, i, fit_record, a_name, sigr_name, b_name, sigc_name, c_name, d_name);
+		} else {
+			initialize_matmniw_record(mat_record, i, fit_record, a_name, sigr_name, b_name, sigc_name);
 		}
 		forecaster[i] = std::make_unique<MatMniwForecaster>(
 			*mat_record, step, y, num_data, lag, static_cast<unsigned int>(seed_chain[i]),
