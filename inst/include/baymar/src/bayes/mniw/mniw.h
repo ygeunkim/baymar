@@ -140,11 +140,12 @@ inline std::vector<std::unique_ptr<McmcMatMniw>> initialize_matmcmc(
 	LIST& row_prior, LIST_OF_LIST& row_init, const int row_prior_type,
 	LIST& col_prior, LIST_OF_LIST& col_init, const int col_prior_type,
   Eigen::Ref<const Eigen::VectorXi> seed_chain,
-	Optional<LIST> row_exogen_prior = NULLOPT, Optional<LIST_OF_LIST> row_exogen_init = NULLOPT, Optional<int> row_exogen_prior_type = NULLOPT,
-	Optional<LIST> col_exogen_prior = NULLOPT, Optional<LIST_OF_LIST> col_exogen_init = NULLOPT, Optional<int> col_exogen_prior_type = NULLOPT
+	Optional<LIST> row_exogen_prior = NULLOPT, Optional<LIST_OF_LIST> row_exogen_init = NULLOPT, Optional<int> row_exogen_prior_type = NULLOPT, Optional<int> exogen_rows = NULLOPT,
+	Optional<LIST> col_exogen_prior = NULLOPT, Optional<LIST_OF_LIST> col_exogen_init = NULLOPT, Optional<int> col_exogen_prior_type = NULLOPT, Optional<int> exogen_cols = NULLOPT
 ) {
 	std::vector<std::unique_ptr<McmcMatMniw>> mcmc_ptr(num_chains);
-	MatMniwParams params(num_iter, x, y, param_coef_sig);
+	// MatMniwParams params(num_iter, x, y, param_coef_sig);
+	MatMniwParams params = exogen_rows ? MatMniwParams(num_iter, x, y, param_coef_sig, *exogen_rows, *exogen_cols) : MatMniwParams(num_iter, x, y, param_coef_sig);
 	for (int i = 0; i < num_chains; ++i) {
 		LIST row_init_spec = row_init[i];
 		LIST col_init_spec = col_init[i];
@@ -154,22 +155,40 @@ inline std::vector<std::unique_ptr<McmcMatMniw>> initialize_matmcmc(
 		col_updater->initPrec(params._col_prec.head(params._row_col_coef));
 		LIST init_spec = coef_sig_init[i];
 		MatMniwInits inits(init_spec);
-		if (row_exogen_prior_type && col_exogen_prior_type) {
+		Optional<std::unique_ptr<MatShrinkageUpdater>> row_exogen_updater = NULLOPT;
+		Optional<std::unique_ptr<MatShrinkageUpdater>> col_exogen_updater = NULLOPT;
+		if (row_exogen_prior_type) {
 			LIST row_exogen_init_spec = (*row_exogen_init)[i];
-			auto row_exogen_updater = initialize_matshrinkageupdater(num_iter, *row_exogen_prior, row_exogen_init_spec, *row_exogen_prior_type);
-			row_exogen_updater->initPrec(params._row_prec.head(params._row_exogen));
-			LIST col_exogen_init_spec = (*col_exogen_init)[i];
-			auto col_exogen_updater = initialize_matshrinkageupdater(num_iter, *col_exogen_prior, col_exogen_init_spec, *col_exogen_prior_type);
-			col_exogen_updater->initPrec(params._col_prec.head(params._col_exogen));
-			mcmc_ptr[i] = std::make_unique<McmcMatMniw>(
-				params, inits, row_updater, col_updater, static_cast<unsigned int>(seed_chain[i]),
-				std::move(row_exogen_updater), std::move(col_exogen_updater)
-			);
-		} else {
-			mcmc_ptr[i] = std::make_unique<McmcMatMniw>(
-				params, inits, row_updater, col_updater, static_cast<unsigned int>(seed_chain[i])
-			);
+			// auto temp_row_exogen_updater = initialize_matshrinkageupdater(num_iter, *row_exogen_prior, row_exogen_init_spec, *row_exogen_prior_type);
+			// row_exogen_updater = std::move(temp_row_exogen_updater);
+			row_exogen_updater = initialize_matshrinkageupdater(num_iter, *row_exogen_prior, row_exogen_init_spec, *row_exogen_prior_type);
+			(*row_exogen_updater)->initPrec(params._row_prec.tail(params._row_exogen));
 		}
+		if (col_exogen_prior_type) {
+			LIST col_exogen_init_spec = (*col_exogen_init)[i];
+			col_exogen_updater = initialize_matshrinkageupdater(num_iter, *col_exogen_prior, col_exogen_init_spec, *col_exogen_prior_type);
+			(*col_exogen_updater)->initPrec(params._col_prec.tail(params._col_exogen));
+		}
+		// if (row_exogen_prior_type && col_exogen_prior_type) {
+		// 	LIST row_exogen_init_spec = (*row_exogen_init)[i];
+		// 	auto row_exogen_updater = initialize_matshrinkageupdater(num_iter, *row_exogen_prior, row_exogen_init_spec, *row_exogen_prior_type);
+		// 	row_exogen_updater->initPrec(params._row_prec.head(params._row_exogen));
+		// 	LIST col_exogen_init_spec = (*col_exogen_init)[i];
+		// 	auto col_exogen_updater = initialize_matshrinkageupdater(num_iter, *col_exogen_prior, col_exogen_init_spec, *col_exogen_prior_type);
+		// 	col_exogen_updater->initPrec(params._col_prec.head(params._col_exogen));
+		// 	mcmc_ptr[i] = std::make_unique<McmcMatMniw>(
+		// 		params, inits, row_updater, col_updater, static_cast<unsigned int>(seed_chain[i]),
+		// 		std::move(row_exogen_updater), std::move(col_exogen_updater)
+		// 	);
+		// } else {
+		// 	mcmc_ptr[i] = std::make_unique<McmcMatMniw>(
+		// 		params, inits, row_updater, col_updater, static_cast<unsigned int>(seed_chain[i])
+		// 	);
+		// }
+		mcmc_ptr[i] = std::make_unique<McmcMatMniw>(
+			params, inits, row_updater, col_updater, static_cast<unsigned int>(seed_chain[i]),
+			std::move(row_exogen_updater), std::move(col_exogen_updater)
+		);
 	}
 	return mcmc_ptr;
 }
@@ -182,7 +201,9 @@ public:
 		LIST& param_coef_sig, LIST_OF_LIST& coef_sig_init,
 		LIST& row_prior, LIST_OF_LIST& row_init, const int row_prior_type,
 		LIST& col_prior, LIST_OF_LIST& col_init, const int col_prior_type,
-		const Eigen::VectorXi& seed_chain, bool display_progress, int nthreads
+		const Eigen::VectorXi& seed_chain, bool display_progress, int nthreads,
+		Optional<LIST> row_exogen_prior = NULLOPT, Optional<LIST_OF_LIST> row_exogen_init = NULLOPT, Optional<int> row_exogen_prior_type = NULLOPT, Optional<int> exogen_rows = NULLOPT,
+		Optional<LIST> col_exogen_prior = NULLOPT, Optional<LIST_OF_LIST> col_exogen_init = NULLOPT, Optional<int> col_exogen_prior_type = NULLOPT, Optional<int> exogen_cols = NULLOPT
 	)
 	: bvhar::McmcRun(num_chains, num_iter, num_burn, thin, display_progress, nthreads) {
 		auto temp_mcmc = initialize_matmcmc(
@@ -190,7 +211,9 @@ public:
 			param_coef_sig, coef_sig_init,
 			row_prior, row_init, row_prior_type,
 			col_prior, col_init, col_prior_type,
-			seed_chain
+			seed_chain,
+			row_exogen_prior, row_exogen_init, row_exogen_prior_type, exogen_rows,
+			col_exogen_prior, col_exogen_init, col_exogen_prior_type, exogen_cols
 		);
 		for (int i = 0; i < num_chains; ++i) {
 			mcmc_ptr[i] = std::move(temp_mcmc[i]);

@@ -28,10 +28,19 @@ validate_bmar_row_spec <- function(y, p, bayes_spec, nrow_data, ncol_data, nrow_
   }
   list(
     row_prior_mean = A0,
-    row_prior_prec = diag(1 / diag(V_A)),
+    row_prior_prec = 1 / diag(V_A),
     row_iw_scl = S_r,
     row_iw_df = nu_r
   )
+}
+
+#' @noRd
+validate_bmarx_rowspec <- function(param_prior, x, s, bayes_spec, nrow_exogen, ncol_exogen, nrow_exogen_row_coef) {
+  exogen_prior <- validate_bmar_row_spec(x, s + 1, bayes_spec, nrow_exogen, ncol_exogen, nrow_exogen_row_coef)
+  exogen_prior$row_prior_mean <- matrix(0L, nrow = nrow_exogen_row_coef, ncol = ncol(param_prior$row_prior_mean))
+  param_prior$row_prior_mean <- rbind(param_prior$row_prior_mean, exogen_prior$row_prior_mean)
+  param_prior$row_prior_prec <- c(param_prior$row_prior_prec, exogen_prior$row_prior_prec)
+  param_prior
 }
 
 #' @noRd
@@ -63,10 +72,19 @@ validate_bmar_col_spec <- function(y, p, bayes_spec, nrow_data, ncol_data, nrow_
   }
   list(
     col_prior_mean = B0,
-    col_prior_prec = diag(1 / diag(V_B)),
+    col_prior_prec = 1 / diag(V_B),
     col_iw_scl = S_c,
     col_iw_df = nu_c
   )
+}
+
+#' @noRd
+validate_bmarx_colspec <- function(param_prior, x, s, bayes_spec, nrow_exogen, ncol_exogen, nrow_exogen_col_coef) {
+  exogen_prior <- validate_bmar_col_spec(x, s + 1, bayes_spec, nrow_exogen, ncol_exogen, nrow_exogen_col_coef)
+  exogen_prior$col_prior_mean <- matrix(0L, nrow = nrow_exogen_col_coef, ncol = ncol(param_prior$col_prior_mean))
+  param_prior$col_prior_mean <- rbind(param_prior$col_prior_mean, exogen_prior$col_prior_mean)
+  param_prior$col_prior_prec <- c(param_prior$col_prior_prec, exogen_prior$col_prior_prec)
+  param_prior
 }
 
 #' @noRd 
@@ -99,7 +117,7 @@ get_prior_id <- function(prior_nm) {
 #' Set initial values for MNIW
 #' @importFrom stats runif
 #' @noRd
-get_bmar_init <- function(num_chains, nrow_data, ncol_data, nrow_row_coef, nrow_col_coef) {
+get_bmar_coef_init <- function(num_chains, nrow_data, ncol_data, nrow_row_coef, nrow_col_coef) {
   lapply(
     seq_len(num_chains),
     function(x) {
@@ -151,6 +169,22 @@ get_mat_hs_init <- function(num_chains, nrow_coef) {
         )
       )
     }
+  )
+}
+
+#' @noRd
+get_bmar_init <- function(bayes_spec, num_chains, nrow_coef) {
+  switch(
+    bayes_spec$prior,
+    "Minnesota" = get_empty_init(num_chains),
+    "Horseshoe" = {
+      get_mat_hs_init(
+        num_chains = num_chains,
+        nrow_coef = nrow_coef
+      )
+    },
+    "MN_Hierarchical" = get_mat_minn_init(num_chains),
+    stop(sprintf("Wrong %s prior", deparse(substitute(bayes_spec))))
   )
 }
 

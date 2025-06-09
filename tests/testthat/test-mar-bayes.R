@@ -15,13 +15,19 @@ help_bmar_fit <- function(row_spec, col_spec) {
 }
 
 test_that("Minnesota Prior", {
-  fit_test <- help_bmar_fit(set_mar_minnesota(kappa = .1), set_mar_minnesota(kappa = .1))
+  expect_no_error(
+    fit_test <- help_bmar_fit(set_mar_minnesota(kappa = .1), set_mar_minnesota(kappa = .1))
+  )
 })
 
 test_that("Horseshoe Prior", {
-  fit_test <- help_bmar_fit(set_mar_horseshoe(), set_mar_horseshoe())
+  expect_no_error(
+    fit_test <- help_bmar_fit(set_mar_horseshoe(), set_mar_horseshoe())
+  )
 })
 
 test_that("Hierarchical Minnesota Prior", {
-  fit_test <- help_bmar_fit(set_mar_minnesota(), set_mar_minnesota())
+  expect_no_error(
+    fit_test <- help_bmar_fit(set_mar_minnesota(), set_mar_minnesota())
+  )
 })

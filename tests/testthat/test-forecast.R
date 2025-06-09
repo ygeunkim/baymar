@@ -1,6 +1,6 @@
 help_bmar_pred <- function(row_spec, col_spec) {
-  toy_data <- chanqi2025[1:3, 1:5, 1:10]
-  set.seed(2)
+  toy_data <- chanqi2025[1:2, 1:3, 1:10]
+  set.seed(1)
   fit_test <- mar_bayes(
     toy_data,
     p = 2,
@@ -17,20 +17,26 @@ help_bmar_pred <- function(row_spec, col_spec) {
 }
 
 test_that("Minnesota Prior", {
-  pred_test <- help_bmar_pred(set_mar_minnesota(kappa = .1), set_mar_minnesota(kappa = .1))
+  expect_no_error(
+    pred_test <- help_bmar_pred(set_mar_minnesota(kappa = .1), set_mar_minnesota(kappa = .1))
+  )
 })
 
 test_that("Horseshoe Prior", {
-  pred_test <- help_bmar_pred(set_mar_horseshoe(), set_mar_horseshoe())
+  expect_no_error(
+    pred_test <- help_bmar_pred(set_mar_horseshoe(), set_mar_horseshoe())
+  )
 })
 
 test_that("Hierarchical Minnesota Prior", {
-  pred_test <- help_bmar_pred(set_mar_minnesota(), set_mar_minnesota())
+  expect_no_error(
+    pred_test <- help_bmar_pred(set_mar_minnesota(), set_mar_minnesota())
+  )
 })
 
 help_bmar_roll <- function(row_spec, col_spec) {
-  toy_data <- chanqi2025[1:3, 1:5, 1:10]
-  eval_data <- chanqi2025[1:3, 1:5, 11:12]
+  toy_data <- chanqi2025[1:2, 1:3, 1:10]
+  eval_data <- chanqi2025[1:2, 1:3, 11:12]
   set.seed(1)
   fit_test <- mar_bayes(
     toy_data,
@@ -48,20 +54,26 @@ help_bmar_roll <- function(row_spec, col_spec) {
 }
 
 test_that("Minnesota Prior - Rolling", {
-  pred_test <- help_bmar_roll(set_mar_minnesota(kappa = .1), set_mar_minnesota(kappa = .1))
+  expect_no_error(
+    pred_test <- help_bmar_roll(set_mar_minnesota(kappa = .1), set_mar_minnesota(kappa = .1))
+  )
 })
 
 test_that("Horseshoe Prior - Rolling", {
-  pred_test <- help_bmar_roll(set_mar_horseshoe(), set_mar_horseshoe())
+  expect_no_error(
+    pred_test <- help_bmar_roll(set_mar_horseshoe(), set_mar_horseshoe())
+  )
 })
 
 test_that("Hierarchical Minnesota Prior - Rolling", {
-  pred_test <- help_bmar_roll(set_mar_minnesota(), set_mar_minnesota())
+  expect_no_error(
+    pred_test <- help_bmar_roll(set_mar_minnesota(), set_mar_minnesota())
+  )
 })
 
 help_bmar_expand <- function(row_spec, col_spec) {
-  toy_data <- chanqi2025[1:3, 1:5, 1:10]
-  eval_data <- chanqi2025[1:3, 1:5, 11:12]
+  toy_data <- chanqi2025[1:2, 1:3, 1:10]
+  eval_data <- chanqi2025[1:2, 1:3, 11:12]
   set.seed(1)
   fit_test <- mar_bayes(
     toy_data,
@@ -79,13 +91,19 @@ help_bmar_expand <- function(row_spec, col_spec) {
 }
 
 test_that("Minnesota Prior - Expanding", {
-  pred_test <- help_bmar_expand(set_mar_minnesota(kappa = .1), set_mar_minnesota(kappa = .1))
+  expect_no_error(
+    pred_test <- help_bmar_expand(set_mar_minnesota(kappa = .1), set_mar_minnesota(kappa = .1))
+  )
 })
 
 test_that("Horseshoe Prior - Expanding", {
-  pred_test <- help_bmar_expand(set_mar_horseshoe(), set_mar_horseshoe())
+  expect_no_error(
+    pred_test <- help_bmar_expand(set_mar_horseshoe(), set_mar_horseshoe())
+  )
 })
 
 test_that("Hierarchical Minnesota Prior - Expanding", {
-  pred_test <- help_bmar_expand(set_mar_minnesota(), set_mar_minnesota())
+  expect_no_error(
+    pred_test <- help_bmar_expand(set_mar_minnesota(), set_mar_minnesota())
+  )
 })

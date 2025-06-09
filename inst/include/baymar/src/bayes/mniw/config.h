@@ -32,7 +32,7 @@ struct MatMniwParams : public bvhar::McmcParams {
 		_row_exogen(exogen_rows ? *exogen_rows : 0), _col_exogen(exogen_cols ? *exogen_cols : 0),
 		_row_mean(CAST<Eigen::MatrixXd>(priors["row_prior_mean"])), _row_iw_scl(CAST<Eigen::MatrixXd>(priors["row_iw_scl"])),
 		_col_mean(CAST<Eigen::MatrixXd>(priors["col_prior_mean"])), _col_iw_scl(CAST<Eigen::MatrixXd>(priors["col_iw_scl"])),
-		_row_prec(CAST<Eigen::MatrixXd>(priors["row_prior_prec"]).diagonal()), _col_prec(CAST<Eigen::MatrixXd>(priors["col_prior_prec"]).diagonal()),
+		_row_prec(CAST<Eigen::VectorXd>(priors["row_prior_prec"])), _col_prec(CAST<Eigen::VectorXd>(priors["col_prior_prec"])),
 		_row_iw_df(CAST_DOUBLE(priors["row_iw_df"])), _col_iw_df(CAST_DOUBLE(priors["col_iw_df"])),
 		_row_row_coef(_row_mean.rows() - _row_exogen), _row_col_coef(_col_mean.rows() - _col_exogen) {}
 };
