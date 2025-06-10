@@ -207,11 +207,15 @@ public:
 		LIST& row_prior, LIST_OF_LIST& row_init, const int row_prior_type,
 		LIST& col_prior, LIST_OF_LIST& col_init, const int col_prior_type,
 		int step, const Eigen::MatrixXd& y_test,
-		const Eigen::MatrixXi& seed_chain, const Eigen::VectorXi& seed_forecast, bool display_progress, int nthreads
+		const Eigen::MatrixXi& seed_chain, const Eigen::VectorXi& seed_forecast, bool display_progress, int nthreads,
+		Optional<LIST> row_exogen_prior = NULLOPT, Optional<LIST_OF_LIST> row_exogen_init = NULLOPT, Optional<int> row_exogen_prior_type = NULLOPT,
+		Optional<LIST> col_exogen_prior = NULLOPT, Optional<LIST_OF_LIST> col_exogen_init = NULLOPT, Optional<int> col_exogen_prior_type = NULLOPT,
+		Optional<Eigen::MatrixXd> exogen = NULLOPT, Optional<int> exogen_lag = NULLOPT
 	)
 	: bvhar::McmcOutForecastRun<Eigen::MatrixXd, Eigen::MatrixXd, isUpdate>(
 			num_data, lag, num_chains, num_iter, num_burn, thin, step, y_test, false,
-			seed_chain, seed_forecast, display_progress, nthreads
+			seed_chain, seed_forecast, display_progress, nthreads,
+			exogen_lag
 		),
 		num_row(y.rows() / num_data), num_col(y.cols()), nrow_row_coef(num_row * lag), nrow_col_coef(num_col * lag) {
 		num_test /= num_row;
@@ -251,6 +255,9 @@ protected:
 	using bvhar::McmcOutForecastRun<Eigen::MatrixXd, Eigen::MatrixXd, isUpdate>::forecaster;
 	using bvhar::McmcOutForecastRun<Eigen::MatrixXd, Eigen::MatrixXd, isUpdate>::out_forecast;
 	using bvhar::McmcOutForecastRun<Eigen::MatrixXd, Eigen::MatrixXd, isUpdate>::lpl_record;
+	using bvhar::McmcOutForecastRun<Eigen::MatrixXd, Eigen::MatrixXd, isUpdate>::roll_exogen_mat;
+	using bvhar::McmcOutForecastRun<Eigen::MatrixXd, Eigen::MatrixXd, isUpdate>::roll_exogen;
+	using bvhar::McmcOutForecastRun<Eigen::MatrixXd, Eigen::MatrixXd, isUpdate>::lag_exogen;
 
 	Eigen::MatrixXd getValid() override {
 		return y_test.bottomRows(num_row);
@@ -261,7 +268,10 @@ protected:
 		LIST& param_coef_sig, LIST_OF_LIST& coef_sig_init,
 		LIST& row_prior, LIST_OF_LIST& row_init, const int row_prior_type,
 		LIST& col_prior, LIST_OF_LIST& col_init, const int col_prior_type,
-		const Eigen::MatrixXi& seed_chain
+		const Eigen::MatrixXi& seed_chain,
+		Optional<LIST> row_exogen_prior = NULLOPT, Optional<LIST_OF_LIST> row_exogen_init = NULLOPT, Optional<int> row_exogen_prior_type = NULLOPT,
+		Optional<LIST> col_exogen_prior = NULLOPT, Optional<LIST_OF_LIST> col_exogen_init = NULLOPT, Optional<int> col_exogen_prior_type = NULLOPT,
+		Optional<Eigen::MatrixXd> exogen = NULLOPT, Optional<int> exogen_lag = NULLOPT
 	) {
 		initData(y);
 		// initForecaster(fit_record);
@@ -271,23 +281,38 @@ protected:
 			// 	param_coef_sig, coef_sig_init, row_prior, row_init, row_prior_type, col_prior, col_init, col_prior_type,
 			// 	seed_chain
 			// );
+			Optional<int> exogen_rows = NULLOPT;
+ 			Optional<int> exogen_cols = NULLOPT;
 			for (int window = 0; window < num_horizon; ++window) {
 				std::vector<Eigen::MatrixXd> response = marmatrix_to_vector(roll_mat[window], num_row, lag);
 				std::vector<Eigen::SparseMatrix<double>> design = build_mar_design(roll_mat[window], response.size(), num_row, num_col, lag);
+				// should add build_mar_design when exogen
+				if (lag_exogen) {
+					exogen_rows = (*lag_exogen + 1) * roll_exogen_mat[window]->rows();
+					exogen_cols = (*lag_exogen + 1) * roll_exogen_mat[window]->cols();
+				}
 				auto temp_mcmc = initialize_matmcmc(
 					num_chains, num_iter - num_burn, design, response,
 					param_coef_sig, coef_sig_init, row_prior, row_init, row_prior_type,
 					col_prior, col_init, col_prior_type,
-					seed_chain.row(window)
+					seed_chain.row(window),
+					row_exogen_prior, row_exogen_init, row_exogen_prior_type, exogen_rows,
+					col_exogen_prior, col_exogen_init, col_exogen_prior_type, exogen_cols
 				);
-				auto temp_forecaster = initialize_matmniwforecaster(num_chains, lag, step, roll_mat[window], num_window, fit_record, seed_forecast, nthreads);
+				auto temp_forecaster = initialize_matmniwforecaster(
+					num_chains, lag, step, roll_mat[window], num_window, fit_record, seed_forecast, nthreads,
+					roll_exogen[window], lag_exogen
+				);
 				for (int i = 0; i < num_chains; ++i) {
 					model[window][i] = std::move(temp_mcmc[i]);
 					forecaster[window][i] = std::move(temp_forecaster[i]);
 				}
 			}
 		} else {
-			auto temp_forecaster = initialize_matmniwforecaster(num_chains, lag, step, roll_mat[0], num_window, fit_record, seed_forecast, nthreads);
+			auto temp_forecaster = initialize_matmniwforecaster(
+				num_chains, lag, step, roll_mat[0], num_window, fit_record, seed_forecast, nthreads,
+				roll_exogen[0], lag_exogen
+			);
 			for (int i = 0; i < num_chains; ++i) {
 				forecaster[0][i] = std::move(temp_forecaster[i]);
 			}
@@ -299,7 +324,14 @@ protected:
 	void updateForecaster(int window, int chain) override {
 		auto* mcmc_mniw = dynamic_cast<McmcMatMniw*>(model[window][chain].get());
 		MatMniwRecords mniw_record = mcmc_mniw->returnStructRecords(0, thin);
-		forecaster[window][chain] = std::make_unique<MatMniwForecaster>(mniw_record, step, roll_mat[window], num_window, lag, static_cast<unsigned int>(seed_forecast[chain]));
+		Optional<std::unique_ptr<MatMniwExogenForecaster>> exogen_updater = NULLOPT;
+		if (lag_exogen) {
+			exogen_updater = std::make_unique<MatMniwExogenForecaster>(*lag_exogen, *(roll_exogen[window]), *lag_exogen + step, num_row, num_col);
+		}
+		forecaster[window][chain] = std::make_unique<MatMniwForecaster>(
+			mniw_record, step, roll_mat[window], num_window, lag, static_cast<unsigned int>(seed_forecast[chain]),
+			std::move(exogen_updater)
+		);
 	}
 };
 
@@ -313,19 +345,27 @@ public:
 		LIST& row_prior, LIST_OF_LIST& row_init, const int row_prior_type,
 		LIST& col_prior, LIST_OF_LIST& col_init, const int col_prior_type,
 		int step, const Eigen::MatrixXd& y_test,
-		const Eigen::MatrixXi& seed_chain, const Eigen::VectorXi& seed_forecast, bool display_progress, int nthreads
+		const Eigen::MatrixXi& seed_chain, const Eigen::VectorXi& seed_forecast, bool display_progress, int nthreads,
+		Optional<LIST> row_exogen_prior = NULLOPT, Optional<LIST_OF_LIST> row_exogen_init = NULLOPT, Optional<int> row_exogen_prior_type = NULLOPT,
+		Optional<LIST> col_exogen_prior = NULLOPT, Optional<LIST_OF_LIST> col_exogen_init = NULLOPT, Optional<int> col_exogen_prior_type = NULLOPT,
+		Optional<Eigen::MatrixXd> exogen = NULLOPT, Optional<int> exogen_lag = NULLOPT
 	)
 	: MatMniwOutForecastRun<isUpdate>(
 			y, num_data, lag,
 			num_chains, num_iter, num_burn, thin, fit_record,
 			param_coef_sig, coef_sig_init, row_prior, row_init, row_prior_type, col_prior, col_init, col_prior_type,
-			step, y_test, seed_chain, seed_forecast, display_progress, nthreads
+			step, y_test, seed_chain, seed_forecast, display_progress, nthreads,
+			row_exogen_prior, row_exogen_init, row_exogen_prior_type,
+			col_exogen_prior, col_exogen_init, col_exogen_prior_type
 		) {
 		initialize(
 			y, fit_record,
 			param_coef_sig, coef_sig_init,
 			row_prior, row_init, row_prior_type, col_prior, col_init, col_prior_type,
-			seed_chain
+			seed_chain,
+			row_exogen_prior, row_exogen_init, row_exogen_prior_type,
+			col_exogen_prior, col_exogen_init, col_exogen_prior_type,
+			exogen, exogen_lag
 		);
 	}
 	virtual ~MatMniwRollForecastRun() = default;
@@ -339,6 +379,9 @@ protected:
 	using MatMniwOutForecastRun<isUpdate>::roll_mat;
 	using MatMniwOutForecastRun<isUpdate>::y_test;
 	using MatMniwOutForecastRun<isUpdate>::initialize;
+	using MatMniwOutForecastRun<isUpdate>::roll_exogen_mat;
+	using MatMniwOutForecastRun<isUpdate>::roll_exogen;
+	using MatMniwOutForecastRun<isUpdate>::lag_exogen;
 
 	void initData(const Eigen::MatrixXd& y) override {
 		Eigen::MatrixXd tot_mat((num_window + num_test) * num_row, num_col);
@@ -348,6 +391,12 @@ protected:
 			// roll_mat[i] = tot_mat.middleRows(i * num_row, num_window);
 			roll_mat[i] = tot_mat.middleRows(i * num_row, num_window * num_row);
 			// roll_y0[i] = roll_mat[i].bottomRows(num_window - num_row * lag);
+		}
+		if (lag_exogen) {
+			// for (int i = 0; i < num_horizon; ++i) {
+			// 	roll_exogen_mat[i] = (*exogen).middleRows(i, num_window);
+			// 	roll_exogen[i] = (*exogen).middleRows(num_window - *lag_exogen + i, *lag_exogen + step);
+			// }
 		}
 	}
 };
@@ -362,19 +411,28 @@ public:
 		LIST& row_prior, LIST_OF_LIST& row_init, const int row_prior_type,
 		LIST& col_prior, LIST_OF_LIST& col_init, const int col_prior_type,
 		int step, const Eigen::MatrixXd& y_test,
-		const Eigen::MatrixXi& seed_chain, const Eigen::VectorXi& seed_forecast, bool display_progress, int nthreads
+		const Eigen::MatrixXi& seed_chain, const Eigen::VectorXi& seed_forecast, bool display_progress, int nthreads,
+		Optional<LIST> row_exogen_prior = NULLOPT, Optional<LIST_OF_LIST> row_exogen_init = NULLOPT, Optional<int> row_exogen_prior_type = NULLOPT,
+		Optional<LIST> col_exogen_prior = NULLOPT, Optional<LIST_OF_LIST> col_exogen_init = NULLOPT, Optional<int> col_exogen_prior_type = NULLOPT,
+		Optional<Eigen::MatrixXd> exogen = NULLOPT, Optional<int> exogen_lag = NULLOPT
 	)
 	: MatMniwOutForecastRun<isUpdate>(
 			y, num_data, lag,
 			num_chains, num_iter, num_burn, thin, fit_record,
 			param_coef_sig, coef_sig_init, row_prior, row_init, row_prior_type, col_prior, col_init, col_prior_type,
-			step, y_test, seed_chain, seed_forecast, display_progress, nthreads
+			step, y_test, seed_chain, seed_forecast, display_progress, nthreads,
+			row_exogen_prior, row_exogen_init, row_exogen_prior_type,
+			col_exogen_prior, col_exogen_init, col_exogen_prior_type,
+			exogen, exogen_lag
 		) {
 		initialize(
 			y, fit_record,
 			param_coef_sig, coef_sig_init,
 			row_prior, row_init, row_prior_type, col_prior, col_init, col_prior_type,
-			seed_chain
+			seed_chain,
+			row_exogen_prior, row_exogen_init, row_exogen_prior_type,
+			col_exogen_prior, col_exogen_init, col_exogen_prior_type,
+			exogen, exogen_lag
 		);
 	}
 	virtual ~MatMniwExpandForecastRun() = default;
@@ -388,6 +446,9 @@ protected:
 	using MatMniwOutForecastRun<isUpdate>::roll_mat;
 	using MatMniwOutForecastRun<isUpdate>::y_test;
 	using MatMniwOutForecastRun<isUpdate>::initialize;
+	using MatMniwOutForecastRun<isUpdate>::roll_exogen_mat;
+	using MatMniwOutForecastRun<isUpdate>::roll_exogen;
+	using MatMniwOutForecastRun<isUpdate>::lag_exogen;
 
 	void initData(const Eigen::MatrixXd& y) override {
 		Eigen::MatrixXd tot_mat((num_window + num_test) * num_row, num_col);
@@ -395,6 +456,12 @@ protected:
 							 y_test;
 		for (int i = 0; i < num_horizon; ++i) {
 			roll_mat[i] = tot_mat.topRows(i * num_row + num_window * num_row);
+		}
+		if (lag_exogen) {
+			// for (int i = 0; i < num_horizon; ++i) {
+			// 	roll_exogen_mat[i] = (*exogen).middleRows(i, num_window);
+			// 	roll_exogen[i] = (*exogen).middleRows(num_window - *lag_exogen + i, *lag_exogen + step);
+			// }
 		}
 	}
 };
@@ -408,19 +475,28 @@ inline std::unique_ptr<bvhar::McmcOutforecastInterface> initialize_matmniwoutfor
 	LIST& row_prior, LIST_OF_LIST& row_init, const int row_prior_type,
 	LIST& col_prior, LIST_OF_LIST& col_init, const int col_prior_type,
 	int step, const Eigen::MatrixXd& y_test,
-	const Eigen::MatrixXi& seed_chain, const Eigen::VectorXi& seed_forecast, bool display_progress, int nthreads
+	const Eigen::MatrixXi& seed_chain, const Eigen::VectorXi& seed_forecast, bool display_progress, int nthreads,
+	Optional<LIST> row_exogen_prior = NULLOPT, Optional<LIST_OF_LIST> row_exogen_init = NULLOPT, Optional<int> row_exogen_prior_type = NULLOPT,
+	Optional<LIST> col_exogen_prior = NULLOPT, Optional<LIST_OF_LIST> col_exogen_init = NULLOPT, Optional<int> col_exogen_prior_type = NULLOPT,
+	Optional<Eigen::MatrixXd> exogen = NULLOPT, Optional<int> exogen_lag = NULLOPT
 ) {
 	if (run_mcmc) {
 		return std::make_unique<BaseOutForecast<true>>(
 			y, num_data, lag, num_chains, num_iter, num_burn, thin, fit_record,
 			param_coef_sig, coef_sig_init, row_prior, row_init, row_prior_type, col_prior, col_init, col_prior_type,
-			step, y_test, seed_chain, seed_forecast, display_progress, nthreads
+			step, y_test, seed_chain, seed_forecast, display_progress, nthreads,
+			row_exogen_prior, row_exogen_init, row_exogen_prior_type,
+			col_exogen_prior, col_exogen_init, col_exogen_prior_type,
+			exogen, exogen_lag
 		);
 	}
 	return std::make_unique<BaseOutForecast<false>>(
 		y, num_data, lag, num_chains, num_iter, num_burn, thin, fit_record,
 		param_coef_sig, coef_sig_init, row_prior, row_init, row_prior_type, col_prior, col_init, col_prior_type,
-		step, y_test, seed_chain, seed_forecast, display_progress, nthreads
+		step, y_test, seed_chain, seed_forecast, display_progress, nthreads,
+		row_exogen_prior, row_exogen_init, row_exogen_prior_type,
+		col_exogen_prior, col_exogen_init, col_exogen_prior_type,
+		exogen, exogen_lag
 	);
 }
 

@@ -35,18 +35,19 @@ inline std::vector<Eigen::SparseMatrix<double>> build_mar_design(const Eigen::Ma
 	// int num_row = y.rows() / num_design;
 	// int num_col = y.cols() / num_design;
 	std::vector<Eigen::SparseMatrix<double>> x(num_design);
+	Eigen::MatrixXd dense_x = Eigen::MatrixXd(num_row * lag, num_col * lag);
 	for (int i = 0; i < num_design; ++i) {
-		Eigen::MatrixXd dense_x(num_row * lag, num_col * lag);
 		// for (int j = i; j < i + lag; ++j) {
 		// 	dense_x.block(j * num_row, j * num_col, num_row, num_col) = y.middleRows(j * num_row, num_row);
 		// }
 		for (int j = 0; j < lag; ++j) {
-			dense_x.block(j * num_row, j * num_col, num_row, num_col) = y.middleRows((i + j) * num_row, num_row);
+			dense_x.block(j * num_row, j * num_col, num_row, num_col) = y.middleRows((i + j) * num_row, num_row); // is this right?
 		}
 		x[i] = dense_x.sparseView();
 	}
 	return x;
 }
+// -> overloading with exogen and exogen_lag
 
 // Y_{p + 1}, ..., Y_T
 inline std::vector<Eigen::MatrixXd> marmatrix_to_vector(const Eigen::MatrixXd& y, int num_row, int lag) {
