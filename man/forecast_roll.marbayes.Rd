@@ -8,8 +8,9 @@
   object,
   n_ahead,
   y_test,
-  num_thread = 1,
   level = 0.05,
+  newxreg,
+  num_thread = 1,
   med = FALSE,
   mcmc = TRUE,
   verbose = FALSE,
@@ -23,9 +24,11 @@
 
 \item{y_test}{Test data to be compared.}
 
-\item{num_thread}{\ifelse{html}{\href{https://lifecycle.r-lib.org/articles/stages.html#experimental}{\figure{lifecycle-experimental.svg}{options: alt='[Experimental]'}}}{\strong{[Experimental]}} Number of threads}
-
 \item{level}{Specify alpha of confidence interval level 100(1 - alpha) percentage. By default, .05.}
+
+\item{newxreg}{New values for exogenous variables.}
+
+\item{num_thread}{\ifelse{html}{\href{https://lifecycle.r-lib.org/articles/stages.html#experimental}{\figure{lifecycle-experimental.svg}{options: alt='[Experimental]'}}}{\strong{[Experimental]}} Number of threads}
 
 \item{med}{\ifelse{html}{\href{https://lifecycle.r-lib.org/articles/stages.html#experimental}{\figure{lifecycle-experimental.svg}{options: alt='[Experimental]'}}}{\strong{[Experimental]}} If \code{TRUE}, use median of forecast draws instead of mean (default).}
 

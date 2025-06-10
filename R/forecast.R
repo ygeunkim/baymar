@@ -111,16 +111,18 @@ predict.marbayes <- function(object, n_ahead, level = .05, newxreg, num_thread =
 #' @param object Model object
 #' @param n_ahead Step to forecast in rolling window scheme
 #' @param y_test Test data to be compared.
-#' @param num_thread `r lifecycle::badge("experimental")` Number of threads
 #' @param level Specify alpha of confidence interval level 100(1 - alpha) percentage. By default, .05.
+#' @param newxreg New values for exogenous variables.
+#' @param num_thread `r lifecycle::badge("experimental")` Number of threads
 #' @param med `r lifecycle::badge("experimental")` If `TRUE`, use median of forecast draws instead of mean (default).
 #' @param mcmc `r lifecycle::badge("experimental")` If `TRUE`, run new MCMC in new windows. By default, `TRUE`.
 #' @param verbose Print the progress bar in the console. By default, `FALSE`.
 #' @param ... Additional arguments
 #' @exportS3Method bvhar::forecast_roll
 forecast_roll.marbayes <- function(object, n_ahead, y_test,
-                                   num_thread = 1,
                                    level = .05,
+                                   newxreg,
+                                   num_thread = 1,
                                    med = FALSE,
                                    mcmc = TRUE,
                                    verbose = FALSE, ...) {
@@ -225,16 +227,18 @@ forecast_roll.marbayes <- function(object, n_ahead, y_test,
 #' @param object Model object
 #' @param n_ahead Step to forecast in rolling window scheme
 #' @param y_test Test data to be compared.
-#' @param num_thread `r lifecycle::badge("experimental")` Number of threads
 #' @param level Specify alpha of confidence interval level 100(1 - alpha) percentage. By default, .05.
+#' @param newxreg New values for exogenous variables.
+#' @param num_thread `r lifecycle::badge("experimental")` Number of threads
 #' @param med `r lifecycle::badge("experimental")` If `TRUE`, use median of forecast draws instead of mean (default).
 #' @param mcmc `r lifecycle::badge("experimental")` If `TRUE`, run new MCMC in new windows. By default, `TRUE`.
 #' @param verbose Print the progress bar in the console. By default, `FALSE`.
 #' @param ... Additional arguments
 #' @exportS3Method bvhar::forecast_expand
 forecast_expand.marbayes <- function(object, n_ahead, y_test,
-                                     num_thread = 1,
                                      level = .05,
+                                     newxreg,
+                                     num_thread = 1,
                                      med = FALSE,
                                      mcmc = TRUE,
                                      verbose = FALSE, ...) {
