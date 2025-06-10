@@ -15,9 +15,9 @@ template <bool isUpdate> class MatMniwExpandForecastRun;
 
 class MatMniwExogenForecaster : public bvhar::ExogenForecaster<Eigen::MatrixXd, Eigen::MatrixXd> {
 public:
-	MatMniwExogenForecaster(int lag, const Eigen::MatrixXd& exogen, int num_row, int num_col)
+	MatMniwExogenForecaster(int lag, const Eigen::MatrixXd& exogen, int num_exogen, int num_row, int num_col)
 	: bvhar::ExogenForecaster<Eigen::MatrixXd, Eigen::MatrixXd>(lag, exogen),
-		nrow_exogen(exogen.rows()), ncol_exogen(exogen.cols()),
+		nrow_exogen(exogen.rows() / num_exogen), ncol_exogen(exogen.cols()),
 		nrow_row_exogen((lag + 1) * nrow_exogen), nrow_col_exogen((lag + 1) * ncol_exogen),
 		num_row(num_row), num_col(num_col),
 		row_coef(nrow_row_exogen, num_row), col_coef(nrow_col_exogen, num_col) {
@@ -31,13 +31,13 @@ public:
 	void appendForecast(Eigen::MatrixXd& point_forecast, const int h) override {
 		for (int i = 0; i < lag + 1; ++i) {
 			last_pvec = exogen.middleRows((lag + h - i) * nrow_exogen, nrow_exogen); // x_(T + h - i)
-			point_forecast += row_coef.middleRows(i * nrow_exogen, num_row).transpose() * last_pvec * col_coef.middleRows(i * ncol_exogen, num_col);
+			point_forecast += row_coef.middleRows(i * nrow_exogen, nrow_exogen).transpose() * last_pvec * col_coef.middleRows(i * ncol_exogen, ncol_exogen);
 		}
 	}
 
 	void updateCoefmat(const Eigen::VectorXd& row_coef_record, const Eigen::VectorXd& col_coef_record) {
-		row_coef = bvhar::unvectorize(row_coef_record.tail(nrow_row_exogen * num_row), num_row);
-		col_coef = bvhar::unvectorize(col_coef_record.tail(nrow_col_exogen * num_col), num_col);
+		row_coef = bvhar::unvectorize(row_coef_record.tail(nrow_row_exogen * num_row).transpose(), num_row);
+		col_coef = bvhar::unvectorize(col_coef_record.tail(nrow_col_exogen * num_col).transpose(), num_col);
 	}
 
 private:
@@ -165,7 +165,7 @@ inline std::vector<std::unique_ptr<MatMniwForecaster>> initialize_matmniwforecas
 		if (exogen) {
 			STRING c_name = "C_record";
 			STRING d_name = "D_record";
-			exogen_updater = std::make_unique<MatMniwExogenForecaster>(*exogen_lag, *exogen, y.rows() / num_data, y.cols());
+			exogen_updater = std::make_unique<MatMniwExogenForecaster>(*exogen_lag, *exogen, *exogen_lag + step, y.rows() / num_data, y.cols());
 			initialize_matmniw_record(mat_record, i, fit_record, a_name, sigr_name, b_name, sigc_name, c_name, d_name);
 		} else {
 			initialize_matmniw_record(mat_record, i, fit_record, a_name, sigr_name, b_name, sigc_name);
