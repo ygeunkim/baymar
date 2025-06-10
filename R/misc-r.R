@@ -1,3 +1,20 @@
+#' @noRd
+validate_newxmat <- function(newxreg, n_ahead) {
+  if (missing(newxreg) || is.null(newxreg)) {
+    stop("'newxreg' should be supplied when using MARX model.")
+  }
+  if (!is.array(newxreg)) {
+    stop("Provide array for 'newxreg'.")
+  }
+  if (length(dim(newxreg)) != 3) {
+    stop("Array should be 3-dim: variable x region x time")
+  }
+  if (dim(newxreg)[3] != n_ahead) {
+    stop("The length of 'newxreg' should be the same as 'n_ahead'")
+  }
+  lapply(seq_len(n_ahead), function(x) newxreg[, , x])
+}
+
 #' Validate prior specification
 #' @importFrom stats ar.ols
 #' @noRd
@@ -28,10 +45,19 @@ validate_bmar_row_spec <- function(y, p, bayes_spec, nrow_data, ncol_data, nrow_
   }
   list(
     row_prior_mean = A0,
-    row_prior_prec = diag(1 / diag(V_A)),
+    row_prior_prec = 1 / diag(V_A),
     row_iw_scl = S_r,
     row_iw_df = nu_r
   )
+}
+
+#' @noRd
+validate_bmarx_rowspec <- function(param_prior, x, s, bayes_spec, nrow_exogen, ncol_exogen, nrow_exogen_row_coef) {
+  exogen_prior <- validate_bmar_row_spec(x, s + 1, bayes_spec, nrow_exogen, ncol_exogen, nrow_exogen_row_coef)
+  exogen_prior$row_prior_mean <- matrix(0L, nrow = nrow_exogen_row_coef, ncol = ncol(param_prior$row_prior_mean))
+  param_prior$row_prior_mean <- rbind(param_prior$row_prior_mean, exogen_prior$row_prior_mean)
+  param_prior$row_prior_prec <- c(param_prior$row_prior_prec, exogen_prior$row_prior_prec)
+  param_prior
 }
 
 #' @noRd
@@ -63,10 +89,19 @@ validate_bmar_col_spec <- function(y, p, bayes_spec, nrow_data, ncol_data, nrow_
   }
   list(
     col_prior_mean = B0,
-    col_prior_prec = diag(1 / diag(V_B)),
+    col_prior_prec = 1 / diag(V_B),
     col_iw_scl = S_c,
     col_iw_df = nu_c
   )
+}
+
+#' @noRd
+validate_bmarx_colspec <- function(param_prior, x, s, bayes_spec, nrow_exogen, ncol_exogen, nrow_exogen_col_coef) {
+  exogen_prior <- validate_bmar_col_spec(x, s + 1, bayes_spec, nrow_exogen, ncol_exogen, nrow_exogen_col_coef)
+  exogen_prior$col_prior_mean <- matrix(0L, nrow = nrow_exogen_col_coef, ncol = ncol(param_prior$col_prior_mean))
+  param_prior$col_prior_mean <- rbind(param_prior$col_prior_mean, exogen_prior$col_prior_mean)
+  param_prior$col_prior_prec <- c(param_prior$col_prior_prec, exogen_prior$col_prior_prec)
+  param_prior
 }
 
 #' @noRd 
@@ -99,7 +134,7 @@ get_prior_id <- function(prior_nm) {
 #' Set initial values for MNIW
 #' @importFrom stats runif
 #' @noRd
-get_bmar_init <- function(num_chains, nrow_data, ncol_data, nrow_row_coef, nrow_col_coef) {
+get_bmar_coef_init <- function(num_chains, nrow_data, ncol_data, nrow_row_coef, nrow_col_coef) {
   lapply(
     seq_len(num_chains),
     function(x) {
@@ -154,6 +189,22 @@ get_mat_hs_init <- function(num_chains, nrow_coef) {
   )
 }
 
+#' @noRd
+get_bmar_init <- function(bayes_spec, num_chains, nrow_coef) {
+  switch(
+    bayes_spec$prior,
+    "Minnesota" = get_empty_init(num_chains),
+    "Horseshoe" = {
+      get_mat_hs_init(
+        num_chains = num_chains,
+        nrow_coef = nrow_coef
+      )
+    },
+    "MN_Hierarchical" = get_mat_minn_init(num_chains),
+    stop(sprintf("Wrong %s prior", deparse(substitute(bayes_spec))))
+  )
+}
+
 #' Validate coefficient and covariance
 #'
 #' @noRd
@@ -177,8 +228,9 @@ validate_coef_sig <- function(coef, sig) {
 #' Split matrix draw
 #' 
 #' @noRd 
-split_matrix_chain <- function(x, chain = 1, varname = "A", lag = 1, num_col, is_symm = FALSE) {
-  index <- expand.grid(seq_len(lag * num_col), seq_len(num_col))
+split_matrix_chain <- function(x, chain = 1, varname = "A", num_row, num_col, is_symm = FALSE) {
+  # index <- expand.grid(seq_len(lag * num_col), seq_len(num_col))
+  index <- expand.grid(seq_len(num_row), seq_len(num_col))
   if (is_symm) {
     index <- index[apply(index, 1, function(x) x[1] >= x[2]), ]
   }
