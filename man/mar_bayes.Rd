@@ -7,12 +7,16 @@
 mar_bayes(
   y,
   p = 1,
+  exogen = NULL,
+  s = 0,
   num_chains = 1,
   num_iter = 1000,
   num_burn = floor(num_iter/2),
   thinning = 1,
   row_spec = set_mar_minnesota(),
   col_spec = row_spec,
+  exogen_row_spec = row_spec,
+  exogen_col_spec = row_spec,
   verbose = FALSE,
   num_thread = 1
 )
@@ -21,6 +25,10 @@ mar_bayes(
 \item{y}{Matrix-valued time series data}
 
 \item{p}{VAR lag (Default: 1)}
+
+\item{exogen}{Unmodeled matrices}
+
+\item{s}{Lag of exogeneous matrices in MARX(p, s). By default, \code{s = 0}.}
 
 \item{num_chains}{Number of MCMC chains}
 
@@ -33,6 +41,10 @@ mar_bayes(
 \item{row_spec}{Row coefficient specification}
 
 \item{col_spec}{Column coefficient specification}
+
+\item{exogen_row_spec}{Exogenous row coefficient prior specification.}
+
+\item{exogen_col_spec}{Exogenous column coefficient prior specification.}
 
 \item{verbose}{Progress log}
 
