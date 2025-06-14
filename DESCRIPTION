@@ -25,7 +25,7 @@ Imports:
     utils
 LinkingTo: 
     BH (>= 1.87.0-0),
-    bvhar (>= 2.2.2.9008),
+    bvhar (>= 2.2.2.9010),
     Rcpp (>= 0.10.0),
     RcppEigen (>= 0.3.4.0.0),
     RcppSpdlog,
@@ -37,7 +37,7 @@ LazyData: true
 Roxygen: list(markdown = TRUE)
 RoxygenNote: 7.3.2
 Depends: 
-    R (>= 4.1.0)
+    R (>= 4.2.0)
 Suggests: 
     knitr,
     purrr,
