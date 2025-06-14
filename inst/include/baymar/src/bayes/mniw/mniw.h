@@ -194,6 +194,8 @@ inline std::vector<std::unique_ptr<McmcMatMniw>> initialize_matmcmc(
 		}
 		if (col_exogen_prior_type) {
 			LIST col_exogen_init_spec = (*col_exogen_init)[i];
+			// auto temp_col_exogen_updater = initialize_matshrinkageupdater(num_iter, *col_exogen_prior, col_exogen_init_spec, *col_exogen_prior_type);
+			// col_exogen_updater = std::move(temp_col_exogen_updater);
 			col_exogen_updater = initialize_matshrinkageupdater(num_iter, *col_exogen_prior, col_exogen_init_spec, *col_exogen_prior_type);
 			(*col_exogen_updater)->initPrec(params._col_prec.tail(params._col_exogen));
 		}

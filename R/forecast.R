@@ -132,8 +132,9 @@ forecast_roll.marbayes <- function(object, n_ahead, y_test,
   num_data <- dim(object$y)[3]
   nrow_row_coef <- nrow_data * object$p
   nrow_col_coef <- ncol_data * object$p
+  num_test <- dim(y_test)[3]
   y_list <- lapply(seq_len(num_data), function(x) object$y[, , x])
-  y_test_list <- lapply(seq_len(dim(y_test)[3]), function(x) y_test[, , x])
+  y_test_list <- lapply(seq_len(num_test), function(x) y_test[, , x])
   var_names <- dimnames(object$y)
   var_names[[3]] <- n_ahead:length(y_test_list)
   param_prior <- validate_bmar_row_spec(
@@ -158,25 +159,61 @@ forecast_roll.marbayes <- function(object, n_ahead, y_test,
   row_prior <- validate_bmar_prior(object$spec$row)
   col_prior <- validate_bmar_prior(object$spec$col)
   num_horizon <- length(y_test_list) - n_ahead + 1
-  pred_res <- roll_bmar_mniw(
-    y = do.call(rbind, y_list),
-    lag = object$p,
-    num_data = length(y_list),
-    num_chains = object$chain,
-    num_iter = object$iter,
-    num_burn = object$burn,
-    thin = object$thin,
-    fit_record = fit_record,
-    run_mcmc = mcmc,
-    param_coef_sig = param_prior, coef_sig_init = object$init$param,
-    row_prior = row_prior, row_init = object$init$row, row_prior_type = get_prior_id(object$spec$row$prior),
-    col_prior = col_prior, col_init = object$init$col, col_prior_type = get_prior_id(object$spec$col$prior),
-    step = n_ahead, y_test = do.call(rbind, y_test_list),
-    seed_chain = sample.int(.Machine$integer.max, size = object$chain * num_horizon) |> matrix(ncol = object$chain),
-    seed_forecast = sample.int(.Machine$integer.max, size = object$chain),
-    display_progress = verbose,
-    nthreads = num_thread
-  )
+  is_exogen <- !is.null(eval.parent(object$call$exogen))
+  if (is_exogen) {
+    newxreg_list <- validate_newxmat(newxreg = newxreg, n_ahead = num_test)
+    exogen_row_prior <- validate_bmar_prior(object$spec$exogen_row)
+    exogen_col_prior <- validate_bmar_prior(object$spec$exogen_col)
+    exogen_list <-
+      lapply(seq_len(dim(object$exogen_data)[3]), function(x) object$exogen_data[, , x]) |>
+      tail(object$s)
+    pred_res <- roll_bmarx_mniw(
+      y = do.call(rbind, y_list),
+      lag = object$p,
+      num_data = length(y_list),
+      num_chains = object$chain,
+      num_iter = object$iter,
+      num_burn = object$burn,
+      thin = object$thin,
+      fit_record = fit_record,
+      run_mcmc = mcmc,
+      param_coef_sig = param_prior, coef_sig_init = object$init$param,
+      row_prior = row_prior, row_init = object$init$row, row_prior_type = get_prior_id(object$spec$row$prior),
+      col_prior = col_prior, col_init = object$init$col, col_prior_type = get_prior_id(object$spec$col$prior),
+      step = n_ahead, y_test = do.call(rbind, y_test_list),
+      seed_chain = sample.int(.Machine$integer.max, size = object$chain * num_horizon) |> matrix(ncol = object$chain),
+      seed_forecast = sample.int(.Machine$integer.max, size = object$chain),
+      display_progress = verbose,
+      nthreads = num_thread,
+      exogen = rbind(
+        do.call(rbind, exogen_list),
+        do.call(rbind, newxreg_list)
+      ),
+      exogen_lag = object$s,
+      exogen_row_prior = exogen_row_prior, exogen_row_init = object$init$exogen_row, exogen_row_prior_type = get_prior_id(object$spec$exogen_row$prior),
+      exogen_col_prior = exogen_col_prior, exogen_col_init = object$init$exogen_col, exogen_col_prior_type = get_prior_id(object$spec$exogen_col$prior)
+    )
+  } else {
+    pred_res <- roll_bmar_mniw(
+      y = do.call(rbind, y_list),
+      lag = object$p,
+      num_data = length(y_list),
+      num_chains = object$chain,
+      num_iter = object$iter,
+      num_burn = object$burn,
+      thin = object$thin,
+      fit_record = fit_record,
+      run_mcmc = mcmc,
+      param_coef_sig = param_prior, coef_sig_init = object$init$param,
+      row_prior = row_prior, row_init = object$init$row, row_prior_type = get_prior_id(object$spec$row$prior),
+      col_prior = col_prior, col_init = object$init$col, col_prior_type = get_prior_id(object$spec$col$prior),
+      step = n_ahead, y_test = do.call(rbind, y_test_list),
+      seed_chain = sample.int(.Machine$integer.max, size = object$chain * num_horizon) |> matrix(ncol = object$chain),
+      seed_forecast = sample.int(.Machine$integer.max, size = object$chain),
+      display_progress = verbose,
+      nthreads = num_thread
+    )
+  }
   num_draw <- nrow(object$param)
   y_distn <-
     lapply(
