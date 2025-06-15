@@ -16,45 +16,70 @@ inline Eigen::SparseMatrix<double> build_blk_design(const std::vector<Eigen::Mat
 	return dense_x.sparseView();
 }
 
-// inline std::vector<Eigen::SparseMatrix<double>> build_mar_design(const std::vector<Eigen::MatrixXd>& y, int lag) {
-// 	int num_row = y[0].rows();
-// 	int num_col = y[0].cols();
-// 	int num_design = y.size();
-// 	std::vector<Eigen::SparseMatrix<double>> x(num_design);
-// 	for (int i = 0; i < num_design; ++i) {
-// 		Eigen::MatrixXd dense_x(num_row * lag, num_col * lag);
-// 		for (int j = i; j < i + lag; ++j) {
-// 			dense_x.block(j * num_row, j * num_col, num_row, num_col) = y[j];
-// 		}
-// 		x[i] = dense_x.sparseView();
-// 	}
-// 	return x;
-// }
+// Y_{p + 1}, ..., Y_T
+inline std::vector<Eigen::MatrixXd> build_mar_response(const std::vector<Eigen::MatrixXd>& y, int lag) {
+	int num_design = y.size() - lag;
+	std::vector<Eigen::MatrixXd> response(num_design);
+	for (int i = 0; i < num_design; ++i) {
+		response[i] = y[i + lag];
+	}
+	return response;
+}
 
-inline std::vector<Eigen::SparseMatrix<double>> build_mar_design(const Eigen::MatrixXd& y, int num_design, int num_row, int num_col, int lag) {
-	// int num_row = y.rows() / num_design;
-	// int num_col = y.cols() / num_design;
-	std::vector<Eigen::SparseMatrix<double>> x(num_design);
+// diag(Y_{t - 1}, ..., Y_{t - p}), t = p + 1, ..., T
+// @param y Y_1, ..., Y_T
+// @param lag MAR lag
+inline std::vector<Eigen::SparseMatrix<double>> build_mar_design(const std::vector<Eigen::MatrixXd>& y, int lag) {
+	int num_design = y.size() - lag;
+	int num_row = y[0].rows();
+	int num_col = y[0].cols();
+	std::vector<Eigen::SparseMatrix<double>> x(num_design); // t = p + 1, ..., T
 	Eigen::MatrixXd dense_x = Eigen::MatrixXd(num_row * lag, num_col * lag);
 	for (int i = 0; i < num_design; ++i) {
-		// for (int j = i; j < i + lag; ++j) {
-		// 	dense_x.block(j * num_row, j * num_col, num_row, num_col) = y.middleRows(j * num_row, num_row);
-		// }
 		for (int j = 0; j < lag; ++j) {
-			dense_x.block(j * num_row, j * num_col, num_row, num_col) = y.middleRows((i + j) * num_row, num_row); // is this right?
+			dense_x.block(j * num_row, j * num_col, num_row, num_col) = y[lag + i - j - 1]; // diag(Y_{t - 1}, ..., Y_{t - p})
 		}
 		x[i] = dense_x.sparseView();
 	}
 	return x;
 }
-// -> overloading with exogen and exogen_lag
 
-// Y_{p + 1}, ..., Y_T
-inline std::vector<Eigen::MatrixXd> marmatrix_to_vector(const Eigen::MatrixXd& y, int num_row, int lag) {
-	int num_design = y.rows() / num_row - lag;
-	std::vector<Eigen::MatrixXd> response(num_design);
+// diag(Y_{t - 1}, ..., Y_{t - p}, X_t, ..., X_{t - s}), t = p + 1, ..., T
+// @param exogen X_1, ..., X_T
+// @param exogen_lag s
+inline std::vector<Eigen::SparseMatrix<double>> build_mar_design(const std::vector<Eigen::MatrixXd>& y,
+																																 const std::vector<Eigen::MatrixXd>& exogen,
+																																 int lag, int exogen_lag) {
+	int num_design = y.size() - lag;
+	int num_row = y[0].rows();
+	int num_col = y[0].cols();
+	int nrow_exogen = exogen[0].rows();
+	int ncol_exogen = exogen[0].cols();
+	std::vector<Eigen::SparseMatrix<double>> design(num_design); // t = p + 1, ..., T
+	Eigen::MatrixXd dense_x = Eigen::MatrixXd(num_row * lag + nrow_exogen * (exogen_lag + 1), num_col * lag + ncol_exogen * (exogen_lag + 1));
 	for (int i = 0; i < num_design; ++i) {
-		response[i] = y.middleRows(num_row * (lag + i), num_row);
+		for (int j = 0; j < lag; ++j) {
+			dense_x.block(j * num_row, j * num_col, num_row, num_col) = y[lag + i - j - 1]; // Y_{t - 1}, ..., Y_{t - p}
+		}
+		for (int j = 0; j < exogen_lag; ++j) {
+			dense_x.block(
+				lag * num_row + j * nrow_exogen,
+				lag * num_col + j * ncol_exogen,
+				nrow_exogen,
+				ncol_exogen
+			) = exogen[lag + i - j]; // X_t, ..., X_{t - s}
+		}
+		design[i] = dense_x.sparseView();
+	}
+	return design;
+}
+
+// Y_1, ..., Y_T
+inline std::vector<Eigen::MatrixXd> marmatrix_to_vector(const Eigen::MatrixXd& y, int num_row) {
+	int num_data = y.rows() / num_row;
+	std::vector<Eigen::MatrixXd> response(num_data);
+	for (int i = 0; i < num_data; ++i) {
+		response[i] = y.middleRows(num_row * i, num_row);
 	}
 	return response;
 }

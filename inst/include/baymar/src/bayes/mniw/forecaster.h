@@ -273,7 +273,7 @@ protected:
 		Optional<LIST> col_exogen_prior = NULLOPT, Optional<LIST_OF_LIST> col_exogen_init = NULLOPT, Optional<int> col_exogen_prior_type = NULLOPT,
 		Optional<Eigen::MatrixXd> exogen = NULLOPT, Optional<int> exogen_lag = NULLOPT
 	) {
-		initData(y);
+		initData(y, exogen);
 		// initForecaster(fit_record);
 		using is_mcmc = std::integral_constant<bool, isUpdate>;
 		if (is_mcmc::value) {
@@ -284,12 +284,17 @@ protected:
 			Optional<int> exogen_rows = NULLOPT;
  			Optional<int> exogen_cols = NULLOPT;
 			for (int window = 0; window < num_horizon; ++window) {
-				std::vector<Eigen::MatrixXd> response = marmatrix_to_vector(roll_mat[window], num_row, lag);
-				std::vector<Eigen::SparseMatrix<double>> design = build_mar_design(roll_mat[window], response.size(), num_row, num_col, lag);
-				// should add build_mar_design when exogen
+				std::vector<Eigen::MatrixXd> y_data = marmatrix_to_vector(roll_mat[window], num_row);
+				std::vector<Eigen::MatrixXd> response = build_mar_response(y_data, lag);
+				Optional<std::vector<Eigen::MatrixXd>> exogen_data = NULLOPT;
 				if (lag_exogen) {
-					exogen_rows = (*lag_exogen + 1) * roll_exogen_mat[window]->rows();
-					exogen_cols = (*lag_exogen + 1) * roll_exogen_mat[window]->cols();
+					int nrow_exogen = exogen->rows() / (num_window + num_test);
+					exogen_data = marmatrix_to_vector(*(roll_exogen_mat[window]), nrow_exogen);
+				}
+				std::vector<Eigen::SparseMatrix<double>> design = lag_exogen ? build_mar_design(y_data, *exogen_data, lag, *lag_exogen) : build_mar_design(y_data, lag);
+				if (lag_exogen) {
+					exogen_rows = (*lag_exogen + 1) * (*exogen_data)[0].rows();
+					exogen_cols = (*lag_exogen + 1) * (*exogen_data)[0].cols();
 				}
 				auto temp_mcmc = initialize_matmcmc(
 					num_chains, num_iter - num_burn, design, response,
@@ -319,7 +324,7 @@ protected:
 		}
 	}
 
-	virtual void initData(const Eigen::MatrixXd& y) = 0;
+	virtual void initData(const Eigen::MatrixXd& y, Optional<Eigen::MatrixXd> exogen = NULLOPT) = 0;
 
 	void updateForecaster(int window, int chain) override {
 		auto* mcmc_mniw = dynamic_cast<McmcMatMniw*>(model[window][chain].get());
@@ -356,7 +361,8 @@ public:
 			param_coef_sig, coef_sig_init, row_prior, row_init, row_prior_type, col_prior, col_init, col_prior_type,
 			step, y_test, seed_chain, seed_forecast, display_progress, nthreads,
 			row_exogen_prior, row_exogen_init, row_exogen_prior_type,
-			col_exogen_prior, col_exogen_init, col_exogen_prior_type
+			col_exogen_prior, col_exogen_init, col_exogen_prior_type,
+			exogen, exogen_lag
 		) {
 		initialize(
 			y, fit_record,
@@ -376,6 +382,7 @@ protected:
 	using MatMniwOutForecastRun<isUpdate>::num_col;
 	using MatMniwOutForecastRun<isUpdate>::num_test;
 	using MatMniwOutForecastRun<isUpdate>::num_horizon;
+	using MatMniwOutForecastRun<isUpdate>::step;
 	using MatMniwOutForecastRun<isUpdate>::roll_mat;
 	using MatMniwOutForecastRun<isUpdate>::y_test;
 	using MatMniwOutForecastRun<isUpdate>::initialize;
@@ -383,7 +390,7 @@ protected:
 	using MatMniwOutForecastRun<isUpdate>::roll_exogen;
 	using MatMniwOutForecastRun<isUpdate>::lag_exogen;
 
-	void initData(const Eigen::MatrixXd& y) override {
+	void initData(const Eigen::MatrixXd& y, Optional<Eigen::MatrixXd> exogen = NULLOPT) override {
 		Eigen::MatrixXd tot_mat((num_window + num_test) * num_row, num_col);
 		tot_mat << y,
 							 y_test;
@@ -393,10 +400,11 @@ protected:
 			// roll_y0[i] = roll_mat[i].bottomRows(num_window - num_row * lag);
 		}
 		if (lag_exogen) {
-			// for (int i = 0; i < num_horizon; ++i) {
-			// 	roll_exogen_mat[i] = (*exogen).middleRows(i, num_window);
-			// 	roll_exogen[i] = (*exogen).middleRows(num_window - *lag_exogen + i, *lag_exogen + step);
-			// }
+			int nrow_exogen = exogen->rows() / (num_window + num_test);
+			for (int i = 0; i < num_horizon; ++i) {
+				roll_exogen_mat[i] = (*exogen).middleRows(i * nrow_exogen, num_window * nrow_exogen);
+				roll_exogen[i] = (*exogen).middleRows((num_window - *lag_exogen + i) * nrow_exogen, (*lag_exogen + step) * nrow_exogen);
+			}
 		}
 	}
 };
@@ -443,6 +451,7 @@ protected:
 	using MatMniwOutForecastRun<isUpdate>::num_col;
 	using MatMniwOutForecastRun<isUpdate>::num_test;
 	using MatMniwOutForecastRun<isUpdate>::num_horizon;
+	using MatMniwOutForecastRun<isUpdate>::step;
 	using MatMniwOutForecastRun<isUpdate>::roll_mat;
 	using MatMniwOutForecastRun<isUpdate>::y_test;
 	using MatMniwOutForecastRun<isUpdate>::initialize;
@@ -450,7 +459,7 @@ protected:
 	using MatMniwOutForecastRun<isUpdate>::roll_exogen;
 	using MatMniwOutForecastRun<isUpdate>::lag_exogen;
 
-	void initData(const Eigen::MatrixXd& y) override {
+	void initData(const Eigen::MatrixXd& y, Optional<Eigen::MatrixXd> exogen = NULLOPT) override {
 		Eigen::MatrixXd tot_mat((num_window + num_test) * num_row, num_col);
 		tot_mat << y,
 							 y_test;
@@ -458,10 +467,11 @@ protected:
 			roll_mat[i] = tot_mat.topRows(i * num_row + num_window * num_row);
 		}
 		if (lag_exogen) {
-			// for (int i = 0; i < num_horizon; ++i) {
-			// 	roll_exogen_mat[i] = (*exogen).middleRows(i, num_window);
-			// 	roll_exogen[i] = (*exogen).middleRows(num_window - *lag_exogen + i, *lag_exogen + step);
-			// }
+			for (int i = 0; i < num_horizon; ++i) {
+				int nrow_exogen = exogen->rows() / (*lag_exogen + num_test);
+				roll_exogen_mat[i] = (*exogen).topRows((num_window + i) * nrow_exogen);
+				roll_exogen[i] = (*exogen).middleRows((num_window - *lag_exogen + i) * nrow_exogen, (*lag_exogen + step) * nrow_exogen);
+			}
 		}
 	}
 };

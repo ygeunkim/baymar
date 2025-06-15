@@ -165,8 +165,7 @@ forecast_roll.marbayes <- function(object, n_ahead, y_test,
     exogen_row_prior <- validate_bmar_prior(object$spec$exogen_row)
     exogen_col_prior <- validate_bmar_prior(object$spec$exogen_col)
     exogen_list <-
-      lapply(seq_len(dim(object$exogen_data)[3]), function(x) object$exogen_data[, , x]) |>
-      tail(object$s)
+      lapply(seq_len(dim(object$exogen_data)[3]), function(x) object$exogen_data[, , x])
     pred_res <- roll_bmarx_mniw(
       y = do.call(rbind, y_list),
       lag = object$p,
