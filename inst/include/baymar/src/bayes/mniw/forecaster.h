@@ -218,6 +218,7 @@ public:
 			exogen_lag
 		),
 		num_row(y.rows() / num_data), num_col(y.cols()), nrow_row_coef(num_row * lag), nrow_col_coef(num_col * lag) {
+		BVHAR_DEBUG_LOG(debug_logger, "MatMniwOutForecastRun Constructor: num_data={}, row_prior_type={}, col_prior_type={}", num_data, row_prior_type, col_prior_type);
 		num_test /= num_row;
 		num_horizon = num_test - step + 1;
 		roll_mat.resize(num_horizon);
@@ -258,8 +259,10 @@ protected:
 	using bvhar::McmcOutForecastRun<Eigen::MatrixXd, Eigen::MatrixXd, isUpdate>::roll_exogen_mat;
 	using bvhar::McmcOutForecastRun<Eigen::MatrixXd, Eigen::MatrixXd, isUpdate>::roll_exogen;
 	using bvhar::McmcOutForecastRun<Eigen::MatrixXd, Eigen::MatrixXd, isUpdate>::lag_exogen;
+	using bvhar::McmcOutForecastRun<Eigen::MatrixXd, Eigen::MatrixXd, isUpdate>::debug_logger;
 
 	Eigen::MatrixXd getValid() override {
+		BVHAR_DEBUG_LOG(debug_logger, "getValid() called");
 		return y_test.bottomRows(num_row);
 	}
 
@@ -273,6 +276,7 @@ protected:
 		Optional<LIST> col_exogen_prior = NULLOPT, Optional<LIST_OF_LIST> col_exogen_init = NULLOPT, Optional<int> col_exogen_prior_type = NULLOPT,
 		Optional<Eigen::MatrixXd> exogen = NULLOPT, Optional<int> exogen_lag = NULLOPT
 	) {
+		BVHAR_DEBUG_LOG(debug_logger, "initialize(...) called");
 		initData(y, exogen);
 		// initForecaster(fit_record);
 		using is_mcmc = std::integral_constant<bool, isUpdate>;
@@ -327,6 +331,7 @@ protected:
 	virtual void initData(const Eigen::MatrixXd& y, Optional<Eigen::MatrixXd> exogen = NULLOPT) = 0;
 
 	void updateForecaster(int window, int chain) override {
+		BVHAR_DEBUG_LOG(debug_logger, "updateForecaster(window={}, chain={}) called", window, chain);
 		auto* mcmc_mniw = dynamic_cast<McmcMatMniw*>(model[window][chain].get());
 		MatMniwRecords mniw_record = mcmc_mniw->returnStructRecords(0, thin);
 		Optional<std::unique_ptr<MatMniwExogenForecaster>> exogen_updater = NULLOPT;
@@ -364,6 +369,7 @@ public:
 			col_exogen_prior, col_exogen_init, col_exogen_prior_type,
 			exogen, exogen_lag
 		) {
+		BVHAR_DEBUG_LOG(debug_logger, "MatMniwRollForecastRun constructor");
 		initialize(
 			y, fit_record,
 			param_coef_sig, coef_sig_init,
@@ -389,8 +395,10 @@ protected:
 	using MatMniwOutForecastRun<isUpdate>::roll_exogen_mat;
 	using MatMniwOutForecastRun<isUpdate>::roll_exogen;
 	using MatMniwOutForecastRun<isUpdate>::lag_exogen;
+	using MatMniwOutForecastRun<isUpdate>::debug_logger;
 
 	void initData(const Eigen::MatrixXd& y, Optional<Eigen::MatrixXd> exogen = NULLOPT) override {
+		BVHAR_DEBUG_LOG(debug_logger, "initData(y, ...) called");
 		Eigen::MatrixXd tot_mat((num_window + num_test) * num_row, num_col);
 		tot_mat << y,
 							 y_test;
@@ -433,6 +441,7 @@ public:
 			col_exogen_prior, col_exogen_init, col_exogen_prior_type,
 			exogen, exogen_lag
 		) {
+		BVHAR_DEBUG_LOG(debug_logger, "MatMniwExpandForecastRun constructor");
 		initialize(
 			y, fit_record,
 			param_coef_sig, coef_sig_init,
@@ -458,8 +467,10 @@ protected:
 	using MatMniwOutForecastRun<isUpdate>::roll_exogen_mat;
 	using MatMniwOutForecastRun<isUpdate>::roll_exogen;
 	using MatMniwOutForecastRun<isUpdate>::lag_exogen;
+	using MatMniwOutForecastRun<isUpdate>::debug_logger;
 
 	void initData(const Eigen::MatrixXd& y, Optional<Eigen::MatrixXd> exogen = NULLOPT) override {
+		BVHAR_DEBUG_LOG(debug_logger, "initData(y, ...) called");
 		Eigen::MatrixXd tot_mat((num_window + num_test) * num_row, num_col);
 		tot_mat << y,
 							 y_test;
