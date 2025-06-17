@@ -164,6 +164,24 @@ forecast_roll.marbayes <- function(object, n_ahead, y_test,
     newxreg_list <- validate_newxmat(newxreg = newxreg, n_ahead = num_test)
     exogen_row_prior <- validate_bmar_prior(object$spec$exogen_row)
     exogen_col_prior <- validate_bmar_prior(object$spec$exogen_col)
+    param_prior <- validate_bmarx_rowspec(
+      param_prior = param_prior,
+      x = object$exogen_data,
+      s = object$s,
+      bayes_spec = object$spec$exogen_row,
+      nrow_exogen = dim(object$exogen_data)[1],
+      ncol_exogen = dim(object$exogen_data)[2],
+      nrow_exogen_row_coef = (object$s + 1) * dim(object$exogen_data)[1]
+    )
+    param_prior <- validate_bmarx_colspec(
+      param_prior = param_prior,
+      x = object$exogen_data,
+      s = object$s,
+      bayes_spec = object$spec$exogen_col,
+      nrow_exogen = dim(object$exogen_data)[1],
+      ncol_exogen = dim(object$exogen_data)[2],
+      nrow_exogen_col_coef = (object$s + 1) * dim(object$exogen_data)[2]
+    )
     exogen_list <-
       lapply(seq_len(dim(object$exogen_data)[3]), function(x) object$exogen_data[, , x])
     pred_res <- roll_bmarx_mniw(

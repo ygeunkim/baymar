@@ -86,20 +86,26 @@ test_that("Minnesota Prior - Rolling", {
   expect_no_error(
     pred_test <- help_bmar_roll(set_mar_minnesota(kappa = .1), set_mar_minnesota(kappa = .1))
   )
+  expect_no_error(
+    pred_test <- help_bmar_roll(set_mar_minnesota(kappa = .1), set_mar_minnesota(kappa = .1), set_mar_minnesota(kappa = .1), set_mar_minnesota(kappa = .1))
+  )
 })
 
 test_that("Horseshoe Prior - Rolling", {
   expect_no_error(
     pred_test <- help_bmar_roll(set_mar_horseshoe(), set_mar_horseshoe())
   )
-  # expect_no_error(
-  #   pred_test <- help_bmar_roll(set_mar_horseshoe(), set_mar_horseshoe(), set_mar_horseshoe(), set_mar_horseshoe())
-  # )
+  expect_no_error(
+    pred_test <- help_bmar_roll(set_mar_horseshoe(), set_mar_horseshoe(), set_mar_horseshoe(), set_mar_horseshoe())
+  )
 })
 
 test_that("Hierarchical Minnesota Prior - Rolling", {
   expect_no_error(
     pred_test <- help_bmar_roll(set_mar_minnesota(), set_mar_minnesota())
+  )
+  expect_no_error(
+    pred_test <- help_bmar_roll(set_mar_minnesota(), set_mar_minnesota(), set_mar_minnesota(), set_mar_minnesota())
   )
 })
 
