@@ -426,6 +426,7 @@ protected:
 		}
 		if (lag_exogen) {
 			int nrow_exogen = exogen->rows() / (num_window + num_test);
+			BVHAR_DEBUG_LOG(debug_logger, "nrow_exogen={}", nrow_exogen);
 			for (int i = 0; i < num_horizon; ++i) {
 				roll_exogen_mat[i] = (*exogen).middleRows(i * nrow_exogen, num_window * nrow_exogen);
 				roll_exogen[i] = (*exogen).middleRows((num_window - *lag_exogen + i) * nrow_exogen, (*lag_exogen + step) * nrow_exogen);
@@ -492,11 +493,13 @@ protected:
 		tot_mat << y,
 							 y_test;
 		for (int i = 0; i < num_horizon; ++i) {
-			roll_mat[i] = tot_mat.topRows(i * num_row + num_window * num_row);
+			roll_mat[i] = tot_mat.topRows((num_window + i) * num_row);
+			BVHAR_DEBUG_LOG(debug_logger, "roll_mat[{}]: {} x {}", i, roll_mat[i].rows(), roll_mat[i].cols());
 		}
 		if (lag_exogen) {
+			int nrow_exogen = exogen->rows() / (num_window + num_test);
+			BVHAR_DEBUG_LOG(debug_logger, "nrow_exogen={}", nrow_exogen);
 			for (int i = 0; i < num_horizon; ++i) {
-				int nrow_exogen = exogen->rows() / (*lag_exogen + num_test);
 				roll_exogen_mat[i] = (*exogen).topRows((num_window + i) * nrow_exogen);
 				roll_exogen[i] = (*exogen).middleRows((num_window - *lag_exogen + i) * nrow_exogen, (*lag_exogen + step) * nrow_exogen);
 			}
