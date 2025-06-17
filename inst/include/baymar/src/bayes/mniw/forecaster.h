@@ -21,6 +21,7 @@ public:
 		nrow_row_exogen((lag + 1) * nrow_exogen), nrow_col_exogen((lag + 1) * ncol_exogen),
 		num_row(num_row), num_col(num_col),
 		row_coef(nrow_row_exogen, num_row), col_coef(nrow_col_exogen, num_col) {
+		BVHAR_DEBUG_LOG(debug_logger, "Constructor: num_exogen={}, num_row={}, num_col={}", num_exogen, num_row, num_col);
 		// last_pvec = Eigen::MatrixXd::Zero((lag + 1) * nrow_exogen, (lag + 1) * ncol_exogen);
 		// exogen: rbind(X_{T - s}, ..., X_{T + h})
 		// last_pvec = x_(T + h), ..., x_(T + h - s)
@@ -29,6 +30,7 @@ public:
 	virtual ~MatMniwExogenForecaster() = default;
 	
 	void appendForecast(Eigen::MatrixXd& point_forecast, const int h) override {
+		BVHAR_DEBUG_LOG(debug_logger, "appendForecast(point_forecast, h) called");
 		for (int i = 0; i < lag + 1; ++i) {
 			last_pvec = exogen.middleRows((lag + h - i) * nrow_exogen, nrow_exogen); // x_(T + h - i)
 			point_forecast += row_coef.middleRows(i * nrow_exogen, nrow_exogen).transpose() * last_pvec * col_coef.middleRows(i * ncol_exogen, ncol_exogen);
@@ -36,6 +38,7 @@ public:
 	}
 
 	void updateCoefmat(const Eigen::VectorXd& row_coef_record, const Eigen::VectorXd& col_coef_record) {
+		BVHAR_DEBUG_LOG(debug_logger, "updateCoefmat() called");
 		row_coef = bvhar::unvectorize(row_coef_record.tail(nrow_row_exogen * num_row).transpose(), num_row);
 		col_coef = bvhar::unvectorize(col_coef_record.tail(nrow_col_exogen * num_col).transpose(), num_col);
 	}
@@ -59,6 +62,7 @@ public:
 		col_coef(Eigen::MatrixXd::Zero(nrow_col_coef, num_col)),
 		col_sig_lower(Eigen::MatrixXd::Identity(num_col, num_col)),
 		error_mat(Eigen::MatrixXd::Zero(num_row, num_col)) {
+		BVHAR_DEBUG_LOG(debug_logger, "MatMniwForecaster Constructor: step={}, num_data={}, lag={}", step, num_data, lag);
 		initLagged();
 		if (exogen_forecaster) {
 			exogen_updater = std::move(*exogen_forecaster);
@@ -81,6 +85,7 @@ protected:
 	Eigen::MatrixXd row_coef, row_sig_lower, col_coef, col_sig_lower, error_mat;
 
 	void initLagged() override {
+		BVHAR_DEBUG_LOG(debug_logger, "initLagged() called");
 		last_pvec = build_dense_design(response, lag);
 		point_forecast = Eigen::MatrixXd::Zero(num_row, num_col);
 		pred_save = Eigen::MatrixXd::Zero(step * num_row, num_sim * num_col);
@@ -88,17 +93,20 @@ protected:
 	}
 
 	void initRecursion(const Eigen::MatrixXd& obs_vec) override {
+		BVHAR_DEBUG_LOG(debug_logger, "initRecursion(obs_vec) called");
 		last_pvec = obs_vec;
 		point_forecast = obs_vec.topLeftCorner(num_row, num_col);
 		tmp_vec = obs_vec.bottomRightCorner(num_row * (lag - 1), num_col * (lag - 1));
 	}
 
 	void setRecursion() override {
+		BVHAR_DEBUG_LOG(debug_logger, "setRecursion() called");
 		last_pvec.bottomRightCorner(num_row * (lag - 1), num_col * (lag - 1)) = tmp_vec;
 		last_pvec.topLeftCorner(num_row, num_col) = point_forecast;
 	}
 
 	void updatePred(const int h, const int i) override {
+		BVHAR_DEBUG_LOG(debug_logger, "updatePred(h={}, i={}) called", h, i);
 		computeMean();
 		updateVariance();
 		// point_forecast += error_mat;
@@ -109,10 +117,12 @@ protected:
 	}
 
 	void updateRecursion() override {
+		BVHAR_DEBUG_LOG(debug_logger, "updateRecursion() called");
 		tmp_vec = last_pvec.topLeftCorner(num_row * (lag - 1), num_col * (lag - 1));
 	}
 
 	void computeMean() {
+		BVHAR_DEBUG_LOG(debug_logger, "computeMean() called");
 		// point_forecast = row_coef.transpose() * last_pvec.sparseView() * col_coef;
 		point_forecast.setZero();
 	// #ifdef _OPENMP
@@ -124,6 +134,7 @@ protected:
 	}
 
 	void updateParams(const int i) override {
+		BVHAR_DEBUG_LOG(debug_logger, "updateParams(i={}) called", i);
 		row_coef = bvhar::unvectorize(mat_record->row_coef_record.row(i).head(nrow_row_coef * num_row).transpose(), num_row);
 		col_coef = bvhar::unvectorize(mat_record->col_coef_record.row(i).head(nrow_col_coef * num_col).transpose(), num_col);
 		if (exogen_updater) {
@@ -134,6 +145,7 @@ protected:
 	}
 
 	void updateVariance() {
+		BVHAR_DEBUG_LOG(debug_logger, "updateVariance() called");
 		for (int j = 0; j < num_col; ++j) {
 			for (int i = 0; i < num_row; ++i) {
 				error_mat(i, j) = bvhar::normal_rand(rng);
@@ -186,6 +198,11 @@ public:
 		Optional<Eigen::MatrixXd> exogen = NULLOPT, Optional<int> exogen_lag = NULLOPT
 	)
 	: bvhar::McmcForecastRun<Eigen::MatrixXd, Eigen::MatrixXd>(num_chains, lag, step, nthreads) {
+		BVHAR_DEBUG_LOG(
+			debug_logger,
+			"MatMniwForecastRun Constructor: num_chains={}, lag={}, step={}, num_data={}, nthreads={}",
+			num_chains, lag, step, num_data, nthreads
+		);
 		auto temp_forecaster = initialize_matmniwforecaster(
 			num_chains, lag, step, y, num_data, fit_record, seed_chain, nthreads,
 			exogen, exogen_lag
