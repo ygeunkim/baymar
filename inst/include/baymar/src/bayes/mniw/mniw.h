@@ -30,6 +30,18 @@ public:
 		col_prior_mean(params._col_mean), col_iw_scl(params._col_iw_scl),
 		row_prior_prec(params._row_prec), col_prior_prec(params._col_prec),
 		row_iw_df(params._row_iw_df), col_iw_df(params._col_iw_df) {
+		BVHAR_DEBUG_LOG(
+			debug_logger,
+			"McmcMatMniw Constructor: row_coef: {} x {}, row_sig_lower: {} x {}, row_prior_mean: {} x {}, row_prior_prec: {}",
+			row_coef.rows(), row_coef.cols(), row_sig_lower.rows(), row_sig_lower.cols(),
+			row_prior_mean.rows(), row_prior_mean.cols(), row_prior_prec.size()
+		);
+		BVHAR_DEBUG_LOG(
+			debug_logger,
+			"McmcMatMniw Constructor: col_coef: {} x {}, col_sig_lower: {} x {}, col_prior_mean: {} x {}, col_prior_prec: {}",
+			col_coef.rows(), col_coef.cols(), col_sig_lower.rows(), col_sig_lower.cols(),
+			col_prior_mean.rows(), col_prior_mean.cols(), col_prior_prec.size()
+		);
 		if (row_exogen) {
 			exogen_row_updater = std::move(*row_exogen);
 		}
@@ -41,12 +53,14 @@ public:
 	virtual ~McmcMatMniw() = default;
 	
 	void doWarmUp() override {
+		BVHAR_DEBUG_LOG(debug_logger, "doWarmUp() called");
 		std::lock_guard<std::mutex> lock(mtx);
 		updatePrec();
 		updateCoefCov();
 	}
 
 	void doPosteriorDraws() override {
+		BVHAR_DEBUG_LOG(debug_logger, "doPosteriorDraws() called");
 		std::lock_guard<std::mutex> lock(mtx);
 		addStep();
 		updatePrec();
@@ -55,6 +69,7 @@ public:
 	}
 
 	LIST returnRecords(int num_burn, int thin) override {
+		BVHAR_DEBUG_LOG(debug_logger, "returnRecords(num_burn={}, thin={}) called", num_burn, thin);
 		// LIST res = CREATE_LIST(
 		// 	// NAMED("A_record") = row_coef_record,
 		// 	// NAMED("Sigr_record") = row_sig_record,
@@ -75,6 +90,7 @@ public:
 	}
 
 	MatMniwRecords returnStructRecords(int num_burn, int thin) const {
+		BVHAR_DEBUG_LOG(debug_logger, "returnStructRecords(num_burn={}, thin={}) called", num_burn, thin);
 		return mniw_record->returnRecords(num_iter, num_burn, thin);
 	}
 
@@ -98,6 +114,7 @@ protected:
 	double row_iw_df, col_iw_df;
 
 	void updatePrec() {
+		BVHAR_DEBUG_LOG(debug_logger, "updatePrec() called");
 		row_updater->updatePrec(
 			row_prior_prec.head(nrow_row_coef),
 			row_coef.topRows(nrow_row_coef),
@@ -133,6 +150,7 @@ protected:
 	}
 
 	void updateCoefCov() {
+		BVHAR_DEBUG_LOG(debug_logger, "updateCoefCov() called");
 		draw_coef_sig<true>(
 			row_coef, row_sig_lower,
 			col_coef, col_sig_lower,
@@ -150,6 +168,7 @@ protected:
 	}
 
 	void updateRecords() {
+		BVHAR_DEBUG_LOG(debug_logger, "updateRecords() called");
 		// row_record[mcmc_step][0] = row_coef;
 		// row_record[mcmc_step][1] = row_sig_lower * row_sig_lower.transpose();
 		// col_record[mcmc_step][0] = col_coef;
@@ -194,6 +213,8 @@ inline std::vector<std::unique_ptr<McmcMatMniw>> initialize_matmcmc(
 		}
 		if (col_exogen_prior_type) {
 			LIST col_exogen_init_spec = (*col_exogen_init)[i];
+			// auto temp_col_exogen_updater = initialize_matshrinkageupdater(num_iter, *col_exogen_prior, col_exogen_init_spec, *col_exogen_prior_type);
+			// col_exogen_updater = std::move(temp_col_exogen_updater);
 			col_exogen_updater = initialize_matshrinkageupdater(num_iter, *col_exogen_prior, col_exogen_init_spec, *col_exogen_prior_type);
 			(*col_exogen_updater)->initPrec(params._col_prec.tail(params._col_exogen));
 		}
