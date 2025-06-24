@@ -2,7 +2,6 @@ Package: baymar
 Type: Package
 Title: Bayesian Matrix Autoregressions
 Version: 0.0.0.9000
-Date: 2025-04-28
 Authors@R:
     c(person(given = "Young Geun",
              family = "Kim",
@@ -12,18 +11,22 @@ Authors@R:
       person(given = "Taeyoung",
              family = "Park",
              role = "ctb"))
-Maintainer: Who to complain to <yourfault@somewhere.net>
-Description: More about what it does (maybe more than one line).
-License: What license is it under?
+Description: Tools to model and forecast matrix-valued time series
+    including Bayesian Matrix autoregressive (BMAR) model.
+License: GPL (>= 3)
 Imports: 
     Rcpp,
     bvhar,
-    lifecycle
+    lifecycle,
+    Matrix,
+    stats,
+    posterior,
+    utils
 LinkingTo: 
-    BH,
-    bvhar,
-    Rcpp,
-    RcppEigen,
+    BH (>= 1.87.0-0),
+    bvhar (>= 2.2.2.9011),
+    Rcpp (>= 0.10.0),
+    RcppEigen (>= 0.3.4.0.0),
     RcppSpdlog,
     RcppThread
 Remotes:
@@ -32,3 +35,12 @@ Encoding: UTF-8
 LazyData: true
 Roxygen: list(markdown = TRUE)
 RoxygenNote: 7.3.2
+Depends: 
+    R (>= 4.2.0)
+Suggests: 
+    knitr,
+    purrr,
+    rmarkdown,
+    testthat (>= 3.0.0)
+VignetteBuilder: knitr
+Config/testthat/edition: 3

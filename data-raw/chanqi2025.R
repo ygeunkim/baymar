@@ -1,0 +1,102 @@
+## code to prepare `chanqi2025` dataset goes here
+# library(httr)
+library(dplyr)
+library(tidyr)
+library(stringr)
+library(readxl)
+
+temp_file <- tempfile()
+temp_xlsx <- tempfile()
+download.file("https://joshuachan.org/code/BMAR_code.zip", temp_file)
+unzip(zipfile = temp_file, exdir = temp_xlsx)
+file_path <- file.path(temp_xlsx, "Data_state_level_6q.xlsx")
+num_series <- 6 # 6 variables
+ts_mat <- list()
+for (id in 1:num_series) {
+  sheet <- read_xlsx(
+    file_path,
+    sheet = 1,
+    skip = 53 * (id - 1),
+    n_max = 52
+  )
+  series_name <- names(sheet)[1]
+  ts_mat[[id]] <-
+    sheet |>
+    rename("state" = series_name, "code" = `Region Code`) |>
+    pivot_longer(
+      -c(state, code),
+      names_to = "date",
+      values_to = tolower(series_name) |>
+        str_replace_all(" ", replacement = "_") |>
+        str_replace_all("-", replacement = "_") |>
+        str_remove_all("_\\(.*?\\)") |>
+        # str_remove("_$")
+        str_remove_all("_by_state.*")
+    ) |>
+    mutate(
+      date = as.Date(as.numeric(date), origin = "1899-12-30")
+    )
+}
+unlink(c(temp_file, temp_xlsx))
+ts_wide <-
+  purrr::reduce(ts_mat, left_join, by = c("state", "code", "date")) |>
+  filter(date < "2019-01-01")
+  arrange(date)
+state_code <-
+  ts_wide |>
+  select(state, code) |>
+  unique()
+ts_wide <- select(ts_wide, -code)
+ts_long <-
+  ts_wide |>
+  pivot_longer(-c(state, date), names_to = "series", values_to = "values")
+# Transformation
+ts_transform <-
+  ts_long |>
+  group_by(state, series) |>
+  mutate(
+    values = case_when(
+      series == "initial_claims" ~ log(values),
+      series == "continued_claims" ~ log(values),
+      series == "total_nonfarm" ~ values / lag(values, 4),
+      series == "unemployment_rate" ~ values,
+      series == "new_private_housing_units_authorized_by_building_permits" ~ log(values),
+      series == "all_transactions_house_price_index" ~ values / lag(values, 4)
+    )
+  ) |>
+  ungroup()
+# Remove NA by lag()
+date_na <-
+  ts_transform |>
+  group_by(date) |>
+  summarise(is_na = any(is.na(values)), .groups = "drop") |>
+  filter(is_na) |>
+  pull(date)
+ts_transform <-
+  ts_transform |>
+  filter(!(date %in% date_na)) |>
+  filter(date >= "2005-01-01")
+state_list <- state_code$state
+chanqi2025 <- array(
+  dim = c(
+    length(unique(ts_transform$series)),
+    length(state_list),
+    length(unique(ts_transform$date))
+  ),
+  dimnames = list(
+    unique(ts_transform$series),
+    state_list,
+    unique(ts_transform$date)
+  )
+)
+for (tid in seq_along(unique(ts_transform$date))) {
+  chanqi2025[, , tid] <-
+    ts_transform |>
+    filter(date == unique(ts_transform$date)[tid]) |>
+    pivot_wider(names_from = "series", values_from = "values") |>
+    arrange(state) |>
+    select(-state, -date) |>
+    # t() |>
+    as.matrix()
+}
+usethis::use_data(chanqi2025, overwrite = TRUE)
