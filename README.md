@@ -10,7 +10,10 @@
 status](https://www.r-pkg.org/badges/version/baymar)](https://CRAN.R-project.org/package=baymar)
 <!-- badges: end -->
 
-The goal of baymar is to …
+## Overview
+
+`baymar` is a research tool to analyze and forecast matrix-valued time
+series.
 
 ## Installation
 
