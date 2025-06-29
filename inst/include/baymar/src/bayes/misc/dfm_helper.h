@@ -2,6 +2,7 @@
 #define BAYMAR_BAYES_MISC_DFM_HELPER_H
 
 #include <bvhar/utils>
+#include <boost/math/distributions/normal.hpp>
 
 namespace baymar {
 
@@ -94,30 +95,59 @@ inline void draw_dfm_prec(Eigen::Ref<Eigen::VectorXd> fac_lambda, int factor_lag
 			rng
 		);
 	}
-	// int id = 0;
-	// Eigen::VectorXd fac_vector(factor_lag);
-	// Eigen::VectorXd fac_resid(num_design - factor_lag);
-	// for (int j = 0; j < cols_factor; ++j) {
-	// 	for (int i = 0; i < rows_factor; ++i) {
-	// 		id = i + j * rows_factor;
-	// 		// 1) t = p + 1, ..., p + s => sum_t f_{jk, t}^2 (1 - sum_i rho_{jk,i}^2)
-	// 		for (int t = 0; t < factor_lag; ++t) {
-	// 			fac_vector[t] = factor_mat[t](i, j);
-	// 		}
-	// 		// 2) t = p + s + 1, ..., T => sum_t (f_{jk, t} - rho_{jk, 1} f_{jk, t - 1} - ... - rho_{jk, s} f_{jk, t - s})^2
-	// 		for (int t = 0; t < num_design - factor_lag; ++t) {
-	// 			fac_resid[t] = factor_mat[t](i, j);
-	// 			for (int l = 0; l < factor_lag; ++l) {
-	// 				fac_resid[t] -= fac_coef_diag(id, l) * factor_mat[t + factor_lag - l - 1](i, j);
-	// 			}
-	// 		}
-	// 		fac_lambda[id] = 1 / bvhar::gamma_rand(
-	// 			ig_shp[id] + num_design / 2,
-	// 			(ig_scl[id] + (fac_vector.array().square() * (1 - fac_coef_diag.rowwise().squaredNorm().array())).sum() + fac_resid.squaredNorm()) / 2,
-	// 			rng
-	// 		);
-	// 	}
-	// }
+}
+
+// log of proposal density for rho
+// cand_coef: rho_{jk, 1}, ... rho_{jk, s}
+// fac_row: f_{jk, p + 1}, ... f_{jk, p + s}
+inline double compute_dfmcoef_logdens(Eigen::Ref<const Eigen::VectorXd> cand_coef,
+																			double lambda_i, Eigen::Ref<const Eigen::VectorXd> fac_init) {
+	double res = 0;
+	for (int i = 0; i < cand_coef.size(); ++i) {
+		res += boost::math::logpdf(
+			boost::math::normal_distribution<>(0.0, lambda_i / sqrt(1 - cand_coef.squaredNorm())),
+			fac_init[i]
+		);
+	}
+	return res;
+}
+
+// Draw rho_{jk}: Each row of fac_coef_diag
+inline void draw_dfm_coef(Eigen::Ref<Eigen::MatrixXd> fac_coef_diag, Eigen::Ref<Eigen::MatrixXd> fac_lambda,
+													Eigen::Ref<Eigen::VectorXd> prior_mean, Eigen::Ref<Eigen::VectorXd> prior_prec,
+													std::vector<Eigen::MatrixXd>& factor_mat, int factor_lag,
+													BHRNG& rng) {
+	int num_design = factor_mat.size() - factor_lag;
+	int num_coef = fac_coef_diag.rows(); // p1 * p2
+	int rows_factor = factor_mat[0].rows(); // p1
+	double numerator, denom;
+	Eigen::MatrixXd factor_design(num_design, factor_lag);
+	Eigen::VectorXd factor_response(num_design);
+	Eigen::VectorXd cand_rho(num_coef);
+	Eigen::VectorXd normal_vector(num_coef);
+	Eigen::VectorXd post_mean(num_coef);
+	Eigen::LLT<Eigen::MatrixXd> llt_of_prec;
+	for (int i = 0; i < num_coef; ++i) {
+		int row_id = i % rows_factor;
+		int col_id = i / rows_factor;
+		for (int j = 0; j < num_design; ++j) {
+			factor_response[j] = factor_mat[j + factor_lag](row_id, col_id);
+			for (int k = 0; k < factor_lag; ++k) {
+				factor_design(j, k) = factor_mat[j + factor_lag - k - 1](row_id, col_id);
+			}
+		}
+		llt_of_prec.compute(prior_prec + factor_design.transpose() * factor_design / fac_lambda[i]);
+		post_mean = llt_of_prec.solve(prior_prec.cwiseProduct(prior_mean) + factor_design.transpose() * factor_response / fac_lambda[i]);
+		for (int j = 0; j < num_coef; ++j) {
+			normal_vector[j] = bvhar::normal_rand(rng);
+		}
+		cand_rho = post_mean + llt_of_prec.matrixU().solve(normal_vector);
+		numerator = compute_dfmcoef_logdens(cand_rho, fac_lambda[i], factor_design.row(0));
+		denom = compute_dfmcoef_logdens(fac_coef_diag.row(i), fac_lambda[i], factor_design.row(0));
+		if (log(bvhar::unif_rand(rng) < std::min(numerator - denom, 0.0))) {
+			fac_coef_diag.row(i) = cand_rho.transpose();
+		}
+	}
 }
 
 } // namespace baymar
