@@ -14,7 +14,8 @@ public:
 		std::unique_ptr<MatShrinkageUpdater>& row_updater, std::unique_ptr<MatShrinkageUpdater>& col_updater,
 		unsigned int seed,
 		Optional<std::unique_ptr<MatShrinkageUpdater>> row_exogen = NULLOPT,
-		Optional<std::unique_ptr<MatShrinkageUpdater>> col_exogen = NULLOPT
+		Optional<std::unique_ptr<MatShrinkageUpdater>> col_exogen = NULLOPT,
+		Optional<std::unique_ptr<McmcMatAugment>> famar = NULLOPT
 	)
 	: bvhar::McmcAlgo(params, seed),
 		x(params._x), y(params._y),
@@ -49,6 +50,9 @@ public:
 			exogen_col_updater = std::move(*col_exogen);
 		}
 		updateRecords();
+		if (famar) {
+			famar_updater = std::move(*famar);
+		}
 	}
 	virtual ~McmcMatMniw() = default;
 	
@@ -101,6 +105,7 @@ protected:
 	std::unique_ptr<MatShrinkageUpdater> col_updater;
 	std::unique_ptr<MatShrinkageUpdater> exogen_row_updater;
 	std::unique_ptr<MatShrinkageUpdater> exogen_col_updater;
+	std::unique_ptr<McmcMatAugment> famar_updater;
 	int num_row;
 	int num_col;
 	int num_design;
@@ -165,6 +170,10 @@ protected:
 			num_design, num_row,
 			x, y, rng
 		);
+		if (famar_updater) {
+			famar_updater->updateResid(x, y, row_coef, col_coef);
+			famar_updater->updateFactor(row_coef, row_sig_lower, col_coef, col_sig_lower, rng);
+		}
 	}
 
 	void updateRecords() {
@@ -188,7 +197,8 @@ inline std::vector<std::unique_ptr<McmcMatMniw>> initialize_matmcmc(
 	LIST& col_prior, LIST_OF_LIST& col_init, const int col_prior_type,
   Eigen::Ref<const Eigen::VectorXi> seed_chain,
 	Optional<LIST> row_exogen_prior = NULLOPT, Optional<LIST_OF_LIST> row_exogen_init = NULLOPT, Optional<int> row_exogen_prior_type = NULLOPT, Optional<int> exogen_rows = NULLOPT,
-	Optional<LIST> col_exogen_prior = NULLOPT, Optional<LIST_OF_LIST> col_exogen_init = NULLOPT, Optional<int> col_exogen_prior_type = NULLOPT, Optional<int> exogen_cols = NULLOPT
+	Optional<LIST> col_exogen_prior = NULLOPT, Optional<LIST_OF_LIST> col_exogen_init = NULLOPT, Optional<int> col_exogen_prior_type = NULLOPT, Optional<int> exogen_cols = NULLOPT,
+	Optional<int> nrow_factor = NULLOPT, Optional<int> ncol_factor = NULLOPT, Optional<int> factor_lag = NULLOPT
 ) {
 	std::vector<std::unique_ptr<McmcMatMniw>> mcmc_ptr(num_chains);
 	// MatMniwParams params(num_iter, x, y, param_coef_sig);
@@ -218,25 +228,14 @@ inline std::vector<std::unique_ptr<McmcMatMniw>> initialize_matmcmc(
 			col_exogen_updater = initialize_matshrinkageupdater(num_iter, *col_exogen_prior, col_exogen_init_spec, *col_exogen_prior_type);
 			(*col_exogen_updater)->initPrec(params._col_prec.tail(params._col_exogen));
 		}
-		// if (row_exogen_prior_type && col_exogen_prior_type) {
-		// 	LIST row_exogen_init_spec = (*row_exogen_init)[i];
-		// 	auto row_exogen_updater = initialize_matshrinkageupdater(num_iter, *row_exogen_prior, row_exogen_init_spec, *row_exogen_prior_type);
-		// 	row_exogen_updater->initPrec(params._row_prec.head(params._row_exogen));
-		// 	LIST col_exogen_init_spec = (*col_exogen_init)[i];
-		// 	auto col_exogen_updater = initialize_matshrinkageupdater(num_iter, *col_exogen_prior, col_exogen_init_spec, *col_exogen_prior_type);
-		// 	col_exogen_updater->initPrec(params._col_prec.head(params._col_exogen));
-		// 	mcmc_ptr[i] = std::make_unique<McmcMatMniw>(
-		// 		params, inits, row_updater, col_updater, static_cast<unsigned int>(seed_chain[i]),
-		// 		std::move(row_exogen_updater), std::move(col_exogen_updater)
-		// 	);
-		// } else {
-		// 	mcmc_ptr[i] = std::make_unique<McmcMatMniw>(
-		// 		params, inits, row_updater, col_updater, static_cast<unsigned int>(seed_chain[i])
-		// 	);
-		// }
+		Optional<std::unique_ptr<McmcMatAugment>> famar_updater = NULLOPT;
+		if (nrow_factor) {
+			famar_updater = std::make_unique<McmcMatDfm>(y.size(), *factor_lag, *nrow_factor, *ncol_factor);
+		}
 		mcmc_ptr[i] = std::make_unique<McmcMatMniw>(
 			params, inits, row_updater, col_updater, static_cast<unsigned int>(seed_chain[i]),
-			std::move(row_exogen_updater), std::move(col_exogen_updater)
+			std::move(row_exogen_updater), std::move(col_exogen_updater),
+			std::move(famar_updater)
 		);
 	}
 	return mcmc_ptr;
@@ -252,7 +251,8 @@ public:
 		LIST& col_prior, LIST_OF_LIST& col_init, const int col_prior_type,
 		const Eigen::VectorXi& seed_chain, bool display_progress, int nthreads,
 		Optional<LIST> row_exogen_prior = NULLOPT, Optional<LIST_OF_LIST> row_exogen_init = NULLOPT, Optional<int> row_exogen_prior_type = NULLOPT, Optional<int> exogen_rows = NULLOPT,
-		Optional<LIST> col_exogen_prior = NULLOPT, Optional<LIST_OF_LIST> col_exogen_init = NULLOPT, Optional<int> col_exogen_prior_type = NULLOPT, Optional<int> exogen_cols = NULLOPT
+		Optional<LIST> col_exogen_prior = NULLOPT, Optional<LIST_OF_LIST> col_exogen_init = NULLOPT, Optional<int> col_exogen_prior_type = NULLOPT, Optional<int> exogen_cols = NULLOPT,
+		Optional<int> nrow_factor = NULLOPT, Optional<int> ncol_factor = NULLOPT, Optional<int> factor_lag = NULLOPT
 	)
 	: bvhar::McmcRun(num_chains, num_iter, num_burn, thin, display_progress, nthreads) {
 		auto temp_mcmc = initialize_matmcmc(
@@ -262,7 +262,8 @@ public:
 			col_prior, col_init, col_prior_type,
 			seed_chain,
 			row_exogen_prior, row_exogen_init, row_exogen_prior_type, exogen_rows,
-			col_exogen_prior, col_exogen_init, col_exogen_prior_type, exogen_cols
+			col_exogen_prior, col_exogen_init, col_exogen_prior_type, exogen_cols,
+			nrow_factor, ncol_factor, factor_lag
 		);
 		for (int i = 0; i < num_chains; ++i) {
 			mcmc_ptr[i] = std::move(temp_mcmc[i]);

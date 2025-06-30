@@ -7,6 +7,11 @@ estimate_bmar_mniw <- function(num_chains, num_iter, num_burn, thin, x, y, param
 }
 
 #' @noRd
+estimate_bmdfm_mniw <- function(num_chains, num_iter, num_burn, thin, x, y, nrow_factor, ncol_factor, factor_lag, param_coef_sig, coef_sig_init, row_prior, row_init, row_prior_type, col_prior, col_init, col_prior_type, exogen_row_prior, exogen_row_init, exogen_row_prior_type, exogen_rows, exogen_col_prior, exogen_col_init, exogen_col_prior_type, exogen_cols, seed_chain, display_progress, nthreads) {
+    .Call(`_baymar_estimate_bmdfm_mniw`, num_chains, num_iter, num_burn, thin, x, y, nrow_factor, ncol_factor, factor_lag, param_coef_sig, coef_sig_init, row_prior, row_init, row_prior_type, col_prior, col_init, col_prior_type, exogen_row_prior, exogen_row_init, exogen_row_prior_type, exogen_rows, exogen_col_prior, exogen_col_init, exogen_col_prior_type, exogen_cols, seed_chain, display_progress, nthreads)
+}
+
+#' @noRd
 forecast_bmar_mniw <- function(num_chains, lag, step, response_mat, num_data, fit_record, seed_chain, nthreads) {
     .Call(`_baymar_forecast_bmar_mniw`, num_chains, lag, step, response_mat, num_data, fit_record, seed_chain, nthreads)
 }

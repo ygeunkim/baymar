@@ -12,7 +12,7 @@ namespace baymar {
 // H_i = diag(rho_{1, i}, ..., rho_{p1 * p2, i})
 // fac_coef_diag: p1*p2 x s
 // fac_lambda: p1*p2 x 1
-inline void draw_dfm_factor(std::vector<Eigen::MatrixXd>& factor_mat, int factor_lag,
+inline void draw_dfm_factor(std::vector<Eigen::MatrixXd>& factor_mat, int factor_lag, int rows_factor, int cols_factor,
 													  Eigen::Ref<Eigen::MatrixXd> fac_coef_diag, Eigen::Ref<Eigen::VectorXd> fac_lambda,
 													  Eigen::Ref<Eigen::MatrixXd> row_coef, Eigen::Ref<Eigen::MatrixXd> row_sig_lower,
 													  Eigen::Ref<Eigen::MatrixXd> col_coef, Eigen::Ref<Eigen::MatrixXd> col_sig_lower,
@@ -32,8 +32,9 @@ inline void draw_dfm_factor(std::vector<Eigen::MatrixXd>& factor_mat, int factor
 	Eigen::MatrixXd post_solve = bvhar::kronecker_eigen(col_inv_sig_coef, row_inv_sig_coef);
 	Eigen::MatrixXd post_cov = post_solve * bvhar::kronecker_eigen(col_coef, row_coef);
 	Eigen::LLT<Eigen::MatrixXd> llt_of_prec;
-	int cols_factor = factor_mat[0].cols();
-	int len_factor = factor_mat[0].rows() * cols_factor;
+	// int cols_factor = factor_mat[0].cols();
+	// int len_factor = factor_mat[0].rows() * cols_factor;
+	int len_factor = rows_factor * cols_factor;
 	Eigen::VectorXd vec_normal(len_factor);
 	Eigen::VectorXd post_mean(len_factor);
 	Eigen::VectorXd prec_t(len_factor);

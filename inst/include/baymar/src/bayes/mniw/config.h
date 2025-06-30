@@ -3,6 +3,7 @@
 
 #include <bvhar/base>
 #include "../shrinkage/shrinkage.h"
+#include "../mdfm/mdfm.h"
 
 namespace baymar {
 
