@@ -85,6 +85,12 @@ mar_bayes <- function(y,
   col_exogen_prior <- list()
   row_exogen_init <- list()
   col_exogen_init <- list()
+  nrow_factor <- 0
+  ncol_factor <- 0
+  lag_factor <- 0
+  # nrow_factor <- 2
+  # ncol_factor <- 2
+  # lag_factor <- 2
   if (!is.null(exogen)) {
     if (!is.array(exogen)) {
       stop("Provide array.")
@@ -140,7 +146,7 @@ mar_bayes <- function(y,
     bayes_spec = row_spec,
     nrow_data = nrow_data,
     ncol_data = ncol_data,
-    nrow_row_coef = nrow_row_coef
+    nrow_row_coef = nrow_row_coef + nrow_factor
   )
   param_prior <- append(
     param_prior,
@@ -150,7 +156,7 @@ mar_bayes <- function(y,
       bayes_spec = col_spec,
       nrow_data = nrow_data,
       ncol_data = ncol_data,
-      nrow_col_coef = nrow_col_coef
+      nrow_col_coef = nrow_col_coef + ncol_factor
     )
   )
   # Initialization
@@ -158,13 +164,13 @@ mar_bayes <- function(y,
     num_chains = num_chains,
     nrow_data = nrow_data,
     ncol_data = ncol_data,
-    nrow_row_coef = nrow_row_coef + nrow_exogen_row_coef,
-    nrow_col_coef = nrow_col_coef + nrow_exogen_col_coef
+    nrow_row_coef = nrow_row_coef + nrow_exogen_row_coef + nrow_factor,
+    nrow_col_coef = nrow_col_coef + nrow_exogen_col_coef + ncol_factor
   )
   row_prior <- validate_bmar_prior(row_spec)
   col_prior <- validate_bmar_prior(col_spec)
-  row_init <- get_bmar_init(row_spec, num_chains, nrow_row_coef)
-  col_init <- get_bmar_init(col_spec, num_chains, nrow_col_coef)
+  row_init <- get_bmar_init(row_spec, num_chains, nrow_row_coef + nrow_factor)
+  col_init <- get_bmar_init(col_spec, num_chains, nrow_col_coef + ncol_factor)
   row_prior_type <- get_prior_id(row_spec$prior)
   col_prior_type <- get_prior_id(col_spec$prior)
   if (!is.null(exogen)) {
@@ -189,6 +195,27 @@ mar_bayes <- function(y,
     row_exogen_init <- get_bmar_init(exogen_row_spec, num_chains, nrow_exogen_row_coef)
     col_exogen_init <- get_bmar_init(exogen_col_spec, num_chains, nrow_exogen_col_coef)
   }
+  # # TEST>>>>
+  # for (i in (seq_along(response) + p)) {
+  #   design[[i - p]] <- bdiag(append(
+  #     design[[i - p]],
+  #     list(matrix(1L, nrow = nrow_factor, ncol = ncol_factor))
+  #   ))
+  # }
+  # res <- estimate_bmdfm_mniw(
+  #   num_chains = num_chains, num_iter = num_iter, num_burn = num_burn, thin = thinning,
+  #   x = design, y = response,
+  #   nrow_factor = nrow_factor, ncol_factor = ncol_factor, factor_lag = lag_factor,
+  #   param_coef_sig = param_prior, coef_sig_init = param_init,
+  #   row_prior = row_prior, row_init = row_init, row_prior_type = row_prior_type,
+  #   col_prior = col_prior, col_init = col_init, col_prior_type = col_prior_type,
+  #   exogen_row_prior = row_exogen_prior, exogen_row_init = row_exogen_init, exogen_row_prior_type = row_exogen_prior_type, exogen_rows = nrow_exogen_row_coef,
+  #   exogen_col_prior = col_exogen_prior, exogen_col_init = col_exogen_init, exogen_col_prior_type = col_exogen_prior_type, exogen_cols = nrow_exogen_col_coef,
+  #   seed_chain = sample.int(.Machine$integer.max, size = num_chains),
+  #   display_progress = verbose, nthreads = num_thread
+  # )
+  # return(res)
+  # # <<<TEST
   res <- estimate_bmar_mniw(
     num_chains = num_chains, num_iter = num_iter, num_burn = num_burn, thin = thinning,
     x = design, y = response,

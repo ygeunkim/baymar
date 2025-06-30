@@ -133,6 +133,12 @@ inline void update_x(Eigen::SparseMatrix<double>& x, Eigen::Ref<Eigen::MatrixXd>
 	x = dense_x.sparseView();
 }
 
+inline void append_x(Eigen::SparseMatrix<double>& x, Eigen::Ref<Eigen::MatrixXd> new_x, int num_row, int num_col) {
+	Eigen::MatrixXd dense_x = x.toDense();
+	dense_x.bottomRightCorner(num_row, num_col) = new_x;
+	x = dense_x.sparseView();
+}
+
 } // namespace baymar
 
 #endif // BAYMAR_MATH_DESIGN_H

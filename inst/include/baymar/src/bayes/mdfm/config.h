@@ -3,15 +3,11 @@
 
 #include <bvhar/base>
 #include "../misc/draw.h"
+#include "../../math/design.h"
 
 namespace baymar {
 
-struct MatDfmParams;
-struct MatDfmInits;
-
-struct MatDfmParams : public bvhar::McmcParams {
-	/* members */
-};
+// 
 
 } // namespace baymar
 

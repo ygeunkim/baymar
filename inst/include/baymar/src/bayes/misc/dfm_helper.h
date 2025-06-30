@@ -14,8 +14,8 @@ namespace baymar {
 // fac_lambda: p1*p2 x 1
 inline void draw_dfm_factor(std::vector<Eigen::MatrixXd>& factor_mat, int factor_lag, int rows_factor, int cols_factor,
 													  Eigen::Ref<Eigen::MatrixXd> fac_coef_diag, Eigen::Ref<Eigen::VectorXd> fac_lambda,
-													  Eigen::Ref<Eigen::MatrixXd> row_coef, Eigen::Ref<Eigen::MatrixXd> row_sig_lower,
-													  Eigen::Ref<Eigen::MatrixXd> col_coef, Eigen::Ref<Eigen::MatrixXd> col_sig_lower,
+													  Eigen::Ref<const Eigen::MatrixXd> row_coef, Eigen::Ref<const Eigen::MatrixXd> row_sig_lower,
+													  Eigen::Ref<const Eigen::MatrixXd> col_coef, Eigen::Ref<const Eigen::MatrixXd> col_sig_lower,
 													  std::vector<Eigen::MatrixXd>& y, BHRNG& rng) {
 	// Eigen::MatrixXd col_inv_sig_coef = col_sig_lower.triangularView<Eigen::Lower>().solve(col_coef);
 	// Eigen::MatrixXd row_inv_sig_coef = row_sig_lower.triangularView<Eigen::Lower>().solve(row_coef);
