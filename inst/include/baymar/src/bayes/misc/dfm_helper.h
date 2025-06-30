@@ -17,12 +17,19 @@ inline void draw_dfm_factor(std::vector<Eigen::MatrixXd>& factor_mat, int factor
 													  Eigen::Ref<Eigen::MatrixXd> row_coef, Eigen::Ref<Eigen::MatrixXd> row_sig_lower,
 													  Eigen::Ref<Eigen::MatrixXd> col_coef, Eigen::Ref<Eigen::MatrixXd> col_sig_lower,
 													  std::vector<Eigen::MatrixXd>& y, BHRNG& rng) {
-	Eigen::MatrixXd col_inv_sig_coef = col_sig_lower.triangularView<Eigen::Lower>().solve(col_coef);
-	Eigen::MatrixXd row_inv_sig_coef = row_sig_lower.triangularView<Eigen::Lower>().solve(row_coef);
-	Eigen::MatrixXd post_solve = bvhar::kronecker_eigen(
-		col_sig_lower.triangularView<Eigen::Lower>().solve<Eigen::OnTheRight>(col_inv_sig_coef.transpose()),
-		row_sig_lower.triangularView<Eigen::Lower>().solve<Eigen::OnTheRight>(row_inv_sig_coef.transpose())
+	// Eigen::MatrixXd col_inv_sig_coef = col_sig_lower.triangularView<Eigen::Lower>().solve(col_coef);
+	// Eigen::MatrixXd row_inv_sig_coef = row_sig_lower.triangularView<Eigen::Lower>().solve(row_coef);
+	// Eigen::MatrixXd post_solve = bvhar::kronecker_eigen(
+	// 	col_sig_lower.triangularView<Eigen::Lower>().solve<Eigen::OnTheRight>(col_inv_sig_coef.transpose()),
+	// 	row_sig_lower.triangularView<Eigen::Lower>().solve<Eigen::OnTheRight>(row_inv_sig_coef.transpose())
+	// );
+	Eigen::MatrixXd col_inv_sig_coef = col_sig_lower.triangularView<Eigen::Lower>().solve<Eigen::OnTheRight>(
+		col_sig_lower.triangularView<Eigen::Lower>().solve(col_coef).transpose()
 	);
+	Eigen::MatrixXd row_inv_sig_coef = row_sig_lower.triangularView<Eigen::Lower>().solve<Eigen::OnTheRight>(
+		row_sig_lower.triangularView<Eigen::Lower>().solve(row_coef).transpose()
+	);
+	Eigen::MatrixXd post_solve = bvhar::kronecker_eigen(col_inv_sig_coef, row_inv_sig_coef);
 	Eigen::MatrixXd post_cov = post_solve * bvhar::kronecker_eigen(col_coef, row_coef);
 	Eigen::LLT<Eigen::MatrixXd> llt_of_prec;
 	int cols_factor = factor_mat[0].cols();
@@ -113,7 +120,7 @@ inline double compute_dfmcoef_logdens(Eigen::Ref<const Eigen::VectorXd> cand_coe
 }
 
 // Draw rho_{jk}: Each row of fac_coef_diag
-inline void draw_dfm_coef(Eigen::Ref<Eigen::MatrixXd> fac_coef_diag, Eigen::Ref<Eigen::MatrixXd> fac_lambda,
+inline void draw_dfm_coef(Eigen::Ref<Eigen::MatrixXd> fac_coef_diag, Eigen::Ref<Eigen::VectorXd> fac_lambda,
 													Eigen::Ref<Eigen::VectorXd> prior_mean, Eigen::Ref<Eigen::VectorXd> prior_prec,
 													std::vector<Eigen::MatrixXd>& factor_mat, int factor_lag,
 													BHRNG& rng) {
