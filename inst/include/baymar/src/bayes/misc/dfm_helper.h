@@ -144,12 +144,19 @@ inline void draw_dfm_coef(Eigen::Ref<Eigen::MatrixXd> fac_coef_diag, Eigen::Ref<
 				factor_design(j, k) = factor_mat[j + factor_lag - k - 1](row_id, col_id);
 			}
 		}
-		llt_of_prec.compute(prior_prec + factor_design.transpose() * factor_design / fac_lambda[i]);
+		std::cout << "factor_design: " << factor_design.rows() << " x " << factor_design.cols() << std::endl;
+		std::cout << "fac_coef_diag: " << fac_coef_diag.rows() << " x " << fac_coef_diag.cols() << std::endl;
+		std::cout << "prior_prec: " << prior_prec.size() << std::endl;
+		std::cout << "prior_mean: " << prior_mean.size() << std::endl;
+		std::cout << "factor_response: " << factor_response.size() << std::endl;
+		llt_of_prec.compute(prior_prec.asDiagonal().toDenseMatrix() + factor_design.transpose() * factor_design / fac_lambda[i]);
 		post_mean = llt_of_prec.solve(prior_prec.cwiseProduct(prior_mean) + factor_design.transpose() * factor_response / fac_lambda[i]);
+		std::cout << "post_mean: " << post_mean.size() << std::endl;
 		for (int j = 0; j < num_coef; ++j) {
 			normal_vector[j] = bvhar::normal_rand(rng);
 		}
 		cand_rho = post_mean + llt_of_prec.matrixU().solve(normal_vector);
+		std::cout << "cand_rho: " << cand_rho.size() << std::endl;
 		numerator = compute_dfmcoef_logdens(cand_rho, fac_lambda[i], factor_design.row(0));
 		denom = compute_dfmcoef_logdens(fac_coef_diag.row(i), fac_lambda[i], factor_design.row(0));
 		if (log(bvhar::unif_rand(rng) < std::min(numerator - denom, 0.0))) {

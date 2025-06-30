@@ -156,6 +156,11 @@ protected:
 
 	void updateCoefCov() {
 		BVHAR_DEBUG_LOG(debug_logger, "updateCoefCov() called");
+		if (famar_updater) {
+			famar_updater->updateResid(x, y, row_coef, col_coef);
+			famar_updater->updateFactor(row_coef, row_sig_lower, col_coef, col_sig_lower, rng);
+			famar_updater->appendDesign(x);
+		}
 		draw_coef_sig<true>(
 			row_coef, row_sig_lower,
 			col_coef, col_sig_lower,
@@ -170,11 +175,6 @@ protected:
 			num_design, num_row,
 			x, y, rng
 		);
-		if (famar_updater) {
-			famar_updater->appendDesign(x);
-			famar_updater->updateResid(x, y, row_coef, col_coef);
-			famar_updater->updateFactor(row_coef, row_sig_lower, col_coef, col_sig_lower, rng);
-		}
 	}
 
 	void updateRecords() {

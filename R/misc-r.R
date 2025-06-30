@@ -112,8 +112,8 @@ validate_bmar_prior <- function(bayes_spec) {
     "Minnesota" = bayes_spec,
     "Horseshoe" = list(),
     "MN_Hierarchical" = {
-      bayes_spec$shape <- bayes_spec$kapp$shape
-      bayes_spec$rate <- bayes_spec$kapp$rate
+      bayes_spec$shape <- bayes_spec$kappa$shape
+      bayes_spec$rate <- bayes_spec$kappa$rate
       bayes_spec
     },
     stop("Wrong prior")
