@@ -318,13 +318,16 @@ mar_bayes <- function(y,
   is_symm <- grepl(pattern = "^Sigma", x = param_names)
   num_col <- c(nrow_data, nrow_data, ncol_data, ncol_data)
   num_row <- c(nrow_row_coef, nrow_data, nrow_col_coef, ncol_data)
+  num_matrix <- rep(0, 4)
   if (!is.null(exogen)) {
     num_col <- c(num_col, nrow_data, ncol_data)
     num_row <- c(num_row, nrow_exogen_row_coef, nrow_exogen_col_coef)
+    num_matrix <- c(num_matrix, rep(0, 3))
   }
   if (is_famar) {
-    num_col <- c(num_col, nrow_data, ncol_data)
-    num_row <- c(num_row, nrow_factor, ncol_factor)
+    num_col <- c(num_col, nrow_data, ncol_data, ncol_factor)
+    num_row <- c(num_row, nrow_factor, ncol_factor, nrow_factor)
+    num_matrix <- c(num_matrix, rep(0, 2), length(y_list) - p)
   }
   # num_row <- c(nrow_row_coef + nrow_exogen_row_coef, nrow_data, nrow_col_coef + nrow_exogen_col_coef, ncol_data)
   res[rec_names] <- lapply(
@@ -333,7 +336,8 @@ mar_bayes <- function(y,
       split_matrix_chain(
         res[rec_names][[id]],
         chain = num_chains, varname = param_names[id],
-        num_row = num_row[id], num_col = num_col[id], is_symm = is_symm[id]
+        num_row = num_row[id], num_col = num_col[id], is_symm = is_symm[id],
+        num_design = num_matrix[id]
       )
     }
   )

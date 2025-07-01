@@ -228,9 +228,12 @@ validate_coef_sig <- function(coef, sig) {
 #' Split matrix draw
 #' 
 #' @noRd 
-split_matrix_chain <- function(x, chain = 1, varname = "A", num_row, num_col, is_symm = FALSE) {
+split_matrix_chain <- function(x, chain = 1, varname = "A", num_row, num_col, is_symm = FALSE, num_design = 0) {
   # index <- expand.grid(seq_len(lag * num_col), seq_len(num_col))
   index <- expand.grid(seq_len(num_row), seq_len(num_col))
+  if (num_design > 0) {
+    index <- expand.grid(seq_len(num_row), seq_len(num_col), seq_len(num_design))
+  }
   if (is_symm) {
     index <- index[apply(index, 1, function(x) x[1] >= x[2]), ]
   }

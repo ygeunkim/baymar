@@ -88,6 +88,9 @@ public:
 	LIST returnRecords(int num_burn, int thin) override {
 		BVHAR_DEBUG_LOG(debug_logger, "returnRecords(num_burn={}, thin={}) called", num_burn, thin);
 		LIST res = mniw_record->returnListRecords(nrow_row_coef, num_row, nrow_row_exogen, nrow_factor, nrow_col_coef, num_col, nrow_col_exogen, ncol_factor);
+		if (famar_updater) {
+			famar_updater->appendRecords(res);
+		}
 		for (auto& record : res) {
 			if (IS_MATRIX(ACCESS_LIST(record, res))) {
 				ACCESS_LIST(record, res) = bvhar::thin_record(CAST<Eigen::MatrixXd>(ACCESS_LIST(record, res)), num_iter, num_burn, thin);
@@ -220,6 +223,9 @@ protected:
 			nrow_row_coef, num_row, nrow_row_exogen, nrow_factor,
 			nrow_col_coef, num_col, nrow_col_exogen, ncol_factor
 		);
+		if (famar_updater) {
+			famar_updater->updateRecords(mcmc_step);
+		}
 	}
 };
 
@@ -279,7 +285,7 @@ inline std::vector<std::unique_ptr<McmcMatMniw>> initialize_matmcmc(
 			(*col_factor_updater)->initPrec(params._col_prec.tail(params._col_factor));
 		}
 		if (nrow_factor) {
-			famar_updater = std::make_unique<McmcMatDfm>(y.size(), *factor_lag, *nrow_factor, *ncol_factor);
+			famar_updater = std::make_unique<McmcMatDfm>(num_iter, y.size(), *factor_lag, *nrow_factor, *ncol_factor);
 		}
 		mcmc_ptr[i] = std::make_unique<McmcMatMniw>(
 			params, inits, row_updater, col_updater, static_cast<unsigned int>(seed_chain[i]),
