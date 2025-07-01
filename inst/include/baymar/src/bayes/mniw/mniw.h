@@ -23,6 +23,7 @@ public:
 		num_row(params._row), num_col(params._col), num_design(params._design),
 		nrow_row_coef(params._row_row_coef), nrow_col_coef(params._row_col_coef),
 		nrow_row_exogen(params._row_exogen), nrow_col_exogen(params._col_exogen),
+		nrow_factor(0), ncol_factor(0),
 		row_record(num_iter + 1, std::vector<Eigen::MatrixXd>(2)), col_record(num_iter + 1, std::vector<Eigen::MatrixXd>(2)),
 		row_coef(inits._init_row_coef), row_sig_lower(inits._init_row_lower),
 		col_coef(inits._init_col_coef), col_sig_lower(inits._init_col_lower),
@@ -52,6 +53,10 @@ public:
 		updateRecords();
 		if (famar) {
 			famar_updater = std::move(*famar);
+			nrow_factor = famar_updater->getRow();
+			ncol_factor = famar_updater->getCol();
+			nrow_row_coef -= nrow_factor;
+			nrow_col_coef -= ncol_factor;
 		}
 	}
 	virtual ~McmcMatMniw() = default;
@@ -74,15 +79,7 @@ public:
 
 	LIST returnRecords(int num_burn, int thin) override {
 		BVHAR_DEBUG_LOG(debug_logger, "returnRecords(num_burn={}, thin={}) called", num_burn, thin);
-		// LIST res = CREATE_LIST(
-		// 	// NAMED("A_record") = row_coef_record,
-		// 	// NAMED("Sigr_record") = row_sig_record,
-		// 	// NAMED("B_record") = col_coef_record,
-		// 	// NAMED("Sigc_record") = col_sig_record
-		// 	NAMED("row_record") = WRAP(row_record),
-		// 	NAMED("col_record") = WRAP(col_record)
-		// );
-		LIST res = mniw_record->returnListRecords(nrow_row_coef, num_row, nrow_row_exogen, nrow_col_coef, num_col, nrow_col_exogen);
+		LIST res = mniw_record->returnListRecords(nrow_row_coef, num_row, nrow_row_exogen, nrow_factor, nrow_col_coef, num_col, nrow_col_exogen, ncol_factor);
 		for (auto& record : res) {
 			if (IS_MATRIX(ACCESS_LIST(record, res))) {
 				ACCESS_LIST(record, res) = bvhar::thin_record(CAST<Eigen::MatrixXd>(ACCESS_LIST(record, res)), num_iter, num_burn, thin);
@@ -109,7 +106,7 @@ protected:
 	int num_row;
 	int num_col;
 	int num_design;
-	int nrow_row_coef, nrow_col_coef, nrow_row_exogen, nrow_col_exogen;
+	int nrow_row_coef, nrow_col_coef, nrow_row_exogen, nrow_col_exogen, nrow_factor, ncol_factor;
 	std::vector<std::vector<Eigen::MatrixXd>> row_record, col_record;
 	Eigen::MatrixXd row_coef, row_sig_lower, col_coef, col_sig_lower;
 	std::unique_ptr<MatMniwRecords> mniw_record;

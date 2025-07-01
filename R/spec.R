@@ -78,3 +78,33 @@ set_mar_horseshoe <- function() {
 is.mathsspec <- function(x) {
   inherits(x, "mathsspec")
 }
+
+#' Factor prior specification
+#' 
+#' @param nrow_factor Number of rows of factor matrix.
+#' By default, `0` which will does not use factor term.
+#' @param ncol_factor Number of columns of factor matrix.
+#' By default, `0` which will does not use factor term.
+#' @param factor_lag Lag of factor autoregressions.
+#'
+#' @order 1
+#' @export
+set_famar <- function(nrow_factor = 0, ncol_factor = 0, factor_lag = 1) {
+  if (factor_lag <= 0 || factor_lag %% 1 != 0) {
+    stop("'factor_lag' positive integer.")
+  }
+  res <- list(
+    nrow_factor = nrow_factor,
+    ncol_factor = ncol_factor,
+    lag = factor_lag
+  )
+  class(res) <- "famarspec"
+  res
+}
+
+#' @rdname set_famar
+#' @param x Any object
+#' @export
+is.famarspec <- function(x) {
+  inherits(x, "famarspec")
+}

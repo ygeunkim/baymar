@@ -17,6 +17,7 @@ mar_bayes(
   col_spec = row_spec,
   exogen_row_spec = row_spec,
   exogen_col_spec = row_spec,
+  factor_spec = set_famar(),
   verbose = FALSE,
   num_thread = 1
 )
@@ -45,6 +46,8 @@ mar_bayes(
 \item{exogen_row_spec}{Exogenous row coefficient prior specification.}
 
 \item{exogen_col_spec}{Exogenous column coefficient prior specification.}
+
+\item{factor_spec}{Augmented factor matrix specification.}
 
 \item{verbose}{Progress log}
 

@@ -114,8 +114,8 @@ struct MatMniwRecords {
 	}
 
 	LIST returnListRecords(
-		int nrow_row_coef, int num_row, int nrow_row_exogen,
-		int nrow_col_coef, int num_col, int nrow_col_exogen
+		int nrow_row_coef, int num_row, int nrow_row_exogen, int nrow_factor,
+		int nrow_col_coef, int num_col, int nrow_col_exogen, int ncol_factor
 	) {
 		LIST res = CREATE_LIST(
 			NAMED("A_record") = row_coef_record.leftCols(num_row * nrow_row_coef),
@@ -124,8 +124,12 @@ struct MatMniwRecords {
 			NAMED("SigmaC_record") = col_sigma_record
 		);
 		if (nrow_row_exogen > 0) {
-			res["C_record"] = row_coef_record.rightCols(num_row * nrow_row_exogen);
-			res["D_record"] = col_coef_record.rightCols(num_col * nrow_col_exogen);
+			res["C_record"] = row_coef_record.middleCols(num_row * nrow_row_coef, num_row * nrow_row_exogen);
+			res["D_record"] = col_coef_record.middleCols(num_col * nrow_col_coef, num_col * nrow_col_exogen);
+		}
+		if (nrow_factor > 0) {
+			res["G_record"] = row_coef_record.rightCols(num_row * nrow_factor);
+			res["H_record"] = col_coef_record.rightCols(num_col * ncol_factor);
 		}
 		// return CREATE_LIST(
 		// 	NAMED("A_record") = row_coef_record,

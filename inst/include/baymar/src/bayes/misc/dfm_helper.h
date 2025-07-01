@@ -152,7 +152,6 @@ inline void draw_dfm_coef(Eigen::Ref<Eigen::MatrixXd> fac_coef_diag, Eigen::Ref<
 			normal_vector[j] = bvhar::normal_rand(rng);
 		}
 		cand_rho = post_mean + llt_of_prec.matrixU().solve(normal_vector);
-		std::cout << "cand_rho: " << cand_rho.size() << std::endl;
 		numerator = compute_dfmcoef_logdens(cand_rho, fac_lambda[i], factor_design.row(0));
 		denom = compute_dfmcoef_logdens(fac_coef_diag.row(i), fac_lambda[i], factor_design.row(0));
 		if (log(bvhar::unif_rand(rng) < std::min(numerator - denom, 0.0))) {

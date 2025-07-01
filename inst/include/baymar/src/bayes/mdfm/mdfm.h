@@ -14,6 +14,9 @@ public:
 	McmcMatAugment() {}
 	virtual ~McmcMatAugment() = default;
 
+	virtual int getRow() { return 0; }
+	virtual int getCol() { return 0; }
+
 	virtual void appendDesign(std::vector<Eigen::SparseMatrix<double>>& x) {}
 
 	virtual void updateResid(
@@ -41,6 +44,14 @@ public:
 		// use ShrinkageUpdater for prior_prec later!
 	}
 	virtual ~McmcMatDfm() = default;
+
+	int getRow() override {
+		return nrow_factor;
+	}
+
+	int getCol() override {
+		return ncol_factor;
+	}
 
 	void appendDesign(std::vector<Eigen::SparseMatrix<double>>& x) override {
 		// diag(Y_{t - 1}, ..., Y_{t - p}, X_t, ..., X_{t - s}, F_t)
