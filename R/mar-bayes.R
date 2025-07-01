@@ -322,7 +322,7 @@ mar_bayes <- function(y,
   if (!is.null(exogen)) {
     num_col <- c(num_col, nrow_data, ncol_data)
     num_row <- c(num_row, nrow_exogen_row_coef, nrow_exogen_col_coef)
-    num_matrix <- c(num_matrix, rep(0, 3))
+    num_matrix <- c(num_matrix, rep(0, 2))
   }
   if (is_famar) {
     num_col <- c(num_col, nrow_data, ncol_data, ncol_factor)
@@ -353,6 +353,14 @@ mar_bayes <- function(y,
       res$param,
       res$C_record,
       res$D_record
+    )
+  }
+  if (is_famar) {
+    res$param <- bind_draws(
+      res$param,
+      res$G_record,
+      res$H_record,
+      res$F_record
     )
   }
   res[rec_names] <- NULL
