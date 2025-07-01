@@ -246,33 +246,21 @@ mar_bayes <- function(y,
       name_col_lag,
       paste("factor", seq_len(ncol_factor), sep = "_")
     )
-    res <- estimate_bmdfm_mniw(
-      num_chains = num_chains, num_iter = num_iter, num_burn = num_burn, thin = thinning,
-      x = design, y = response,
-      param_coef_sig = param_prior, coef_sig_init = param_init,
-      row_prior = row_prior, row_init = row_init, row_prior_type = row_prior_type,
-      col_prior = col_prior, col_init = col_init, col_prior_type = col_prior_type,
-      exogen_row_prior = row_exogen_prior, exogen_row_init = row_exogen_init, exogen_row_prior_type = row_exogen_prior_type, exogen_rows = nrow_exogen_row_coef,
-      exogen_col_prior = col_exogen_prior, exogen_col_init = col_exogen_init, exogen_col_prior_type = col_exogen_prior_type, exogen_cols = nrow_exogen_col_coef,
-      factor_row_prior = row_factor_prior, factor_row_init = row_factor_init, factor_row_prior_type = row_factor_prior_type, factor_rows = nrow_factor,
-      factor_col_prior = col_factor_prior, factor_col_init = col_factor_init, factor_col_prior_type = col_factor_prior_type, factor_cols = ncol_factor,
-      factor_lag = lag_factor,
-      seed_chain = sample.int(.Machine$integer.max, size = num_chains),
-      display_progress = verbose, nthreads = num_thread
-    )
-  } else {
-    res <- estimate_bmar_mniw(
-      num_chains = num_chains, num_iter = num_iter, num_burn = num_burn, thin = thinning,
-      x = design, y = response,
-      param_coef_sig = param_prior, coef_sig_init = param_init,
-      row_prior = row_prior, row_init = row_init, row_prior_type = row_prior_type,
-      col_prior = col_prior, col_init = col_init, col_prior_type = col_prior_type,
-      exogen_row_prior = row_exogen_prior, exogen_row_init = row_exogen_init, exogen_row_prior_type = row_exogen_prior_type, exogen_rows = nrow_exogen_row_coef,
-      exogen_col_prior = col_exogen_prior, exogen_col_init = col_exogen_init, exogen_col_prior_type = col_exogen_prior_type, exogen_cols = nrow_exogen_col_coef,
-      seed_chain = sample.int(.Machine$integer.max, size = num_chains),
-      display_progress = verbose, nthreads = num_thread
-    )
   }
+  res <- estimate_bmar_mniw(
+    num_chains = num_chains, num_iter = num_iter, num_burn = num_burn, thin = thinning,
+    x = design, y = response,
+    param_coef_sig = param_prior, coef_sig_init = param_init,
+    row_prior = row_prior, row_init = row_init, row_prior_type = row_prior_type,
+    col_prior = col_prior, col_init = col_init, col_prior_type = col_prior_type,
+    exogen_row_prior = row_exogen_prior, exogen_row_init = row_exogen_init, exogen_row_prior_type = row_exogen_prior_type, exogen_rows = nrow_exogen_row_coef,
+    exogen_col_prior = col_exogen_prior, exogen_col_init = col_exogen_init, exogen_col_prior_type = col_exogen_prior_type, exogen_cols = nrow_exogen_col_coef,
+    factor_row_prior = row_factor_prior, factor_row_init = row_factor_init, factor_row_prior_type = row_factor_prior_type, factor_rows = nrow_factor,
+    factor_col_prior = col_factor_prior, factor_col_init = col_factor_init, factor_col_prior_type = col_factor_prior_type, factor_cols = ncol_factor,
+    factor_lag = lag_factor,
+    seed_chain = sample.int(.Machine$integer.max, size = num_chains),
+    display_progress = verbose, nthreads = num_thread
+  )
   res <- do.call(rbind, res)
   rec_names <- colnames(res)
   param_names <- gsub(pattern = "_record$", replacement = "", rec_names)
