@@ -217,8 +217,8 @@ protected:
 		// col_record[mcmc_step][1] = col_sig_lower * col_sig_lower.transpose();
 		mniw_record->assignRecords(
 			mcmc_step, row_coef, row_sig_lower, col_coef, col_sig_lower,
-			nrow_row_coef, num_row, nrow_row_exogen,
-			nrow_col_coef, num_col, nrow_col_exogen
+			nrow_row_coef, num_row, nrow_row_exogen, nrow_factor,
+			nrow_col_coef, num_col, nrow_col_exogen, ncol_factor
 		);
 	}
 };
