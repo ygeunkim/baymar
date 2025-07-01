@@ -16,6 +16,7 @@ struct MatMniwParams : public bvhar::McmcParams {
 	std::vector<Eigen::MatrixXd> _y;
 	int _row, _col, _design;
 	int _row_exogen, _col_exogen;
+	int _row_factor, _col_factor;
 	Eigen::MatrixXd _row_mean, _row_iw_scl;
 	Eigen::MatrixXd _col_mean, _col_iw_scl;
 	Eigen::VectorXd _row_prec, _col_prec;
@@ -25,17 +26,19 @@ struct MatMniwParams : public bvhar::McmcParams {
 	MatMniwParams(
 		int num_iter, std::vector<Eigen::SparseMatrix<double>>& x, std::vector<Eigen::MatrixXd>& y,
 		LIST& priors,
-		Optional<int> exogen_rows = NULLOPT, Optional<int> exogen_cols = NULLOPT
+		Optional<int> exogen_rows = NULLOPT, Optional<int> exogen_cols = NULLOPT,
+		Optional<int> factor_rows = NULLOPT, Optional<int> factor_cols = NULLOPT
 	)
 	: bvhar::McmcParams(num_iter),
 		_x(x), _y(y),
 		_row(y[0].rows()), _col(y[0].cols()), _design(y.size()),
 		_row_exogen(exogen_rows ? *exogen_rows : 0), _col_exogen(exogen_cols ? *exogen_cols : 0),
+		_row_factor(factor_rows ? *factor_rows : 0), _col_factor(factor_cols ? *factor_cols : 0),
 		_row_mean(CAST<Eigen::MatrixXd>(priors["row_prior_mean"])), _row_iw_scl(CAST<Eigen::MatrixXd>(priors["row_iw_scl"])),
 		_col_mean(CAST<Eigen::MatrixXd>(priors["col_prior_mean"])), _col_iw_scl(CAST<Eigen::MatrixXd>(priors["col_iw_scl"])),
 		_row_prec(CAST<Eigen::VectorXd>(priors["row_prior_prec"])), _col_prec(CAST<Eigen::VectorXd>(priors["col_prior_prec"])),
 		_row_iw_df(CAST_DOUBLE(priors["row_iw_df"])), _col_iw_df(CAST_DOUBLE(priors["col_iw_df"])),
-		_row_row_coef(_row_mean.rows() - _row_exogen), _row_col_coef(_col_mean.rows() - _col_exogen) {}
+		_row_row_coef(_row_mean.rows() - _row_exogen - _row_factor), _row_col_coef(_col_mean.rows() - _col_exogen - _col_factor) {}
 };
 
 struct MatMniwInits {

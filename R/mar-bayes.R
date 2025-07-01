@@ -6,6 +6,7 @@
 #' @param p VAR lag (Default: 1)
 #' @param exogen Unmodeled matrices
 #' @param s Lag of exogeneous matrices in MARX(p, s). By default, `s = 0`.
+#' @param famar_spec Augmented factor matrix specification.
 #' @param num_chains Number of MCMC chains
 #' @param num_iter MCMC iteration number
 #' @param num_burn Number of burn-in (warm-up). Half of the iteration is the default choice.
@@ -14,7 +15,8 @@
 #' @param col_spec Column coefficient specification
 #' @param exogen_row_spec Exogenous row coefficient prior specification.
 #' @param exogen_col_spec Exogenous column coefficient prior specification.
-#' @param factor_spec Augmented factor matrix specification.
+#' @param factor_row_spec Factor row coefficient prior specification.
+#' @param factor_col_spec Factor column coefficient prior specification.
 #' @param verbose Progress log
 #' @param num_thread Number of threads
 #' 
@@ -30,6 +32,7 @@ mar_bayes <- function(y,
                       p = 1,
                       exogen = NULL,
                       s = 0,
+                      famar_spec = set_famar(),
                       num_chains = 1,
                       num_iter = 1000,
                       num_burn = floor(num_iter / 2),
@@ -38,7 +41,8 @@ mar_bayes <- function(y,
                       col_spec = row_spec,
                       exogen_row_spec = row_spec,
                       exogen_col_spec = row_spec,
-                      factor_spec = set_famar(),
+                      factor_row_spec = row_spec,
+                      factor_col_spec = col_spec,
                       verbose = FALSE,
                       num_thread = 1) {
   if (!is.array(y)) {
@@ -90,14 +94,20 @@ mar_bayes <- function(y,
   nrow_factor <- 0
   ncol_factor <- 0
   lag_factor <- 0
+  row_factor_prior_type <- 0
+  col_factor_prior_type <- 0
+  row_factor_prior <- list()
+  col_factor_prior <- list()
+  row_factor_init <- list()
+  col_factor_init <- list()
   is_famar <- FALSE
-  if (!is.famarspec(factor_spec)) {
-    stop("Wrong 'factor_spec'")
+  if (!is.famarspec(famar_spec)) {
+    stop("Wrong 'famar_spec'")
   }
-  if (factor_spec$nrow_factor > 0 && factor_spec$ncol_factor > 0) {
-    nrow_factor <- factor_spec$nrow_factor
-    ncol_factor <- factor_spec$ncol_factor
-    lag_factor <- factor_spec$lag
+  if (famar_spec$nrow_factor > 0 && famar_spec$ncol_factor > 0) {
+    nrow_factor <- famar_spec$nrow_factor
+    ncol_factor <- famar_spec$ncol_factor
+    lag_factor <- famar_spec$lag
     is_famar <- TRUE
   }
   if (!is.null(exogen)) {
@@ -155,7 +165,7 @@ mar_bayes <- function(y,
     bayes_spec = row_spec,
     nrow_data = nrow_data,
     ncol_data = ncol_data,
-    nrow_row_coef = nrow_row_coef + nrow_factor
+    nrow_row_coef = nrow_row_coef
   )
   param_prior <- append(
     param_prior,
@@ -165,7 +175,7 @@ mar_bayes <- function(y,
       bayes_spec = col_spec,
       nrow_data = nrow_data,
       ncol_data = ncol_data,
-      nrow_col_coef = nrow_col_coef + ncol_factor
+      nrow_col_coef = nrow_col_coef
     )
   )
   # Initialization
@@ -178,8 +188,8 @@ mar_bayes <- function(y,
   )
   row_prior <- validate_bmar_prior(row_spec)
   col_prior <- validate_bmar_prior(col_spec)
-  row_init <- get_bmar_init(row_spec, num_chains, nrow_row_coef + nrow_factor)
-  col_init <- get_bmar_init(col_spec, num_chains, nrow_col_coef + ncol_factor)
+  row_init <- get_bmar_init(row_spec, num_chains, nrow_row_coef)
+  col_init <- get_bmar_init(col_spec, num_chains, nrow_col_coef)
   row_prior_type <- get_prior_id(row_spec$prior)
   col_prior_type <- get_prior_id(col_spec$prior)
   if (!is.null(exogen)) {
@@ -205,8 +215,22 @@ mar_bayes <- function(y,
     col_exogen_init <- get_bmar_init(exogen_col_spec, num_chains, nrow_exogen_col_coef)
   }
   if (is_famar) {
+    row_factor_prior <- validate_bmar_prior(factor_row_spec)
+    col_factor_prior <- validate_bmar_prior(factor_col_spec)
+    row_factor_prior_type <- get_prior_id(factor_row_spec$prior)
+    col_factor_prior_type <- get_prior_id(factor_col_spec$prior)
+    param_prior$row_prior_mean <- rbind(
+      param_prior$row_prior_mean,
+      matrix(0L, nrow = nrow_factor, ncol = nrow_data)
+    )
     param_prior$row_prior_prec <- c(param_prior$row_prior_prec, rep(1, nrow_factor))
+    param_prior$col_prior_mean <- rbind(
+      param_prior$col_prior_mean,
+      matrix(0L, nrow = ncol_factor, ncol = ncol_data)
+    )
     param_prior$col_prior_prec <- c(param_prior$col_prior_prec, rep(1, ncol_factor))
+    row_factor_init <- get_bmar_init(factor_row_spec, num_chains, nrow_factor)
+    col_factor_init <- get_bmar_init(factor_col_spec, num_chains, ncol_factor)
     for (i in (seq_along(response) + p)) {
       design[[i - p]] <- bdiag(append(
         design[[i - p]],
@@ -224,12 +248,14 @@ mar_bayes <- function(y,
     res <- estimate_bmdfm_mniw(
       num_chains = num_chains, num_iter = num_iter, num_burn = num_burn, thin = thinning,
       x = design, y = response,
-      nrow_factor = nrow_factor, ncol_factor = ncol_factor, factor_lag = lag_factor,
       param_coef_sig = param_prior, coef_sig_init = param_init,
       row_prior = row_prior, row_init = row_init, row_prior_type = row_prior_type,
       col_prior = col_prior, col_init = col_init, col_prior_type = col_prior_type,
       exogen_row_prior = row_exogen_prior, exogen_row_init = row_exogen_init, exogen_row_prior_type = row_exogen_prior_type, exogen_rows = nrow_exogen_row_coef,
       exogen_col_prior = col_exogen_prior, exogen_col_init = col_exogen_init, exogen_col_prior_type = col_exogen_prior_type, exogen_cols = nrow_exogen_col_coef,
+      factor_row_prior = row_factor_prior, factor_row_init = row_factor_init, factor_row_prior_type = row_factor_prior_type, factor_rows = nrow_factor,
+      factor_col_prior = col_factor_prior, factor_col_init = col_factor_init, factor_col_prior_type = col_factor_prior_type, factor_cols = ncol_factor,
+      factor_lag = lag_factor,
       seed_chain = sample.int(.Machine$integer.max, size = num_chains),
       display_progress = verbose, nthreads = num_thread
     )

@@ -17,6 +17,8 @@ public:
 	virtual int getRow() { return 0; }
 	virtual int getCol() { return 0; }
 
+	virtual void updatePrec(Eigen::Ref<const Eigen::VectorXd> prec) {}
+
 	virtual void appendDesign(std::vector<Eigen::SparseMatrix<double>>& x) {}
 
 	virtual void updateResid(
@@ -25,8 +27,8 @@ public:
 	) {}
 	
 	virtual void updateFactor(
-		Eigen::Ref<Eigen::MatrixXd> row_coef, Eigen::Ref<Eigen::MatrixXd> row_sig_lower,
-		Eigen::Ref<Eigen::MatrixXd> col_coef, Eigen::Ref<Eigen::MatrixXd> col_sig_lower,
+		Eigen::Ref<const Eigen::MatrixXd> row_coef, Eigen::Ref<const Eigen::MatrixXd> row_sig_lower,
+		Eigen::Ref<const Eigen::MatrixXd> col_coef, Eigen::Ref<const Eigen::MatrixXd> col_sig_lower,
 		BHRNG& rng
 	) {}
 };
@@ -53,10 +55,13 @@ public:
 		return ncol_factor;
 	}
 
+	void updatePrec(Eigen::Ref<const Eigen::VectorXd> prec) override {
+		prior_prec = prec;
+	}
+
 	void appendDesign(std::vector<Eigen::SparseMatrix<double>>& x) override {
 		// diag(Y_{t - 1}, ..., Y_{t - p}, X_t, ..., X_{t - s}, F_t)
 		for (int i = 0; i < num_design; ++i) {
-			// x[i].bottomRightCorner(nrow_factor, ncol_factor) = factor_mat[i].sparseView();
 			append_x(x[i], factor_mat[i], nrow_factor, ncol_factor);
 		}
 	}
@@ -66,19 +71,20 @@ public:
 		Eigen::Ref<const Eigen::MatrixXd> row_coef, Eigen::Ref<const Eigen::MatrixXd> col_coef
 	) override {
 		for (int i = 0; i < num_design; ++i) {
-			resid[i] = y[i] - row_coef.topRows(row_coef.rows() - nrow_factor).transpose() * x[i].topLeftCorner(x[i].rows() - nrow_factor, x[i].cols() - ncol_factor) * col_coef.topRows(col_coef.rows() - ncol_factor);
+			// resid[i] = y[i] - row_coef.topRows(row_coef.rows() - nrow_factor).transpose() * x[i].topLeftCorner(x[i].rows() - nrow_factor, x[i].cols() - ncol_factor) * col_coef.topRows(col_coef.rows() - ncol_factor);
+			resid[i] = y[i] - row_coef.transpose() * x[i].topLeftCorner(x[i].rows() - nrow_factor, x[i].cols() - ncol_factor) * col_coef;
 		}
 	}
 	
 	void updateFactor(
-		Eigen::Ref<Eigen::MatrixXd> row_coef, Eigen::Ref<Eigen::MatrixXd> row_sig_lower,
-		Eigen::Ref<Eigen::MatrixXd> col_coef, Eigen::Ref<Eigen::MatrixXd> col_sig_lower,
+		Eigen::Ref<const Eigen::MatrixXd> row_coef, Eigen::Ref<const Eigen::MatrixXd> row_sig_lower,
+		Eigen::Ref<const Eigen::MatrixXd> col_coef, Eigen::Ref<const Eigen::MatrixXd> col_sig_lower,
 		BHRNG& rng
 	) override {
 		draw_dfm_factor(
 			factor_mat, lag, nrow_factor, ncol_factor, dfm_coef, dfm_prec,
-			row_coef.bottomRows(nrow_factor).transpose(), row_sig_lower,
-			col_coef.bottomRows(ncol_factor).transpose(), col_sig_lower,
+			row_coef, row_sig_lower,
+			col_coef, col_sig_lower,
 			resid, rng
 		);
 		draw_dfm_prec(dfm_prec, lag, ig_shp, ig_scl, factor_mat, dfm_coef, rng);

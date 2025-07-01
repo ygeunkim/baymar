@@ -60,12 +60,14 @@ Rcpp::List estimate_bmar_mniw(int num_chains, int num_iter, int num_burn, int th
 // [[Rcpp::export]]
 Rcpp::List estimate_bmdfm_mniw(int num_chains, int num_iter, int num_burn, int thin,
 															 std::vector<Eigen::SparseMatrix<double>>& x, std::vector<Eigen::MatrixXd>& y,
-															 int nrow_factor, int ncol_factor, int factor_lag,
 															 Rcpp::List param_coef_sig, Rcpp::List coef_sig_init,
 															 Rcpp::List row_prior, Rcpp::List row_init, int row_prior_type,
 															 Rcpp::List col_prior, Rcpp::List col_init, int col_prior_type,
 															 Rcpp::List exogen_row_prior, Rcpp::List exogen_row_init, int exogen_row_prior_type, int exogen_rows,
 															 Rcpp::List exogen_col_prior, Rcpp::List exogen_col_init, int exogen_col_prior_type, int exogen_cols,
+															 Rcpp::List factor_row_prior, Rcpp::List factor_row_init, int factor_row_prior_type, int factor_rows,
+															 Rcpp::List factor_col_prior, Rcpp::List factor_col_init, int factor_col_prior_type, int factor_cols,
+															 int factor_lag,
 															 Eigen::VectorXi seed_chain, bool display_progress, int nthreads) {
 	auto mcmc_run = [&]() -> std::unique_ptr<baymar::MatMcmcRun> {
 		if (exogen_row_prior_type != 0 && exogen_col_prior_type != 0) {
@@ -78,7 +80,9 @@ Rcpp::List estimate_bmdfm_mniw(int num_chains, int num_iter, int num_burn, int t
 				seed_chain, display_progress, nthreads,
 				exogen_row_prior, exogen_row_init, exogen_row_prior_type, exogen_rows,
 				exogen_col_prior, exogen_col_init, exogen_col_prior_type, exogen_cols,
-				nrow_factor, ncol_factor, factor_lag
+				factor_row_prior, factor_row_init, factor_row_prior_type, factor_rows,
+				factor_col_prior, factor_col_init, factor_col_prior_type, factor_cols,
+				factor_lag
 			);
 		} if (exogen_row_prior_type != 0 && exogen_col_prior_type == 0) {
 			return std::make_unique<baymar::MatMcmcRun>(
@@ -90,7 +94,9 @@ Rcpp::List estimate_bmdfm_mniw(int num_chains, int num_iter, int num_burn, int t
 				seed_chain, display_progress, nthreads,
 				exogen_row_prior, exogen_row_init, exogen_row_prior_type, exogen_rows,
 				NULLOPT, NULLOPT, NULLOPT, NULLOPT,
-				nrow_factor, ncol_factor, factor_lag
+				factor_row_prior, factor_row_init, factor_row_prior_type, factor_rows,
+				factor_col_prior, factor_col_init, factor_col_prior_type, factor_cols,
+				factor_lag
 			); 
 		} else if (exogen_row_prior_type == 0 && exogen_col_prior_type != 0) {
 			return std::make_unique<baymar::MatMcmcRun>(
@@ -102,7 +108,9 @@ Rcpp::List estimate_bmdfm_mniw(int num_chains, int num_iter, int num_burn, int t
 				seed_chain, display_progress, nthreads,
 				NULLOPT, NULLOPT, NULLOPT, NULLOPT,
 				exogen_col_prior, exogen_col_init, exogen_col_prior_type, exogen_cols,
-				nrow_factor, ncol_factor, factor_lag
+				factor_row_prior, factor_row_init, factor_row_prior_type, factor_rows,
+				factor_col_prior, factor_col_init, factor_col_prior_type, factor_cols,
+				factor_lag
 			);
 		}
 		return std::make_unique<baymar::MatMcmcRun>(
@@ -114,7 +122,9 @@ Rcpp::List estimate_bmdfm_mniw(int num_chains, int num_iter, int num_burn, int t
 			seed_chain, display_progress, nthreads,
 			NULLOPT, NULLOPT, NULLOPT, NULLOPT,
 			NULLOPT, NULLOPT, NULLOPT, NULLOPT,
-			nrow_factor, ncol_factor, factor_lag
+			factor_row_prior, factor_row_init, factor_row_prior_type, factor_rows,
+			factor_col_prior, factor_col_init, factor_col_prior_type, factor_cols,
+			factor_lag
 		);
 	}();
 	return mcmc_run->returnRecords();
