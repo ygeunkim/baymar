@@ -21,8 +21,9 @@
 #' @param num_thread Number of threads
 #' 
 #' @references
-#' Chan, J. C. C. & Qi, Y. (2024). Large Bayesian Tensor VARs with Stochastic Volatility. arXiv.
+#' Chan, J. C. C. & Qi, Y. (2025). Large Bayesian matrix autoregressions. Journal of Econometrics, 105955.
 #' 
+#' Zhang, W. (2025). Bayesian Dynamic Factor Models for High-Dimensional Matrix-Valued Time Series. SSRN Electronic Journal.
 #' @importFrom Matrix bdiag
 #' @importFrom utils tail
 #' @importFrom posterior as_draws_df bind_draws summarise_draws
