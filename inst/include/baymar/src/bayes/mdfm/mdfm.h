@@ -38,7 +38,7 @@ public:
 		dfm_prec(Eigen::VectorXd::Ones(size_factor)),
 		ig_shp(Eigen::VectorXd::Constant(size_factor, 3.0)), ig_scl(Eigen::VectorXd::Ones(size_factor)),
 		prior_mean(Eigen::VectorXd::Zero(lag)), prior_prec(Eigen::VectorXd::Ones(lag)) {
-		// updateResid(x, y, row_coef, col_coef);
+		// use ShrinkageUpdater for prior_prec later!
 	}
 	virtual ~McmcMatDfm() = default;
 
@@ -71,7 +71,6 @@ public:
 			resid, rng
 		);
 		draw_dfm_prec(dfm_prec, lag, ig_shp, ig_scl, factor_mat, dfm_coef, rng);
-		// Should fix draw_dfm_coef()
 		draw_dfm_coef(dfm_coef, dfm_prec, prior_mean, prior_prec, factor_mat, lag, rng);
 	}
 	

@@ -2,7 +2,7 @@
 #define BAYMAR_BAYES_MISC_DFM_HELPER_H
 
 #include <bvhar/utils>
-#include <boost/math/distributions/normal.hpp>
+// #include <boost/math/distributions/normal.hpp>
 
 namespace baymar {
 
@@ -111,11 +111,13 @@ inline void draw_dfm_prec(Eigen::Ref<Eigen::VectorXd> fac_lambda, int factor_lag
 inline double compute_dfmcoef_logdens(Eigen::Ref<const Eigen::VectorXd> cand_coef,
 																			double lambda_i, Eigen::Ref<const Eigen::VectorXd> fac_init) {
 	double res = 0;
+	double sd = lambda_i / sqrt(1 - cand_coef.squaredNorm());
 	for (int i = 0; i < cand_coef.size(); ++i) {
-		res += boost::math::logpdf(
-			boost::math::normal_distribution<>(0.0, lambda_i / sqrt(1 - cand_coef.squaredNorm())),
-			fac_init[i]
-		);
+		// res += boost::math::logpdf(
+		// 	boost::math::normal_distribution<>(0.0, lambda_i / sqrt(1 - cand_coef.squaredNorm())),
+		// 	fac_init[i]
+		// );
+		res += -log(sd) - fac_init[i] * fac_init[i] / (2 * sd * sd);
 	}
 	return res;
 }
@@ -132,7 +134,7 @@ inline void draw_dfm_coef(Eigen::Ref<Eigen::MatrixXd> fac_coef_diag, Eigen::Ref<
 	Eigen::MatrixXd factor_design(num_design, factor_lag);
 	Eigen::VectorXd factor_response(num_design);
 	Eigen::VectorXd cand_rho(num_coef);
-	Eigen::VectorXd normal_vector(num_coef);
+	Eigen::VectorXd normal_vector(factor_lag);
 	Eigen::VectorXd post_mean(num_coef);
 	Eigen::LLT<Eigen::MatrixXd> llt_of_prec;
 	for (int i = 0; i < num_coef; ++i) {
@@ -144,15 +146,9 @@ inline void draw_dfm_coef(Eigen::Ref<Eigen::MatrixXd> fac_coef_diag, Eigen::Ref<
 				factor_design(j, k) = factor_mat[j + factor_lag - k - 1](row_id, col_id);
 			}
 		}
-		std::cout << "factor_design: " << factor_design.rows() << " x " << factor_design.cols() << std::endl;
-		std::cout << "fac_coef_diag: " << fac_coef_diag.rows() << " x " << fac_coef_diag.cols() << std::endl;
-		std::cout << "prior_prec: " << prior_prec.size() << std::endl;
-		std::cout << "prior_mean: " << prior_mean.size() << std::endl;
-		std::cout << "factor_response: " << factor_response.size() << std::endl;
 		llt_of_prec.compute(prior_prec.asDiagonal().toDenseMatrix() + factor_design.transpose() * factor_design / fac_lambda[i]);
 		post_mean = llt_of_prec.solve(prior_prec.cwiseProduct(prior_mean) + factor_design.transpose() * factor_response / fac_lambda[i]);
-		std::cout << "post_mean: " << post_mean.size() << std::endl;
-		for (int j = 0; j < num_coef; ++j) {
+		for (int j = 0; j < factor_lag; ++j) {
 			normal_vector[j] = bvhar::normal_rand(rng);
 		}
 		cand_rho = post_mean + llt_of_prec.matrixU().solve(normal_vector);
