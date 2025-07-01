@@ -37,10 +37,10 @@ public:
 		}
 	}
 
-	void updateCoefmat(const Eigen::VectorXd& row_coef_record, const Eigen::VectorXd& col_coef_record) {
+	void updateCoefmat(const Eigen::VectorXd& row_coef_record, const Eigen::VectorXd& col_coef_record, int nrow_row_coef, int nrow_col_coef) {
 		BVHAR_DEBUG_LOG(debug_logger, "updateCoefmat() called");
-		row_coef = bvhar::unvectorize(row_coef_record.tail(nrow_row_exogen * num_row).transpose(), num_row);
-		col_coef = bvhar::unvectorize(col_coef_record.tail(nrow_col_exogen * num_col).transpose(), num_col);
+		row_coef = bvhar::unvectorize(row_coef_record.segment(nrow_row_coef * num_row, nrow_row_exogen * num_row).transpose(), num_row);
+		col_coef = bvhar::unvectorize(col_coef_record.segment(nrow_col_coef * num_col, nrow_col_exogen * num_col).transpose(), num_col);
 	}
 
 private:
@@ -138,7 +138,7 @@ protected:
 		row_coef = bvhar::unvectorize(mat_record->row_coef_record.row(i).head(nrow_row_coef * num_row).transpose(), num_row);
 		col_coef = bvhar::unvectorize(mat_record->col_coef_record.row(i).head(nrow_col_coef * num_col).transpose(), num_col);
 		if (exogen_updater) {
-			exogen_updater->updateCoefmat(mat_record->row_coef_record.row(i).transpose(), mat_record->col_coef_record.row(i).transpose());
+			exogen_updater->updateCoefmat(mat_record->row_coef_record.row(i).transpose(), mat_record->col_coef_record.row(i).transpose(), nrow_row_coef, nrow_col_coef);
 		}
 		fill_lower(row_sig_lower, mat_record->row_sigma_record.row(i).transpose());
 		fill_lower(col_sig_lower, mat_record->col_sigma_record.row(i).transpose());
