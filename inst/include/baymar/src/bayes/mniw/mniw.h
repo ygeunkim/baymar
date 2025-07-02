@@ -15,7 +15,7 @@ public:
 		unsigned int seed,
 		Optional<std::unique_ptr<MatShrinkageUpdater>> row_exogen = NULLOPT,
 		Optional<std::unique_ptr<MatShrinkageUpdater>> col_exogen = NULLOPT,
-		Optional<std::unique_ptr<McmcMatAugment>> famar = NULLOPT,
+		Optional<std::unique_ptr<MatAugmenter>> famar = NULLOPT,
 		Optional<std::unique_ptr<MatShrinkageUpdater>> row_factor = NULLOPT,
 		Optional<std::unique_ptr<MatShrinkageUpdater>> col_factor = NULLOPT
 	)
@@ -115,7 +115,7 @@ protected:
 	std::unique_ptr<MatShrinkageUpdater> exogen_col_updater;
 	std::unique_ptr<MatShrinkageUpdater> factor_row_updater;
 	std::unique_ptr<MatShrinkageUpdater> factor_col_updater;
-	std::unique_ptr<McmcMatAugment> famar_updater;
+	std::unique_ptr<MatAugmenter> famar_updater;
 	int num_row;
 	int num_col;
 	int num_design;
@@ -271,7 +271,7 @@ inline std::vector<std::unique_ptr<McmcMatMniw>> initialize_matmcmc(
 			col_exogen_updater = initialize_matshrinkageupdater(num_iter, *col_exogen_prior, col_exogen_init_spec, *col_exogen_prior_type);
 			(*col_exogen_updater)->initPrec(params._col_prec.segment(params._row_col_coef, params._col_exogen));
 		}
-		Optional<std::unique_ptr<McmcMatAugment>> famar_updater = NULLOPT;
+		Optional<std::unique_ptr<MatAugmenter>> famar_updater = NULLOPT;
 		Optional<std::unique_ptr<MatShrinkageUpdater>> row_factor_updater = NULLOPT;
 		Optional<std::unique_ptr<MatShrinkageUpdater>> col_factor_updater = NULLOPT;
 		if (row_factor_prior_type) {
@@ -285,7 +285,7 @@ inline std::vector<std::unique_ptr<McmcMatMniw>> initialize_matmcmc(
 			(*col_factor_updater)->initPrec(params._col_prec.tail(params._col_factor));
 		}
 		if (nrow_factor) {
-			famar_updater = std::make_unique<McmcMatDfm>(num_iter, y.size(), *factor_lag, *nrow_factor, *ncol_factor);
+			famar_updater = std::make_unique<MatFactorAugmenter>(num_iter, y.size(), *factor_lag, *nrow_factor, *ncol_factor);
 		}
 		mcmc_ptr[i] = std::make_unique<McmcMatMniw>(
 			params, inits, row_updater, col_updater, static_cast<unsigned int>(seed_chain[i]),

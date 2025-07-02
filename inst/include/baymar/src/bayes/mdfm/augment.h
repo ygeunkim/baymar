@@ -1,18 +1,17 @@
-#ifndef BAYMAR_BAYES_MDFM_MDFM_H
-#define BAYMAR_BAYES_MDFM_MDFM_H
+#ifndef BAYMAR_BAYES_MDFM_AUGMENT_H
+#define BAYMAR_BAYES_MDFM_AUGMENT_H
 
-// #include <bvhar/base>
 #include "./config.h"
 
 namespace baymar {
 
-class McmcMatAugment;
-class McmcMatDfm;
+class MatAugmenter;
+class MatFactorAugmenter;
 
-class McmcMatAugment {
+class MatAugmenter {
 public:
-	McmcMatAugment() {}
-	virtual ~McmcMatAugment() = default;
+	MatAugmenter() {}
+	virtual ~MatAugmenter() = default;
 
 	virtual void appendDesign(std::vector<Eigen::SparseMatrix<double>>& x) {}
 
@@ -32,9 +31,9 @@ public:
 	virtual void appendRecords(LIST& list) {}
 };
 
-class McmcMatDfm : public McmcMatAugment {
+class MatFactorAugmenter : public MatAugmenter {
 public:
-	McmcMatDfm(int num_iter, int num_design, int lag, int nrow_factor, int ncol_factor)
+	MatFactorAugmenter(int num_iter, int num_design, int lag, int nrow_factor, int ncol_factor)
 	: nrow_factor(nrow_factor), ncol_factor(ncol_factor),
 		size_factor(nrow_factor * ncol_factor), lag(lag), num_design(num_design),
 		resid(num_design), factor_mat(num_design),
@@ -47,7 +46,7 @@ public:
 		prec_record(Eigen::MatrixXd::Zero(num_iter + 1, size_factor)) {
 		// use ShrinkageUpdater for prior_prec later!
 	}
-	virtual ~McmcMatDfm() = default;
+	virtual ~MatFactorAugmenter() = default;
 
 	void appendDesign(std::vector<Eigen::SparseMatrix<double>>& x) override {
 		// diag(Y_{t - 1}, ..., Y_{t - p}, X_t, ..., X_{t - s}, F_t)
@@ -109,4 +108,4 @@ protected:
 
 } // namespace baymar
 
-#endif // BAYMAR_BAYES_MDFM_MDFM_H
+#endif // BAYMAR_BAYES_MDFM_AUGMENT_H
