@@ -10,7 +10,7 @@ class McmcMatMniw;
 class McmcMatMniw : public bvhar::McmcAlgo {
 public:
 	McmcMatMniw(
-		const MatMniwParams& params, const MatMniwInits& inits,
+		const MatMniwRegParams& params, const MatMniwInits& inits,
 		std::unique_ptr<MatShrinkageUpdater>& row_updater, std::unique_ptr<MatShrinkageUpdater>& col_updater,
 		unsigned int seed,
 		Optional<std::unique_ptr<MatShrinkageUpdater>> row_exogen = NULLOPT,
@@ -242,10 +242,10 @@ inline std::vector<std::unique_ptr<McmcMatMniw>> initialize_matmcmc(
 	Optional<int> factor_lag = NULLOPT
 ) {
 	std::vector<std::unique_ptr<McmcMatMniw>> mcmc_ptr(num_chains);
-	// MatMniwParams params(num_iter, x, y, param_coef_sig);
-	MatMniwParams params = exogen_rows
-		? (nrow_factor ? MatMniwParams(num_iter, x, y, param_coef_sig, *exogen_rows, *exogen_cols, *nrow_factor, *ncol_factor) : MatMniwParams(num_iter, x, y, param_coef_sig, *exogen_rows, *exogen_cols))
-		: (nrow_factor ? MatMniwParams(num_iter, x, y, param_coef_sig, NULLOPT, NULLOPT, *nrow_factor, *ncol_factor) : MatMniwParams(num_iter, x, y, param_coef_sig));
+	// MatMniwRegParams params(num_iter, x, y, param_coef_sig);
+	MatMniwRegParams params = exogen_rows
+		? (nrow_factor ? MatMniwRegParams(num_iter, x, y, param_coef_sig, *exogen_rows, *exogen_cols, *nrow_factor, *ncol_factor) : MatMniwRegParams(num_iter, x, y, param_coef_sig, *exogen_rows, *exogen_cols))
+		: (nrow_factor ? MatMniwRegParams(num_iter, x, y, param_coef_sig, NULLOPT, NULLOPT, *nrow_factor, *ncol_factor) : MatMniwRegParams(num_iter, x, y, param_coef_sig));
 	for (int i = 0; i < num_chains; ++i) {
 		LIST row_init_spec = row_init[i];
 		LIST col_init_spec = col_init[i];

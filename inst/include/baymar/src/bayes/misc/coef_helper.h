@@ -22,14 +22,14 @@ namespace baymar {
  * @param y Y_t
  * @param rng boost rng
  */
-template <bool isRow = true>
+template <bool isRow = true, typename xType = Eigen::SparseMatrix<double>>
 inline void draw_coef_sig(
 	Eigen::Ref<Eigen::MatrixXd> coef, Eigen::Ref<Eigen::MatrixXd> sig_lower,
 	Eigen::Ref<Eigen::MatrixXd> other_coef, Eigen::Ref<Eigen::MatrixXd> other_sig_lower,
 	Eigen::Ref<Eigen::MatrixXd> prior_mean, Eigen::Ref<Eigen::VectorXd> prior_prec,
 	Eigen::Ref<Eigen::MatrixXd> iw_scl,
 	double iw_df, int num_mat, int other_dim,
-	std::vector<Eigen::SparseMatrix<double>>& x, std::vector<Eigen::MatrixXd>& y,
+	std::vector<xType>& x, std::vector<Eigen::MatrixXd>& y,
 	BHRNG& rng
 ) {
 	using is_row = std::integral_constant<bool, isRow>;

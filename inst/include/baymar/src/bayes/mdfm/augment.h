@@ -1,7 +1,9 @@
 #ifndef BAYMAR_BAYES_MDFM_AUGMENT_H
 #define BAYMAR_BAYES_MDFM_AUGMENT_H
 
-#include "./config.h"
+// #include "./config.h"
+#include "../misc/draw.h"
+#include "../../math/design.h"
 
 namespace baymar {
 
