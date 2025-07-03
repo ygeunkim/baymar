@@ -33,6 +33,18 @@ public:
 		row_iw_df(params._row_iw_df), col_iw_df(params._col_iw_df) {
 		BVHAR_DEBUG_LOG(
 			debug_logger,
+			"McmcMatDfm Constructor: row_coef: {} x {}, row_sig_lower: {} x {}, row_prior_mean: {} x {}, row_prior_prec: {}",
+			row_coef.rows(), row_coef.cols(), row_sig_lower.rows(), row_sig_lower.cols(),
+			row_prior_mean.rows(), row_prior_mean.cols(), row_prior_prec.size()
+		);
+		BVHAR_DEBUG_LOG(
+			debug_logger,
+			"McmcMatDfm Constructor: col_coef: {} x {}, col_sig_lower: {} x {}, col_prior_mean: {} x {}, col_prior_prec: {}",
+			col_coef.rows(), col_coef.cols(), col_sig_lower.rows(), col_sig_lower.cols(),
+			col_prior_mean.rows(), col_prior_mean.cols(), col_prior_prec.size()
+		);
+		BVHAR_DEBUG_LOG(
+			debug_logger,
 			"McmcMatDfm Constructor: nrow_factor: {}, ncol_factor: {}, lag: {}, num_design: {}",
 			nrow_factor, ncol_factor, lag, num_design
 		);
@@ -145,28 +157,36 @@ public:
 	: McmcMatDfm(params, inits, row_updater, col_updater, seed),
 		ig_shp(params._sig_shp), ig_scl(params._sig_scl),
 		prior_mean(params._mean), prior_prec(params._prec),
-		dfm_coef(inits._init_factor_coef), dfm_prec(inits._init_factor_prec) {
+		factor_coef(inits._init_factor_coef), factor_prec(inits._init_factor_prec) {
+		BVHAR_DEBUG_LOG(
+			debug_logger,
+			"McmcMatDfmVar Constructor: factor_coef: {} x {}, factor_prec: {}, ig_shp: {}, ig_scl: {}, prior_mean: {}, prior_prec: {}",
+			factor_coef.rows(), factor_coef.cols(), factor_prec.size(),
+			ig_shp.size(), ig_scl.size(),
+			prior_mean.size(), prior_prec.size()
+		);
 		mdfm_record = std::make_unique<MatDfmVarRecords>(num_iter, num_row, num_col, nrow_row_coef, nrow_col_coef, num_design, size_factor, lag);
 	}
 	virtual ~McmcMatDfmVar() = default;
 
 protected:
 	void updateFactor() override {
+		BVHAR_DEBUG_LOG(debug_logger, "updateFactor() called");
 		draw_dfm_factor(
-			factor_mat, lag, nrow_factor, ncol_factor, dfm_coef, dfm_prec,
-			row_coef, row_sig_lower,
-			col_coef, col_sig_lower,
+			factor_mat, lag, nrow_factor, ncol_factor, factor_coef, factor_prec,
+			row_coef.transpose(), row_sig_lower,
+			col_coef.transpose(), col_sig_lower,
 			y, rng
 		);
-		draw_dfm_prec(dfm_prec, lag, ig_shp, ig_scl, factor_mat, dfm_coef, rng);
-		draw_dfm_coef(dfm_coef, dfm_prec, prior_mean, prior_prec, factor_mat, lag, rng);
+		draw_dfm_prec(factor_prec, lag, ig_shp, ig_scl, factor_mat, factor_coef, rng);
+		draw_dfm_coef(factor_coef, factor_prec, prior_mean, prior_prec, factor_mat, lag, rng);
 	}
 
 private:
 	Eigen::VectorXd ig_shp, ig_scl;
 	Eigen::VectorXd prior_mean, prior_prec;
-	Eigen::MatrixXd dfm_coef; // p1*p2 x s
-	Eigen::VectorXd dfm_prec; // lambda_{1, 1}, ..., lambda_{p1, p2}
+	Eigen::MatrixXd factor_coef; // p1*p2 x s
+	Eigen::VectorXd factor_prec; // lambda_{1, 1}, ..., lambda_{p1, p2}
 };
 
 template <typename BaseDfm = McmcMatDfmVar>

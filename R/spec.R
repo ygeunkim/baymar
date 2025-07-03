@@ -108,3 +108,37 @@ set_famar <- function(nrow_factor = 0, ncol_factor = 0, factor_lag = 1) {
 is.famarspec <- function(x) {
   inherits(x, "famarspec")
 }
+
+#' Vectorzied factor prior specification
+#'
+#' @param nrow_factor Number of rows of factor matrix.
+#' By default, `0` which will does not use factor term.
+#' @param ncol_factor Number of columns of factor matrix.
+#' By default, `0` which will does not use factor term.
+#' @param factor_lag Lag of factor autoregressions.
+#' @param ig_shape Inverse Gamma shape for precision
+#' @param ig_scale Inverse Gamma scale for precision
+#'
+#' @order 1
+#' @export
+set_dfm <- function(nrow_factor = 2, ncol_factor = 2, factor_lag = 2, ig_shape = 3, ig_scale = 1) {
+  if (factor_lag <= 0 || factor_lag %% 1 != 0) {
+    stop("'factor_lag' positive integer.")
+  }
+  res <- list(
+    nrow_factor = nrow_factor,
+    ncol_factor = ncol_factor,
+    lag = factor_lag,
+    shape = ig_shape,
+    scale = ig_scale
+  )
+  class(res) <- "dfmspec"
+  res
+}
+
+#' @rdname set_dfm
+#' @param x Any object
+#' @export
+is.dfmspec <- function(x) {
+  inherits(x, "dfmspec")
+}

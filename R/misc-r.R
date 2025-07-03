@@ -104,6 +104,24 @@ validate_bmarx_colspec <- function(param_prior, x, s, bayes_spec, nrow_exogen, n
   param_prior
 }
 
+#' @noRd
+validate_bdfm_spec <- function(bayes_spec) {
+  if (!is.dfmspec(bayes_spec)) {
+    stop("Wrong 'row_spec'")
+  }
+  if (bayes_spec$nrow_factor == 0 || bayes_spec$ncol_factor == 0) {
+    stop("Wrong 'dfm_spec'")
+  }
+  size_factor <- bayes_spec$nrow_factor * bayes_spec$ncol_factor
+  if (length(bayes_spec$shape) == 1) {
+    bayes_spec$shape <- rep(bayes_spec$shape, size_factor)
+  }
+  if (length(bayes_spec$scale) == 1) {
+    bayes_spec$scale <- rep(bayes_spec$scale, size_factor)
+  }
+  bayes_spec
+}
+
 #' @noRd 
 validate_bmar_prior <- function(bayes_spec) {
   prior_nm <- bayes_spec$prior
@@ -202,6 +220,23 @@ get_bmar_init <- function(bayes_spec, num_chains, nrow_coef) {
     },
     "MN_Hierarchical" = get_mat_minn_init(num_chains),
     stop(sprintf("Wrong %s prior", deparse(substitute(bayes_spec))))
+  )
+}
+
+#' @noRd
+get_bdfm_coef_init <- function(num_chains, nrow_data, ncol_data, nrow_row_coef, nrow_col_coef, size_factor, factor_lag) {
+  lapply(
+    seq_len(num_chains),
+    function(init) {
+      list(
+        row_init_coef = matrix(runif(nrow_row_coef * nrow_data, -1, 1), ncol = nrow_data),
+        row_init_lower = diag(exp(runif(nrow_data, -1, 0))),
+        col_init_coef = matrix(runif(nrow_col_coef * ncol_data, -1, 1), ncol = ncol_data),
+        col_init_lower = diag(exp(runif(ncol_data, -1, 0))),
+        factor_arcoef_init = matrix(runif(size_factor * factor_lag, -1, 1), ncol = factor_lag),
+        factor_arprec_init = exp(runif(factor_lag, -1, 0))
+      )
+    }
   )
 }
 
