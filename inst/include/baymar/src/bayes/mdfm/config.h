@@ -72,6 +72,12 @@ struct MatDfmRecords : public MatMniwRecords {
 			factor_record.row(id).segment(i * size_factor, size_factor) = factor_mat[i].reshaped();
 		}
 	}
+
+	LIST returnListRecords(int nrow_row_coef, int num_row, int nrow_col_coef, int num_col, int num_design, int size_factor) {
+		LIST res = MatMniwRecords::returnListRecords(nrow_row_coef, num_row, 0, 0, nrow_col_coef, num_col, 0, 0);
+		res["F_record"] = factor_record;
+		return res;
+	}
 };
 
 } // namespace baymar

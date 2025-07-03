@@ -1,0 +1,6 @@
+#ifndef BAYMAR_MDFM_H
+#define BAYMAR_MDFM_H
+
+#include "src/bayes/mdfm/mdfm.h"
+
+#endif // BAYMAR_MDFM_H

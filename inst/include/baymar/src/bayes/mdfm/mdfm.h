@@ -8,6 +8,7 @@ namespace baymar {
 
 class McmcMatDfm;
 class McmcMatDfmVar;
+template <typename BaseDfm> class MatDfmRun;
 
 class McmcMatDfm : public bvhar::McmcAlgo {
 public:
@@ -55,6 +56,19 @@ public:
 		updateFactor();
 		// updateDesign();
 		updateCoefCov();
+	}
+
+	LIST returnRecords(int num_burn, int thin) override {
+		BVHAR_DEBUG_LOG(debug_logger, "returnRecords(num_burn={}, thin={}) called", num_burn, thin);
+		LIST res = mdfm_record->returnListRecords(nrow_row_coef, num_row, nrow_col_coef, num_col, num_design, size_factor);
+		for (auto& record : res) {
+			if (IS_MATRIX(ACCESS_LIST(record, res))) {
+				ACCESS_LIST(record, res) = bvhar::thin_record(CAST<Eigen::MatrixXd>(ACCESS_LIST(record, res)), num_iter, num_burn, thin);
+			} else {
+				ACCESS_LIST(record, res) = bvhar::thin_record(CAST<Eigen::VectorXd>(ACCESS_LIST(record, res)), num_iter, num_burn, thin);
+			}
+		}
+		return res;
 	}
 
 protected:
@@ -146,6 +160,58 @@ private:
 	Eigen::VectorXd prior_mean, prior_prec;
 	Eigen::MatrixXd dfm_coef; // p1*p2 x s
 	Eigen::VectorXd dfm_prec; // lambda_{1, 1}, ..., lambda_{p1, p2}
+};
+
+template <typename BaseDfm = McmcMatDfmVar>
+inline std::vector<std::unique_ptr<McmcMatDfm>> initialize_matdfm(
+	int num_chains, int num_iter,
+	std::vector<Eigen::MatrixXd>& y, int factor_lag,
+	LIST& param_dfm, LIST_OF_LIST& dfm_init,
+	LIST& row_prior, LIST_OF_LIST& row_init, const int row_prior_type,
+	LIST& col_prior, LIST_OF_LIST& col_init, const int col_prior_type,
+  Eigen::Ref<const Eigen::VectorXi> seed_chain
+) {
+	using PARAMS = typename std::conditional<std::is_same<BaseDfm, McmcMatDfmVar>::value, MatDfmVarParams, MatDfmParams>::type;
+	using INITS = typename std::conditional<std::is_same<BaseDfm, McmcMatDfmVar>::value, MatDfmVarInits, MatMniwInits>::type;
+	PARAMS params(num_iter, y, param_dfm);
+	std::vector<std::unique_ptr<McmcMatDfm>> mcmc_ptr(num_chains);
+	for (int i = 0; i < num_chains; ++i) {
+		LIST row_init_spec = row_init[i];
+		LIST col_init_spec = col_init[i];
+		auto row_updater = initialize_matshrinkageupdater(num_iter, row_prior, row_init_spec, row_prior_type);
+		auto col_updater = initialize_matshrinkageupdater(num_iter, col_prior, col_init_spec, col_prior_type);
+		row_updater->initPrec(params._row_prec.head(params._row_row_coef));
+		col_updater->initPrec(params._col_prec.head(params._row_col_coef));
+		LIST init_spec = dfm_init[i];
+		INITS inits(init_spec);
+		mcmc_ptr[i] = std::make_unique<BaseDfm>(params, inits, row_updater, col_updater, static_cast<unsigned int>(seed_chain[i]));
+	}
+	return mcmc_ptr;
+}
+
+template <typename BaseDfm = McmcMatDfmVar>
+class MatDfmRun : public bvhar::McmcRun {
+public:
+	MatDfmRun(
+		int num_chains, int num_iter, int num_burn, int thin,
+		std::vector<Eigen::MatrixXd>& y, int factor_lag,
+		LIST& param_dfm, LIST_OF_LIST& dfm_init,
+		LIST& row_prior, LIST_OF_LIST& row_init, const int row_prior_type,
+		LIST& col_prior, LIST_OF_LIST& col_init, const int col_prior_type,
+		Eigen::Ref<const Eigen::VectorXi> seed_chain, bool display_progress, int nthreads
+	)
+	: bvhar::McmcRun(num_chains, num_iter, num_burn, thin, display_progress, nthreads) {
+		auto temp_mcmc = initialize_matdfm<BaseDfm>(
+			num_chains, num_iter - num_burn, y, factor_lag, param_dfm, dfm_init,
+			row_prior, row_init, row_prior_type,
+			col_prior, col_init, col_prior_type,
+			seed_chain
+		);
+		for (int i = 0; i < num_chains; ++i) {
+			mcmc_ptr[i] = std::move(temp_mcmc[i]);
+		}
+	}
+	virtual ~MatDfmRun() = default;
 };
 
 } // namespace baymar

@@ -12,6 +12,33 @@ Rcpp::Rostream<true>&  Rcpp::Rcout = Rcpp::Rcpp_cout_get();
 Rcpp::Rostream<false>& Rcpp::Rcerr = Rcpp::Rcpp_cerr_get();
 #endif
 
+// estimate_bmdfm
+Rcpp::List estimate_bmdfm(int num_chains, int num_iter, int num_burn, int thin, std::vector<Eigen::MatrixXd>& y, int factor_lag, Rcpp::List param_dfm, Rcpp::List dfm_init, Rcpp::List row_prior, Rcpp::List row_init, int row_prior_type, Rcpp::List col_prior, Rcpp::List col_init, int col_prior_type, Eigen::VectorXi seed_chain, bool display_progress, int nthreads);
+RcppExport SEXP _baymar_estimate_bmdfm(SEXP num_chainsSEXP, SEXP num_iterSEXP, SEXP num_burnSEXP, SEXP thinSEXP, SEXP ySEXP, SEXP factor_lagSEXP, SEXP param_dfmSEXP, SEXP dfm_initSEXP, SEXP row_priorSEXP, SEXP row_initSEXP, SEXP row_prior_typeSEXP, SEXP col_priorSEXP, SEXP col_initSEXP, SEXP col_prior_typeSEXP, SEXP seed_chainSEXP, SEXP display_progressSEXP, SEXP nthreadsSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< int >::type num_chains(num_chainsSEXP);
+    Rcpp::traits::input_parameter< int >::type num_iter(num_iterSEXP);
+    Rcpp::traits::input_parameter< int >::type num_burn(num_burnSEXP);
+    Rcpp::traits::input_parameter< int >::type thin(thinSEXP);
+    Rcpp::traits::input_parameter< std::vector<Eigen::MatrixXd>& >::type y(ySEXP);
+    Rcpp::traits::input_parameter< int >::type factor_lag(factor_lagSEXP);
+    Rcpp::traits::input_parameter< Rcpp::List >::type param_dfm(param_dfmSEXP);
+    Rcpp::traits::input_parameter< Rcpp::List >::type dfm_init(dfm_initSEXP);
+    Rcpp::traits::input_parameter< Rcpp::List >::type row_prior(row_priorSEXP);
+    Rcpp::traits::input_parameter< Rcpp::List >::type row_init(row_initSEXP);
+    Rcpp::traits::input_parameter< int >::type row_prior_type(row_prior_typeSEXP);
+    Rcpp::traits::input_parameter< Rcpp::List >::type col_prior(col_priorSEXP);
+    Rcpp::traits::input_parameter< Rcpp::List >::type col_init(col_initSEXP);
+    Rcpp::traits::input_parameter< int >::type col_prior_type(col_prior_typeSEXP);
+    Rcpp::traits::input_parameter< Eigen::VectorXi >::type seed_chain(seed_chainSEXP);
+    Rcpp::traits::input_parameter< bool >::type display_progress(display_progressSEXP);
+    Rcpp::traits::input_parameter< int >::type nthreads(nthreadsSEXP);
+    rcpp_result_gen = Rcpp::wrap(estimate_bmdfm(num_chains, num_iter, num_burn, thin, y, factor_lag, param_dfm, dfm_init, row_prior, row_init, row_prior_type, col_prior, col_init, col_prior_type, seed_chain, display_progress, nthreads));
+    return rcpp_result_gen;
+END_RCPP
+}
 // estimate_bmar_mniw
 Rcpp::List estimate_bmar_mniw(int num_chains, int num_iter, int num_burn, int thin, std::vector<Eigen::SparseMatrix<double>>& x, std::vector<Eigen::MatrixXd>& y, Rcpp::List param_coef_sig, Rcpp::List coef_sig_init, Rcpp::List row_prior, Rcpp::List row_init, int row_prior_type, Rcpp::List col_prior, Rcpp::List col_init, int col_prior_type, Rcpp::List exogen_row_prior, Rcpp::List exogen_row_init, int exogen_row_prior_type, int exogen_rows, Rcpp::List exogen_col_prior, Rcpp::List exogen_col_init, int exogen_col_prior_type, int exogen_cols, Rcpp::List factor_row_prior, Rcpp::List factor_row_init, int factor_row_prior_type, int factor_rows, Rcpp::List factor_col_prior, Rcpp::List factor_col_init, int factor_col_prior_type, int factor_cols, int factor_lag, Eigen::VectorXi seed_chain, bool display_progress, int nthreads);
 RcppExport SEXP _baymar_estimate_bmar_mniw(SEXP num_chainsSEXP, SEXP num_iterSEXP, SEXP num_burnSEXP, SEXP thinSEXP, SEXP xSEXP, SEXP ySEXP, SEXP param_coef_sigSEXP, SEXP coef_sig_initSEXP, SEXP row_priorSEXP, SEXP row_initSEXP, SEXP row_prior_typeSEXP, SEXP col_priorSEXP, SEXP col_initSEXP, SEXP col_prior_typeSEXP, SEXP exogen_row_priorSEXP, SEXP exogen_row_initSEXP, SEXP exogen_row_prior_typeSEXP, SEXP exogen_rowsSEXP, SEXP exogen_col_priorSEXP, SEXP exogen_col_initSEXP, SEXP exogen_col_prior_typeSEXP, SEXP exogen_colsSEXP, SEXP factor_row_priorSEXP, SEXP factor_row_initSEXP, SEXP factor_row_prior_typeSEXP, SEXP factor_rowsSEXP, SEXP factor_col_priorSEXP, SEXP factor_col_initSEXP, SEXP factor_col_prior_typeSEXP, SEXP factor_colsSEXP, SEXP factor_lagSEXP, SEXP seed_chainSEXP, SEXP display_progressSEXP, SEXP nthreadsSEXP) {
@@ -261,6 +288,7 @@ END_RCPP
 }
 
 static const R_CallMethodDef CallEntries[] = {
+    {"_baymar_estimate_bmdfm", (DL_FUNC) &_baymar_estimate_bmdfm, 17},
     {"_baymar_estimate_bmar_mniw", (DL_FUNC) &_baymar_estimate_bmar_mniw, 34},
     {"_baymar_forecast_bmar_mniw", (DL_FUNC) &_baymar_forecast_bmar_mniw, 8},
     {"_baymar_forecast_bmarx_mniw", (DL_FUNC) &_baymar_forecast_bmarx_mniw, 10},
