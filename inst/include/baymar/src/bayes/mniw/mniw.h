@@ -103,7 +103,7 @@ public:
 
 	MatMniwRecords returnStructRecords(int num_burn, int thin) const {
 		BVHAR_DEBUG_LOG(debug_logger, "returnStructRecords(num_burn={}, thin={}) called", num_burn, thin);
-		return mniw_record->returnRecords(num_iter, num_burn, thin);
+		return mniw_record->returnRecords<MatMniwRecords>(num_iter, num_burn, thin);
 	}
 
 protected:

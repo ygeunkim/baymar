@@ -95,8 +95,8 @@ struct MatMniwRecords {
 	
 	void assignRecords(
 		int id,
-		const Eigen::MatrixXd row_coef, const Eigen::MatrixXd row_sig_lower,
-		const Eigen::MatrixXd col_coef, const Eigen::MatrixXd col_sig_lower,
+		const Eigen::MatrixXd& row_coef, const Eigen::MatrixXd& row_sig_lower,
+		const Eigen::MatrixXd& col_coef, const Eigen::MatrixXd& col_sig_lower,
 		int nrow_row_coef, int num_row, int nrow_row_exogen, int nrow_factor,
 		int nrow_col_coef, int num_col, int nrow_col_exogen, int ncol_factor
 	) {
@@ -159,7 +159,7 @@ struct MatMniwRecords {
 		return res;
 	}
 
-	MatMniwRecords returnRecords(int num_iter, int num_burn, int thin) {
+	MatMniwRecords returnMniwRecords(int num_iter, int num_burn, int thin) const {
 		return MatMniwRecords(
 			bvhar::thin_record(row_coef_record, num_iter, num_burn, thin).derived(),
 			bvhar::thin_record(row_sigma_record, num_iter, num_burn, thin).derived(),
@@ -167,7 +167,15 @@ struct MatMniwRecords {
 			bvhar::thin_record(col_sigma_record, num_iter, num_burn, thin).derived()
 		);
 	}
+
+	template <typename RecordType = MatMniwRecords>
+	RecordType returnRecords(int num_iter, int num_burn, int thin) const;
 };
+
+template <>
+inline MatMniwRecords MatMniwRecords::returnRecords(int num_iter, int num_burn, int thin) const {
+	return returnMniwRecords(num_iter, num_burn, thin);
+}
 
 inline void initialize_matmniw_record(
 	std::unique_ptr<MatMniwRecords>& record, int chain_id, LIST& fit_record,

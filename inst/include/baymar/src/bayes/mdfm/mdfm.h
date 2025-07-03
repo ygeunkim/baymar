@@ -26,7 +26,7 @@ public:
 		row_updater(std::move(row_updater)), col_updater(std::move(col_updater)),
 		row_coef(inits._init_row_coef), row_sig_lower(inits._init_row_lower),
 		col_coef(inits._init_col_coef), col_sig_lower(inits._init_col_lower),
-		mdfm_record(std::make_unique<MatDfmRecords>(num_iter, num_row, num_col, nrow_row_coef, nrow_col_coef, num_design, size_factor)),
+		// mdfm_record(std::make_unique<MatDfmRecords>(num_iter, num_row, num_col, nrow_row_coef, nrow_col_coef, num_design, size_factor)),
 		row_prior_mean(params._row_mean), row_iw_scl(params._row_iw_scl),
 		col_prior_mean(params._col_mean), col_iw_scl(params._col_iw_scl),
 		row_prior_prec(params._row_prec), col_prior_prec(params._col_prec),
@@ -69,6 +69,11 @@ public:
 			}
 		}
 		return res;
+	}
+
+	template <typename RecordType>
+	RecordType returnStructRecords(int num_burn, int thin) const {
+		return mdfm_record->returnRecords<RecordType>(num_iter, num_burn, thin);
 	}
 
 protected:
@@ -140,7 +145,9 @@ public:
 	: McmcMatDfm(params, inits, row_updater, col_updater, seed),
 		ig_shp(params._sig_shp), ig_scl(params._sig_scl),
 		prior_mean(params._mean), prior_prec(params._prec),
-		dfm_coef(inits._init_factor_coef), dfm_prec(inits._init_factor_prec) {}
+		dfm_coef(inits._init_factor_coef), dfm_prec(inits._init_factor_prec) {
+		mdfm_record = std::make_unique<MatDfmVarRecords>(num_iter, num_row, num_col, nrow_row_coef, nrow_col_coef, num_design, size_factor, lag);
+	}
 	virtual ~McmcMatDfmVar() = default;
 
 protected:

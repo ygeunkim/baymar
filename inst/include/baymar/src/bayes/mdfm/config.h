@@ -12,6 +12,7 @@ struct MatDfmParams;
 struct MatDfmVarParams;
 struct MatDfmVarInits;
 struct MatDfmRecords;
+struct MatDfmVarRecords;
 
 struct MatDfmParams : public MatMniwParams {
 	int _nrow_factor, _ncol_factor, _size_factor, _lag;
@@ -53,10 +54,18 @@ struct MatDfmRecords : public MatMniwRecords {
 	: MatMniwRecords(num_iter, num_row, num_col, nrow_row_coef, nrow_col_coef),
 		factor_record(Eigen::MatrixXd::Zero(num_iter + 1, num_design * size_factor)) {}
 	
+	MatDfmRecords(
+		const Eigen::MatrixXd& coef_row_record, const Eigen::MatrixXd& row_sigma_record,
+		const Eigen::MatrixXd& coef_col_record, const Eigen::MatrixXd& col_sigma_record,
+		const Eigen::MatrixXd& factor_record
+	)
+	: MatMniwRecords(coef_row_record, row_sigma_record, coef_col_record, col_sigma_record),
+		factor_record(factor_record) {}
+	
 	void assignRecords(
 		int id,
-		const Eigen::MatrixXd row_coef, const Eigen::MatrixXd row_sig_lower,
-		const Eigen::MatrixXd col_coef, const Eigen::MatrixXd col_sig_lower,
+		const Eigen::MatrixXd& row_coef, const Eigen::MatrixXd& row_sig_lower,
+		const Eigen::MatrixXd& col_coef, const Eigen::MatrixXd& col_sig_lower,
 		std::vector<Eigen::MatrixXd>& factor_mat,
 		int nrow_row_coef, int num_row, int nrow_col_coef, int num_col,
 		int num_design, int size_factor
@@ -78,7 +87,87 @@ struct MatDfmRecords : public MatMniwRecords {
 		res["F_record"] = factor_record;
 		return res;
 	}
+
+	// MatDfmRecords returnDfmRecords(int num_iter, int num_burn, int thin) const {
+	// 	return MatDfmRecords(
+	// 		bvhar::thin_record(row_coef_record, num_iter, num_burn, thin).derived(),
+	// 		bvhar::thin_record(row_sigma_record, num_iter, num_burn, thin).derived(),
+	// 		bvhar::thin_record(col_coef_record, num_iter, num_burn, thin).derived(),
+	// 		bvhar::thin_record(col_sigma_record, num_iter, num_burn, thin).derived(),
+	// 		bvhar::thin_record(factor_record, num_iter, num_burn, thin).derived()
+	// 	);
+	// }
+
+	virtual MatDfmVarRecords returnDfmVarRecords(int num_iter, int num_burn, int thin) const = 0;
+
+	template <typename RecordType = MatDfmRecords>
+	RecordType returnRecords(int num_iter, int num_burn, int thin) const;
 };
+
+struct MatDfmVarRecords : public MatDfmRecords {
+	Eigen::MatrixXd factor_coef_record;
+	Eigen::MatrixXd factor_prec_record;
+
+	MatDfmVarRecords(
+		int num_iter, int num_row, int num_col, int nrow_row_coef, int nrow_col_coef,
+		int num_design, int size_factor, int lag
+	)
+	: MatDfmRecords(num_iter, num_row, num_col, nrow_row_coef, nrow_col_coef, num_design, size_factor),
+		factor_coef_record(Eigen::MatrixXd::Zero(num_iter + 1, size_factor * lag)),
+		factor_prec_record(Eigen::MatrixXd::Zero(num_iter + 1, size_factor)) {}
+	
+	MatDfmVarRecords(
+		const Eigen::MatrixXd& coef_row_record, const Eigen::MatrixXd& row_sigma_record,
+		const Eigen::MatrixXd& coef_col_record, const Eigen::MatrixXd& col_sigma_record,
+		const Eigen::MatrixXd& factor_record,
+		const Eigen::MatrixXd& factor_coef_record, const Eigen::MatrixXd& factor_prec_record
+	)
+	: MatDfmRecords(coef_row_record, row_sigma_record, coef_col_record, col_sigma_record, factor_record),
+		factor_coef_record(factor_coef_record), factor_prec_record(factor_prec_record) {}
+	
+	void assignRecords(
+		int id,
+		const Eigen::MatrixXd& row_coef, const Eigen::MatrixXd& row_sig_lower,
+		const Eigen::MatrixXd& col_coef, const Eigen::MatrixXd& col_sig_lower,
+		std::vector<Eigen::MatrixXd>& factor_mat,
+		const Eigen::MatrixXd& factor_coef, const Eigen::VectorXd& factor_prec,
+		int nrow_row_coef, int num_row, int nrow_col_coef, int num_col,
+		int num_design, int size_factor
+	) {
+		MatDfmRecords::assignRecords(
+			id,
+			row_coef, row_sig_lower, col_coef, col_sig_lower,
+			factor_mat,
+			nrow_row_coef, num_row,
+			nrow_col_coef, num_col,
+			num_design, size_factor
+		);
+		factor_coef_record.row(id) = factor_coef.reshaped();
+		factor_prec_record.row(id) = factor_prec;
+	}
+
+	MatDfmVarRecords returnDfmVarRecords(int num_iter, int num_burn, int thin) const override {
+		return MatDfmVarRecords(
+			bvhar::thin_record(row_coef_record, num_iter, num_burn, thin).derived(),
+			bvhar::thin_record(row_sigma_record, num_iter, num_burn, thin).derived(),
+			bvhar::thin_record(col_coef_record, num_iter, num_burn, thin).derived(),
+			bvhar::thin_record(col_sigma_record, num_iter, num_burn, thin).derived(),
+			bvhar::thin_record(factor_record, num_iter, num_burn, thin).derived(),
+			bvhar::thin_record(factor_coef_record, num_iter, num_burn, thin).derived(),
+			bvhar::thin_record(factor_prec_record, num_iter, num_burn, thin).derived()
+		);
+	}
+};
+
+// template <>
+// inline MatDfmRecords MatDfmRecords::returnRecords(int num_iter, int num_burn, int thin) const {
+//   return returnDfmRecords(num_iter, num_burn, thin);
+// }
+
+template <>
+inline MatDfmVarRecords MatDfmRecords::returnRecords(int num_iter, int num_burn, int thin) const {
+  return returnDfmVarRecords(num_iter, num_burn, thin);
+}
 
 } // namespace baymar
 
