@@ -2,7 +2,7 @@
 #define BAYMAR_BAYES_MDFM_MDFM_H
 
 #include "./config.h"
-#include "../shrinkage/shrinkage.h"
+// #include "../shrinkage/shrinkage.h"
 
 namespace baymar {
 
@@ -68,11 +68,13 @@ public:
 		updateFactor();
 		// updateDesign();
 		updateCoefCov();
+		updateRecords();
 	}
 
 	LIST returnRecords(int num_burn, int thin) override {
 		BVHAR_DEBUG_LOG(debug_logger, "returnRecords(num_burn={}, thin={}) called", num_burn, thin);
 		LIST res = mdfm_record->returnListRecords(nrow_row_coef, num_row, nrow_col_coef, num_col, num_design, size_factor);
+		mdfm_record->appendRecords(res);
 		for (auto& record : res) {
 			if (IS_MATRIX(ACCESS_LIST(record, res))) {
 				ACCESS_LIST(record, res) = bvhar::thin_record(CAST<Eigen::MatrixXd>(ACCESS_LIST(record, res)), num_iter, num_burn, thin);
@@ -103,7 +105,7 @@ protected:
 	Eigen::VectorXd row_prior_prec, col_prior_prec;
 	double row_iw_df, col_iw_df;
 
-	virtual void updateFactor() {}
+	virtual void updateFactor() = 0;
 	
 	void updatePrec() {
 		BVHAR_DEBUG_LOG(debug_logger, "updatePrec() called");
@@ -141,10 +143,7 @@ protected:
 		);
 	}
 
-private:
-	// void updateDesign() {
-	// 	x = build_mar_design(factor_mat, lag);
-	// }
+	virtual void updateRecords() = 0;
 };
 
 class McmcMatDfmVar : public McmcMatDfm {
@@ -180,6 +179,16 @@ protected:
 		);
 		draw_dfm_prec(factor_prec, lag, ig_shp, ig_scl, factor_mat, factor_coef, rng);
 		draw_dfm_coef(factor_coef, factor_prec, prior_mean, prior_prec, factor_mat, lag, rng);
+	}
+
+	void updateRecords() override {
+		BVHAR_DEBUG_LOG(debug_logger, "updateRecords() called");
+		mdfm_record->assignRecords(
+			mcmc_step, row_coef, row_sig_lower, col_coef, col_sig_lower,
+			factor_mat, factor_coef, factor_prec,
+			nrow_row_coef, num_row, nrow_col_coef, num_col,
+			num_design, size_factor
+		);
 	}
 
 private:

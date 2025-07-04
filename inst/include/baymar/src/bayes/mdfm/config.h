@@ -82,10 +82,24 @@ struct MatDfmRecords : public MatMniwRecords {
 		}
 	}
 
+	virtual void assignRecords(
+		int id,
+		const Eigen::MatrixXd& row_coef, const Eigen::MatrixXd& row_sig_lower,
+		const Eigen::MatrixXd& col_coef, const Eigen::MatrixXd& col_sig_lower,
+		std::vector<Eigen::MatrixXd>& factor_mat,
+		const Eigen::MatrixXd& factor_coef, const Eigen::VectorXd& factor_prec,
+		int nrow_row_coef, int num_row, int nrow_col_coef, int num_col,
+		int num_design, int size_factor
+	) = 0;
+
 	LIST returnListRecords(int nrow_row_coef, int num_row, int nrow_col_coef, int num_col, int num_design, int size_factor) {
 		LIST res = MatMniwRecords::returnListRecords(nrow_row_coef, num_row, 0, 0, nrow_col_coef, num_col, 0, 0);
-		res["F_record"] = factor_record;
+		// res["F_record"] = factor_record;
 		return res;
+	}
+
+	virtual void appendRecords(LIST& list) {
+		list["F_record"] = factor_record;
 	}
 
 	// MatDfmRecords returnDfmRecords(int num_iter, int num_burn, int thin) const {
@@ -133,7 +147,7 @@ struct MatDfmVarRecords : public MatDfmRecords {
 		const Eigen::MatrixXd& factor_coef, const Eigen::VectorXd& factor_prec,
 		int nrow_row_coef, int num_row, int nrow_col_coef, int num_col,
 		int num_design, int size_factor
-	) {
+	) override {
 		MatDfmRecords::assignRecords(
 			id,
 			row_coef, row_sig_lower, col_coef, col_sig_lower,
@@ -144,6 +158,12 @@ struct MatDfmVarRecords : public MatDfmRecords {
 		);
 		factor_coef_record.row(id) = factor_coef.reshaped();
 		factor_prec_record.row(id) = factor_prec;
+	}
+
+	void appendRecords(LIST& list) override {
+		list["F_record"] = factor_record;
+		// list["Lambda_record"] = factor_coef_record;
+		// list["Omega_record"] = factor_prec_record;
 	}
 
 	MatDfmVarRecords returnDfmVarRecords(int num_iter, int num_burn, int thin) const override {
