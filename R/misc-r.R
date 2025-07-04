@@ -105,7 +105,7 @@ validate_bmarx_colspec <- function(param_prior, x, s, bayes_spec, nrow_exogen, n
 }
 
 #' @noRd
-validate_bdfm_spec <- function(bayes_spec) {
+validate_bmdfm_spec <- function(bayes_spec) {
   if (!is.dfmspec(bayes_spec)) {
     stop("Wrong 'row_spec'")
   }
@@ -224,7 +224,7 @@ get_bmar_init <- function(bayes_spec, num_chains, nrow_coef) {
 }
 
 #' @noRd
-get_bdfm_coef_init <- function(num_chains, nrow_data, ncol_data, nrow_row_coef, nrow_col_coef, size_factor, factor_lag) {
+get_bmdfm_coef_init <- function(num_chains, nrow_data, ncol_data, nrow_row_coef, nrow_col_coef, size_factor, factor_lag) {
   lapply(
     seq_len(num_chains),
     function(init) {
@@ -234,7 +234,7 @@ get_bdfm_coef_init <- function(num_chains, nrow_data, ncol_data, nrow_row_coef, 
         col_init_coef = matrix(runif(nrow_col_coef * ncol_data, -1, 1), ncol = ncol_data),
         col_init_lower = diag(exp(runif(ncol_data, -1, 0))),
         factor_arcoef_init = matrix(runif(size_factor * factor_lag, -1, 1), ncol = factor_lag),
-        factor_arprec_init = exp(runif(factor_lag, -1, 0))
+        factor_arprec_init = exp(runif(size_factor, -1, 0))
       )
     }
   )

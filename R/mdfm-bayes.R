@@ -58,7 +58,7 @@ mdfm_bayes <- function(y,
   #   function(lag) paste(var_names[[2]], lag, sep = "_")
   # ) |>
   #   unlist()
-  dfm_spec <- validate_bdfm_spec(dfm_spec)
+  dfm_spec <- validate_bmdfm_spec(dfm_spec)
   nrow_factor <- dfm_spec$nrow_factor
   ncol_factor <- dfm_spec$ncol_factor
   size_factor <- nrow_factor * ncol_factor
@@ -100,7 +100,7 @@ mdfm_bayes <- function(y,
   )
   param_prior$row_prior_prec <- rep(1, nrow_factor)
   param_prior$col_prior_prec <- rep(1, ncol_factor)
-  param_init <- get_bdfm_coef_init(
+  param_init <- get_bmdfm_coef_init(
     num_chains = num_chains,
     nrow_data = nrow_data,
     ncol_data = ncol_data,
