@@ -62,6 +62,8 @@ struct MatDfmRecords : public MatMniwRecords {
 	: MatMniwRecords(coef_row_record, row_sigma_record, coef_col_record, col_sigma_record),
 		factor_record(factor_record) {}
 	
+	virtual ~MatDfmRecords() = default;
+	
 	void assignRecords(
 		int id,
 		const Eigen::MatrixXd& row_coef, const Eigen::MatrixXd& row_sig_lower,
@@ -138,6 +140,8 @@ struct MatDfmVarRecords : public MatDfmRecords {
 	)
 	: MatDfmRecords(coef_row_record, row_sigma_record, coef_col_record, col_sigma_record, factor_record),
 		factor_coef_record(factor_coef_record), factor_prec_record(factor_prec_record) {}
+	
+	virtual ~MatDfmVarRecords() = default;
 	
 	void assignRecords(
 		int id,
