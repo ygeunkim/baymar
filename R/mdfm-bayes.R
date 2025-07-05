@@ -63,8 +63,8 @@ mdfm_bayes <- function(y,
   ncol_factor <- dfm_spec$ncol_factor
   size_factor <- nrow_factor * ncol_factor
   lag_factor <- dfm_spec$lag
-  name_row_lag <- paste("factor", seq_len(nrow_factor), sep = "_")
-  name_col_lag <- paste("factor", seq_len(ncol_factor), sep = "_")
+  name_row_lag <- paste("factor_row", seq_len(nrow_factor), sep = "_")
+  name_col_lag <- paste("factor_col", seq_len(ncol_factor), sep = "_")
   if (dfm_spec$nrow_factor == 0 || dfm_spec$ncol_factor == 0) {
     stop("Wrong 'dfm_spec'")
   }
@@ -149,6 +149,7 @@ mdfm_bayes <- function(y,
   col_sig <- diag(ncol_data)
   col_sig[lower.tri(col_sig, diag = TRUE)] <- colMeans(res$SigmaC_record)
   col_sig[upper.tri(col_sig, diag = FALSE)] <- col_sig[lower.tri(col_sig, diag = FALSE)]
+  fac_series <- array(colMeans(res$F_record), dim = c(nrow_factor, ncol_factor, length(y_list)))
   # Should compute posterior mean of F_t: will be 3d array
   is_symm <- grepl(pattern = "^Sigma", x = param_names)
   num_col <- c(nrow_data, nrow_data, ncol_data, ncol_data, ncol_factor)
@@ -183,6 +184,7 @@ mdfm_bayes <- function(y,
   colnames(col_coef) <- var_names[[2]]
   rownames(col_sig) <- var_names[[2]]
   colnames(col_sig) <- var_names[[2]]
+  dimnames(fac_series) <- list(name_row_lag, name_col_lag, seq_along(y_list))
   res$coefficients <- list(
     row = row_coef,
     col = col_coef
@@ -191,6 +193,7 @@ mdfm_bayes <- function(y,
     row = row_sig,
     col = col_sig
   )
+  res$factor <- fac_series
   res$spec <- list(
     row = row_spec,
     col = col_spec

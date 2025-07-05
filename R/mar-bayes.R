@@ -238,14 +238,10 @@ mar_bayes <- function(y,
         list(matrix(1L, nrow = nrow_factor, ncol = ncol_factor))
       ))
     }
-    name_row_lag <- c(
-      name_row_lag,
-      paste("factor", seq_len(nrow_factor), sep = "_")
-    )
-    name_col_lag <- c(
-      name_col_lag,
-      paste("factor", seq_len(ncol_factor), sep = "_")
-    )
+    name_factor_row <- paste("factor_row", seq_len(nrow_factor), sep = "_")
+    name_factor_col <- paste("factor_col", seq_len(ncol_factor), sep = "_")
+    name_row_lag <- c(name_row_lag, name_factor_row)
+    name_col_lag <- c(name_col_lag, name_factor_col)
   }
   res <- estimate_bmar_mniw(
     num_chains = num_chains, num_iter = num_iter, num_burn = num_burn, thin = thinning,
@@ -296,6 +292,7 @@ mar_bayes <- function(y,
       col_coef,
       matrix(colMeans(res$H_record), ncol = ncol_data)
     )
+    fac_series <- array(colMeans(res$F_record), dim = c(nrow_factor, ncol_factor, length(y_list) - p))
   }
   row_sig <- diag(nrow_data)
   row_sig[lower.tri(row_sig, diag = TRUE)] <- colMeans(res$SigmaR_record)
@@ -391,6 +388,10 @@ mar_bayes <- function(y,
     res$s <- s
     res$exogen_row_id <- row_exogen_id
     res$exogen_col_id <- col_exogen_id
+  }
+  if (is_famar) {
+    dimnames(fac_series) <- list(name_factor_row, name_factor_col, seq_len(length(y_list) - p) + p)
+    res$factor <- fac_series
   }
   res$call <- match.call()
   res$y <- y
