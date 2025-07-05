@@ -9,6 +9,7 @@ mar_bayes(
   p = 1,
   exogen = NULL,
   s = 0,
+  famar_spec = set_famar(),
   num_chains = 1,
   num_iter = 1000,
   num_burn = floor(num_iter/2),
@@ -17,6 +18,8 @@ mar_bayes(
   col_spec = row_spec,
   exogen_row_spec = row_spec,
   exogen_col_spec = row_spec,
+  factor_row_spec = row_spec,
+  factor_col_spec = col_spec,
   verbose = FALSE,
   num_thread = 1
 )
@@ -29,6 +32,8 @@ mar_bayes(
 \item{exogen}{Unmodeled matrices}
 
 \item{s}{Lag of exogeneous matrices in MARX(p, s). By default, \code{s = 0}.}
+
+\item{famar_spec}{Augmented factor matrix specification.}
 
 \item{num_chains}{Number of MCMC chains}
 
@@ -46,6 +51,10 @@ mar_bayes(
 
 \item{exogen_col_spec}{Exogenous column coefficient prior specification.}
 
+\item{factor_row_spec}{Factor row coefficient prior specification.}
+
+\item{factor_col_spec}{Factor column coefficient prior specification.}
+
 \item{verbose}{Progress log}
 
 \item{num_thread}{Number of threads}
@@ -54,5 +63,7 @@ mar_bayes(
 This function fits Bayesian Matrix Autoregressive (BMAR) model with various priors.
 }
 \references{
-Chan, J. C. C. & Qi, Y. (2024). Large Bayesian Tensor VARs with Stochastic Volatility. arXiv.
+Chan, J. C. C. & Qi, Y. (2025). Large Bayesian matrix autoregressions. Journal of Econometrics, 105955.
+
+Zhang, W. (2025). Bayesian Dynamic Factor Models for High-Dimensional Matrix-Valued Time Series. SSRN Electronic Journal.
 }
