@@ -310,9 +310,9 @@ mar_bayes <- function(y,
     num_matrix <- c(num_matrix, rep(0, 2))
   }
   if (is_famar) {
-    num_col <- c(num_col, nrow_data, ncol_data, ncol_factor)
-    num_row <- c(num_row, nrow_factor, ncol_factor, nrow_factor)
-    num_matrix <- c(num_matrix, rep(0, 2), length(y_list) - p)
+    num_col <- c(num_col, nrow_data, ncol_data, ncol_factor, ncol_factor, ncol_factor)
+    num_row <- c(num_row, nrow_factor, ncol_factor, nrow_factor, nrow_factor, nrow_factor)
+    num_matrix <- c(num_matrix, rep(0, 2), length(y_list) - p, lag_factor, 0)
   }
   # num_row <- c(nrow_row_coef + nrow_exogen_row_coef, nrow_data, nrow_col_coef + nrow_exogen_col_coef, ncol_data)
   res[rec_names] <- lapply(
@@ -327,27 +327,7 @@ mar_bayes <- function(y,
     }
   )
   res[rec_names] <- lapply(res[rec_names], as_draws_df)
-  res$param <- bind_draws(
-    res$A_record,
-    res$SigmaR_record,
-    res$B_record,
-    res$SigmaC_record
-  )
-  if (!is.null(exogen)) {
-    res$param <- bind_draws(
-      res$param,
-      res$C_record,
-      res$D_record
-    )
-  }
-  if (is_famar) {
-    res$param <- bind_draws(
-      res$param,
-      res$G_record,
-      res$H_record,
-      res$F_record
-    )
-  }
+  res$param <- Reduce(bind_draws, res[rec_names])
   res[rec_names] <- NULL
   res$param_names <- param_names
   rownames(row_coef) <- name_row_lag

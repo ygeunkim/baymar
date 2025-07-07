@@ -166,8 +166,8 @@ struct MatDfmVarRecords : public MatDfmRecords {
 
 	void appendRecords(LIST& list) override {
 		list["F_record"] = factor_record;
-		// list["Lambda_record"] = factor_coef_record;
-		// list["Omega_record"] = factor_prec_record;
+		list["Rho_record"] = factor_coef_record;
+		list["Lambda_record"] = factor_prec_record;
 	}
 
 	MatDfmVarRecords returnDfmVarRecords(int num_iter, int num_burn, int thin) const override {

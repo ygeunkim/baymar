@@ -152,9 +152,9 @@ mdfm_bayes <- function(y,
   fac_series <- array(colMeans(res$F_record), dim = c(nrow_factor, ncol_factor, length(y_list)))
   # Should compute posterior mean of F_t: will be 3d array
   is_symm <- grepl(pattern = "^Sigma", x = param_names)
-  num_col <- c(nrow_data, nrow_data, ncol_data, ncol_data, ncol_factor)
-  num_row <- c(nrow_row_coef, nrow_data, nrow_col_coef, ncol_data, nrow_factor)
-  num_matrix <- c(rep(0, 4), length(y_list))
+  num_col <- c(nrow_data, nrow_data, ncol_data, ncol_data, ncol_factor, ncol_factor, ncol_factor)
+  num_row <- c(nrow_row_coef, nrow_data, nrow_col_coef, ncol_data, nrow_factor, nrow_factor, nrow_factor)
+  num_matrix <- c(rep(0, 4), length(y_list), lag_factor, 0)
   res[rec_names] <- lapply(
     seq_along(res[rec_names]),
     function(id) {
@@ -167,13 +167,7 @@ mdfm_bayes <- function(y,
     }
   )
   res[rec_names] <- lapply(res[rec_names], as_draws_df)
-  res$param <- bind_draws(
-    res$A_record,
-    res$SigmaR_record,
-    res$B_record,
-    res$SigmaC_record,
-    res$F_record
-  )
+  res$param <- Reduce(bind_draws, res[rec_names])
   res[rec_names] <- NULL
   res$param_names <- param_names
   rownames(row_coef) <- name_row_lag

@@ -93,8 +93,8 @@ public:
 
 	void appendRecords(LIST& list) override {
 		list["F_record"] = factor_record;
-		// list["rho_record"] = coef_record;
-		// list["lambda_record"] = prec_record;
+		list["Rho_record"] = coef_record;
+		list["Lambda_record"] = prec_record;
 	}
 	
 protected:
