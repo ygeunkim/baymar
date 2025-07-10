@@ -2,7 +2,7 @@
 #define BAYMAR_CORE_FORECASTER_H
 
 #include <bvhar/base>
-#include <bvhar/utils>
+#include "../math/design.h"
 
 namespace baymar {
 
@@ -67,6 +67,7 @@ public:
 
 	void appendError(Eigen::MatrixXd& point_forecast) override {
 		error_term = bvhar::sim_mn(error_mean, error_sig_row, error_sig_col, false, rng);
+		point_forecast += error_term;
 	}
 
 private:

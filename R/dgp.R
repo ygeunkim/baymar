@@ -33,7 +33,8 @@ sim_mar <- function(num_sim,
       stop("Array 'init' should be nrow x ncol x p.")
     }
     init_list <- lapply(seq_len(p), function(id) init[, , id])
-    init_mat <- bdiag(init_list[1:p])
+    # init_mat <- bdiag(init_list[1:p])
+    init_mat <- do.call(rbind, init_list)
   } else if (is.list(init)) {
     if (length(init) != p) {
       stop("Length of list 'init' should be p.")
@@ -46,18 +47,31 @@ sim_mar <- function(num_sim,
     if (any(sapply(init, ncol) != num_col)) {
       stop(sprintf("Every matrix of 'init' should be %d", num_col))
     }
-    init_mat <- bdiag(init[1:p])
+    # init_mat <- bdiag(init[1:p])
+    init_mat <- do.call(rbind, init)
   } else {
     stop("'init' should be list or 3d array.")
   }
-  sim_mar_export(
+  # sim_mar_export(
+  #   num_sim = num_sim,
+  #   num_burn = num_burn,
+  #   init = init_mat,
+  #   row_coef = row_coef,
+  #   col_coef = col_coef,
+  #   row_sig = row_sig,
+  #   col_sig = col_sig
+  # ) |> 
+  # simplify2array()
+  sim_mar_process(
     num_sim = num_sim,
     num_burn = num_burn,
+    lag = p,
     init = init_mat,
     row_coef = row_coef,
     col_coef = col_coef,
     row_sig = row_sig,
-    col_sig = col_sig
-  ) |> 
-  simplify2array()
+    col_sig = col_sig,
+    seed = sample.int(.Machine$integer.max, size = 1)
+  ) |>
+    simplify2array()
 }

@@ -1,0 +1,7 @@
+#ifndef BAYMAR_OLS_H
+#define BAYMAR_OLS_H
+
+#include "src/ols/forecaster.h"
+#include "src/ols/simulator.h"
+
+#endif // BAYMAR_OLS_H
