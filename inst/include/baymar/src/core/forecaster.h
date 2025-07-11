@@ -25,6 +25,12 @@ public:
 		last_pvec = Eigen::MatrixXd::Zero(nrow_exogen, ncol_exogen);
 	}
 	virtual ~MatExogenForecaster() = default;
+
+	void updateCoef(Eigen::Ref<const Eigen::MatrixXd> row_coef_mat, Eigen::Ref<const Eigen::MatrixXd> col_coef_mat) {
+		BVHAR_DEBUG_LOG(debug_logger, "updateCoef() called");
+		row_coef = row_coef_mat;
+		col_coef = col_coef_mat;
+	}
 	
 	void appendForecast(Eigen::MatrixXd& point_forecast, const int h) override {
 		BVHAR_DEBUG_LOG(debug_logger, "appendForecast(point_forecast, h) called");
@@ -37,12 +43,6 @@ public:
 protected:
 	int nrow_exogen, ncol_exogen, nrow_row_exogen, nrow_col_exogen, num_row, num_col;
 	Eigen::MatrixXd row_coef, col_coef;
-
-	void updateCoef(Eigen::Ref<const Eigen::MatrixXd> row_coef_mat, Eigen::Ref<const Eigen::MatrixXd> col_coef_mat) {
-		BVHAR_DEBUG_LOG(debug_logger, "updateCoef() called");
-		row_coef = row_coef_mat;
-		col_coef = col_coef_mat;
-	}
 };
 
 class MatErrorGenerator : public bvhar::AutoregGenerator<Eigen::MatrixXd, Eigen::MatrixXd> {

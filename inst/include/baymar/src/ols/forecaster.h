@@ -18,7 +18,7 @@ public:
 		Optional<std::unique_ptr<MatErrorGenerator>> dgp_updater = NULLOPT
 	)
 	: bvhar::MultistepForecaster<Eigen::MatrixXd, Eigen::MatrixXd>(step, y, lag),
-		num_row(row_coef.cols()), num_col(y.cols()),
+		num_row(row_coef.cols()), num_col(col_coef.cols()),
 		row_coef(row_coef), col_coef(col_coef) {
 		initLagged();
 		if (dgp_updater) {
