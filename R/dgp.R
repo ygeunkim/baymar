@@ -16,7 +16,7 @@
 #' @importFrom Matrix bdiag
 #' @export
 sim_mar <- function(num_sim,
-                    num_burn,
+                    num_burn = floor(num_sim / 2),
                     p = 1,
                     row_coef,
                     col_coef,
