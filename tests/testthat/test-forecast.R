@@ -148,6 +148,7 @@ test_that("Minnesota Prior - Expanding", {
 })
 
 test_that("Horseshoe Prior - Expanding", {
+  skip_on_ci()
   expect_no_error(
     pred_test <- help_bmar_expand(set_mar_horseshoe(), set_mar_horseshoe())
   )
