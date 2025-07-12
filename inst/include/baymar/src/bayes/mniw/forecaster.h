@@ -3,6 +3,7 @@
 
 #include "./mniw.h"
 #include "../../math/design.h"
+#include "../../core/forecaster.h"
 
 namespace baymar {
 
@@ -13,39 +14,19 @@ template <bool isUpdate> class MatMniwOutForecastRun;
 template <bool isUpdate> class MatMniwRollForecastRun;
 template <bool isUpdate> class MatMniwExpandForecastRun;
 
-class MatMniwExogenForecaster : public bvhar::ExogenForecaster<Eigen::MatrixXd, Eigen::MatrixXd> {
+class MatMniwExogenForecaster : public MatExogenForecaster {
 public:
 	MatMniwExogenForecaster(int lag, const Eigen::MatrixXd& exogen, int num_exogen, int num_row, int num_col)
-	: bvhar::ExogenForecaster<Eigen::MatrixXd, Eigen::MatrixXd>(lag, exogen),
-		nrow_exogen(exogen.rows() / num_exogen), ncol_exogen(exogen.cols()),
-		nrow_row_exogen((lag + 1) * nrow_exogen), nrow_col_exogen((lag + 1) * ncol_exogen),
-		num_row(num_row), num_col(num_col),
-		row_coef(nrow_row_exogen, num_row), col_coef(nrow_col_exogen, num_col) {
-		BVHAR_DEBUG_LOG(debug_logger, "Constructor: num_exogen={}, num_row={}, num_col={}", num_exogen, num_row, num_col);
-		// last_pvec = Eigen::MatrixXd::Zero((lag + 1) * nrow_exogen, (lag + 1) * ncol_exogen);
-		// exogen: rbind(X_{T - s}, ..., X_{T + h})
-		// last_pvec = x_(T + h), ..., x_(T + h - s)
-		last_pvec = Eigen::MatrixXd::Zero(nrow_exogen, ncol_exogen);
-	}
+	: MatExogenForecaster(lag, exogen, num_exogen, num_row, num_col) {}
 	virtual ~MatMniwExogenForecaster() = default;
-	
-	void appendForecast(Eigen::MatrixXd& point_forecast, const int h) override {
-		BVHAR_DEBUG_LOG(debug_logger, "appendForecast(point_forecast, h) called");
-		for (int i = 0; i < lag + 1; ++i) {
-			last_pvec = exogen.middleRows((lag + h - i) * nrow_exogen, nrow_exogen); // x_(T + h - i)
-			point_forecast += row_coef.middleRows(i * nrow_exogen, nrow_exogen).transpose() * last_pvec * col_coef.middleRows(i * ncol_exogen, ncol_exogen);
-		}
-	}
 
 	void updateCoefmat(const Eigen::VectorXd& row_coef_record, const Eigen::VectorXd& col_coef_record, int nrow_row_coef, int nrow_col_coef) {
 		BVHAR_DEBUG_LOG(debug_logger, "updateCoefmat() called");
-		row_coef = bvhar::unvectorize(row_coef_record.segment(nrow_row_coef * num_row, nrow_row_exogen * num_row).transpose(), num_row);
-		col_coef = bvhar::unvectorize(col_coef_record.segment(nrow_col_coef * num_col, nrow_col_exogen * num_col).transpose(), num_col);
+		updateCoef(
+			bvhar::unvectorize(row_coef_record.segment(nrow_row_coef * num_row, nrow_row_exogen * num_row).transpose(), num_row),
+			bvhar::unvectorize(col_coef_record.segment(nrow_col_coef * num_col, nrow_col_exogen * num_col).transpose(), num_col)
+		);
 	}
-
-private:
-	int nrow_exogen, ncol_exogen, nrow_row_exogen, nrow_col_exogen, num_row, num_col;
-	Eigen::MatrixXd row_coef, col_coef;
 };
 
 class MatMniwForecaster : public bvhar::BayesForecaster<Eigen::MatrixXd, Eigen::MatrixXd> {

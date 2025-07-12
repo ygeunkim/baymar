@@ -42,7 +42,12 @@ expand_bmarx_mniw <- function(y, lag, num_data, num_chains, num_iter, num_burn, 
 }
 
 #' @noRd
-sim_mar_export <- function(num_sim, num_burn, init, row_coef, col_coef, row_sig, col_sig) {
-    .Call(`_baymar_sim_mar_export`, num_sim, num_burn, init, row_coef, col_coef, row_sig, col_sig)
+sim_mar_process <- function(num_sim, num_burn, lag, init, row_coef, col_coef, row_sig, col_sig, seed) {
+    .Call(`_baymar_sim_mar_process`, num_sim, num_burn, lag, init, row_coef, col_coef, row_sig, col_sig, seed)
+}
+
+#' @noRd
+sim_mdfm_process <- function(num_sim, num_burn, lag, row_coef, col_coef, row_sig, col_sig, factor_init, factor_row_coef, factor_col_coef, factor_row_sig, factor_col_sig, seed) {
+    .Call(`_baymar_sim_mdfm_process`, num_sim, num_burn, lag, row_coef, col_coef, row_sig, col_sig, factor_init, factor_row_coef, factor_col_coef, factor_row_sig, factor_col_sig, seed)
 }
 
