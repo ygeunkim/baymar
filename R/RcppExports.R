@@ -46,3 +46,8 @@ sim_mar_process <- function(num_sim, num_burn, lag, init, row_coef, col_coef, ro
     .Call(`_baymar_sim_mar_process`, num_sim, num_burn, lag, init, row_coef, col_coef, row_sig, col_sig, seed)
 }
 
+#' @noRd
+sim_mdfm_process <- function(num_sim, num_burn, lag, row_coef, col_coef, row_sig, col_sig, factor_init, factor_row_coef, factor_col_coef, factor_row_sig, factor_col_sig, seed) {
+    .Call(`_baymar_sim_mdfm_process`, num_sim, num_burn, lag, row_coef, col_coef, row_sig, col_sig, factor_init, factor_row_coef, factor_col_coef, factor_row_sig, factor_col_sig, seed)
+}
+
