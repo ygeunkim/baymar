@@ -2,12 +2,13 @@
 #define BAYMAR_OLS_SIMULATOR_H
 
 #include "./forecaster.h"
+#include <bvhar/ols>
 
 namespace baymar {
 
 class MarSimulator;
 class MdfmSimulator;
-// class MdfmVecSimulator;
+class MdfmVecSimulator;
 class MdfmMarSimulator;
 
 class MarSimulator : public bvhar::MultistepForecastRun<Eigen::MatrixXd, Eigen::MatrixXd> {
@@ -103,6 +104,40 @@ protected:
 	virtual void generateFactor() = 0;
 };
 
+class MdfmVecSimulator : public MdfmSimulator {
+public:
+	MdfmVecSimulator(
+		int num_iter, int num_burn,
+		int lag,
+		const Eigen::MatrixXd& row_coef, const Eigen::MatrixXd& col_coef, const Eigen::MatrixXd& row_sig, const Eigen::MatrixXd& col_sig,
+		const Eigen::MatrixXd& factor_init,
+		const Eigen::MatrixXd& factor_coef, const Eigen::MatrixXd& factor_sig,
+		unsigned int seed
+	)
+	: MdfmSimulator(num_iter, num_burn, row_coef, col_coef, row_sig, col_sig, seed),
+		factor_draw(Eigen::MatrixXd::Zero(num_iter, factor_coef.cols())),
+		ncol_factor(col_coef.rows()) {
+		factor_generator = std::make_unique<bvhar::OlsSimulator>(
+			num_iter, num_burn, lag,
+			factor_init, factor_coef, factor_sig, 2, seed
+		);
+	}
+	virtual ~MdfmVecSimulator() = default;
+
+protected:
+	void generateFactor() override {
+		factor_draw = factor_generator->returnDgp();
+		for (int i = 0; i < num_iter; ++i) {
+			factor_mat[i] = bvhar::unvectorize(factor_draw.row(i).transpose(), ncol_factor);
+		}
+	}
+
+private:
+	std::unique_ptr<bvhar::OlsSimulator> factor_generator;
+	Eigen::MatrixXd factor_draw;
+	int ncol_factor;
+};
+
 class MdfmMarSimulator : public MdfmSimulator {
 public:
 	MdfmMarSimulator(
@@ -123,12 +158,13 @@ public:
 	}
 	virtual ~MdfmMarSimulator() = default;
 
-private:
-	std::unique_ptr<MarSimulator> factor_generator;
-
+protected:
 	void generateFactor() override {
 		factor_mat = factor_generator->returnDgp();
 	}
+
+private:
+	std::unique_ptr<MarSimulator> factor_generator;
 };
 
 } // namespace baymar
