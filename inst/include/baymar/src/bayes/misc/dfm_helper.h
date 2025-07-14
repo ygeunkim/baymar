@@ -2,7 +2,6 @@
 #define BAYMAR_BAYES_MISC_DFM_HELPER_H
 
 #include <bvhar/utils>
-// #include <boost/math/distributions/normal.hpp>
 
 namespace baymar {
 
@@ -40,8 +39,8 @@ inline void draw_dfm_factor(std::vector<Eigen::MatrixXd>& factor_mat, int factor
 	Eigen::VectorXd prec_t(len_factor);
 	// 1) t = p + 1, ..., p + s with Lambda = diag(lambda^2 / (1 - sum_i^s rho_i^2))
 	prec_t = (1 - fac_coef_diag.rowwise().squaredNorm().array()) / fac_lambda.array();
+	llt_of_prec.compute((post_cov + prec_t.asDiagonal().toDenseMatrix()).selfadjointView<Eigen::Lower>());
 	for (int i = 0; i < factor_lag; ++i) {
-		llt_of_prec.compute((post_cov + prec_t.asDiagonal().toDenseMatrix()).selfadjointView<Eigen::Lower>());
 		post_mean = llt_of_prec.solve(post_solve * y[i].reshaped());
 		for (int j = 0; j < len_factor; ++j) {
 			vec_normal[j] = bvhar::normal_rand(rng);
@@ -73,7 +72,6 @@ inline void draw_dfm_prec(Eigen::Ref<Eigen::VectorXd> fac_lambda, int factor_lag
 	int num_design = factor_mat.size();
 	int rows_factor = factor_mat[0].rows();
 	int cols_factor = factor_mat[0].cols();
-	// Eigen::VectorXd ssr_item(num_design);
 	double post_scl, coef_square, resid;
 	for (int i = 0; i < rows_factor * cols_factor; ++i) {
 		int row_id = i % rows_factor;
@@ -82,23 +80,18 @@ inline void draw_dfm_prec(Eigen::Ref<Eigen::VectorXd> fac_lambda, int factor_lag
 		// 1) t = p + 1, ..., p + s => sum_t f_{jk, t}^2 (1 - sum_i rho_{jk,i}^2)
 		coef_square = 1 - fac_coef_diag.row(i).squaredNorm();
 		for (int j = 0; j < factor_lag; ++j) {
-			// ssr_item[j] = factor_mat[j](row_id, col_id) * factor_mat[j](row_id, col_id) * coef_square;
 			post_scl += factor_mat[j](row_id, col_id) * factor_mat[j](row_id, col_id) * coef_square;
 		}
 		// 2) t = p + s + 1, ..., T => sum_t (f_{jk, t} - rho_{jk, 1} f_{jk, t - 1} - ... - rho_{jk, s} f_{jk, t - s})^2
 		for (int j = factor_lag; j < num_design; ++j) {
-			// ssr_item[j] = factor_mat[j](row_id, col_id);
 			resid = factor_mat[j](row_id, col_id);
 			for (int l = 0; l < factor_lag; ++l) {
 				resid -= fac_coef_diag(i, l) * factor_mat[j - l - 1](row_id, col_id);
-				// ssr_item[j] -= (fac_coef_diag(i, l) * factor_mat[l + factor_lag - l - 1](row_id, col_id)) * (fac_coef_diag(i, l) * factor_mat[j - l - 1](row_id, col_id));
 			}
-			// ssr_item[j] = resid * resid;
 			post_scl += resid * resid;
 		}
 		fac_lambda[i] = 1 / bvhar::gamma_rand(
 			ig_shp[i] + num_design / 2,
-			// (ig_scl[i] + ssr_item.sum()) / 2,
 			post_scl / 2,
 			rng
 		);
@@ -113,10 +106,6 @@ inline double compute_dfmcoef_logdens(Eigen::Ref<const Eigen::VectorXd> cand_coe
 	double res = 0;
 	double sd = lambda_i / sqrt(1 - cand_coef.squaredNorm());
 	for (int i = 0; i < cand_coef.size(); ++i) {
-		// res += boost::math::logpdf(
-		// 	boost::math::normal_distribution<>(0.0, lambda_i / sqrt(1 - cand_coef.squaredNorm())),
-		// 	fac_init[i]
-		// );
 		res += -log(sd) - fac_init[i] * fac_init[i] / (2 * sd * sd);
 	}
 	return res;
@@ -154,7 +143,7 @@ inline void draw_dfm_coef(Eigen::Ref<Eigen::MatrixXd> fac_coef_diag, Eigen::Ref<
 		cand_rho = post_mean + llt_of_prec.matrixU().solve(normal_vector);
 		numerator = compute_dfmcoef_logdens(cand_rho, fac_lambda[i], factor_design.row(0));
 		denom = compute_dfmcoef_logdens(fac_coef_diag.row(i), fac_lambda[i], factor_design.row(0));
-		if (log(bvhar::unif_rand(rng) < std::min(numerator - denom, 0.0))) {
+		if (log(bvhar::unif_rand(rng)) < std::min(numerator - denom, 0.0)) {
 			fac_coef_diag.row(i) = cand_rho.transpose();
 		}
 	}
