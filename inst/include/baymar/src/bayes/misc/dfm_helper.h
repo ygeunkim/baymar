@@ -104,9 +104,9 @@ inline void draw_dfm_prec(Eigen::Ref<Eigen::VectorXd> fac_lambda, int factor_lag
 inline double compute_dfmcoef_logdens(Eigen::Ref<const Eigen::VectorXd> cand_coef,
 																			double lambda_i, Eigen::Ref<const Eigen::VectorXd> fac_init) {
 	double res = 0;
-	double sd = lambda_i / sqrt(1 - cand_coef.squaredNorm());
+	double variance = lambda_i / (1 - cand_coef.squaredNorm());
 	for (int i = 0; i < cand_coef.size(); ++i) {
-		res += -log(sd) - fac_init[i] * fac_init[i] / (2 * sd * sd);
+		res += -log(variance) / 2 - fac_init[i] * fac_init[i] / (2 * variance);
 	}
 	return res;
 }
