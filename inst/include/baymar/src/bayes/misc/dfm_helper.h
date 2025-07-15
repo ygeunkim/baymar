@@ -80,7 +80,7 @@ inline void draw_dfm_prec(Eigen::Ref<Eigen::VectorXd> fac_lambda, int factor_lag
 		// 1) t = p + 1, ..., p + s => sum_t f_{jk, t}^2 (1 - sum_i rho_{jk,i}^2)
 		coef_square = 1 - fac_coef_diag.row(i).squaredNorm();
 		for (int j = 0; j < factor_lag; ++j) {
-			post_scl += factor_mat[j](row_id, col_id) * factor_mat[j](row_id, col_id) * coef_square;
+			post_scl += factor_mat[j](row_id, col_id) * factor_mat[j](row_id, col_id) * coef_square / 2;
 		}
 		// 2) t = p + s + 1, ..., T => sum_t (f_{jk, t} - rho_{jk, 1} f_{jk, t - 1} - ... - rho_{jk, s} f_{jk, t - s})^2
 		for (int j = factor_lag; j < num_design; ++j) {
@@ -88,13 +88,9 @@ inline void draw_dfm_prec(Eigen::Ref<Eigen::VectorXd> fac_lambda, int factor_lag
 			for (int l = 0; l < factor_lag; ++l) {
 				resid -= fac_coef_diag(i, l) * factor_mat[j - l - 1](row_id, col_id);
 			}
-			post_scl += resid * resid;
+			post_scl += resid * resid / 2;
 		}
-		fac_lambda[i] = 1 / bvhar::gamma_rand(
-			ig_shp[i] + num_design / 2,
-			post_scl / 2,
-			rng
-		);
+		fac_lambda[i] = 1 / bvhar::gamma_rand(ig_shp[i] + num_design / 2, 1 / post_scl, rng);
 	}
 }
 
@@ -132,7 +128,7 @@ inline void draw_dfm_coef(Eigen::Ref<Eigen::MatrixXd> fac_coef_diag, Eigen::Ref<
 		for (int j = 0; j < num_design; ++j) {
 			factor_response[j] = factor_mat[j + factor_lag](row_id, col_id);
 			for (int k = 0; k < factor_lag; ++k) {
-				factor_design(j, k) = factor_mat[j + factor_lag - k - 1](row_id, col_id);
+				factor_design(j, k) = factor_mat[j + k](row_id, col_id);
 			}
 		}
 		llt_of_prec.compute(prior_prec.asDiagonal().toDenseMatrix() + factor_design.transpose() * factor_design / fac_lambda[i]);
