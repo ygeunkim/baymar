@@ -165,6 +165,25 @@ public:
 			prior_mean.size(), prior_prec.size()
 		);
 		mdfm_record = std::make_unique<MatDfmVarRecords>(num_iter, num_row, num_col, nrow_row_coef, nrow_col_coef, num_design, size_factor, lag);
+		// To check Gibbs sampler
+		row_coef << 0.2655087, 0.9082078, 0.9446753, 0.06178627, 0.6870228, 0.4976992, 0.3800352, 0.2121425, 0.26722067, 0.3823880,
+								0.3721239, 0.2016819, 0.6607978, 0.20597457, 0.3841037, 0.7176185, 0.7774452, 0.6516738, 0.38611409, 0.8696908,
+								0.5728534, 0.8983897, 0.6291140, 0.17655675, 0.7698414, 0.9919061, 0.9347052, 0.1255551, 0.01339033, 0.3403490;
+		std::cout << "row_coef: " << row_coef.rows() << " x " << row_coef.cols() << std::endl;
+		col_coef << 0.4820801, 0.4935413, 0.8273733, 0.7942399, 0.7237109, 0.8209463, 0.7829328, 0.5297196, 0.0233312, 0.7323137,
+							  0.5995658, 0.1862176, 0.6684667, 0.1079436, 0.4112744, 0.6470602, 0.5530363, 0.7893562, 0.4772301, 0.6927316;
+		std::cout << "col_coef: " << col_coef.rows() << " x " << col_coef.cols() << std::endl;
+		row_sig_lower = Eigen::MatrixXd::Zero(num_row, num_row);
+		std::cout << "row_sig_lower: " << row_sig_lower.rows() << " x " << row_sig_lower.cols() << std::endl;
+		col_sig_lower = Eigen::MatrixXd::Zero(num_col, num_col);
+		std::cout << "col_sig_lower: " << col_sig_lower.rows() << " x " << col_sig_lower.cols() << std::endl;
+		row_sig_lower.diagonal() = Eigen::VectorXd::Constant(10, .5);
+		col_sig_lower.diagonal() = Eigen::VectorXd::Constant(10, .3);
+		std::cout << "row_sig_lower: " << row_sig_lower.rows() << " x " << row_sig_lower.cols() << std::endl;
+		std::cout << "col_sig_lower: " << col_sig_lower.rows() << " x " << col_sig_lower.cols() << std::endl;
+		factor_prec = Eigen::VectorXd::Ones(6);
+		std::cout << "factor_prec: " << factor_prec.size() << std::endl;
+		// To check Gibbs sampler
 	}
 	virtual ~McmcMatDfmVar() = default;
 
