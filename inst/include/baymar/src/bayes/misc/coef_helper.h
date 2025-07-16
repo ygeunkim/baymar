@@ -51,6 +51,7 @@ inline void draw_coef_sig(
 	}
 	Eigen::LLT<Eigen::MatrixXd> llt_of_prec(post_cov.selfadjointView<Eigen::Lower>());
 	Eigen::MatrixXd post_mean = llt_of_prec.solve(post_solve);
+	post_iw_scl -= post_mean.transpose() * post_cov * post_mean;
 	double post_df = iw_df + num_mat * other_dim;
 	sig_lower = bvhar::sim_iw_tri(post_iw_scl, post_df, rng);
 	for (int j = 0; j < prior_mean.cols(); ++j) {
