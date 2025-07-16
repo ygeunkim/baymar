@@ -5,23 +5,31 @@
 
 namespace baymar {
 
-// Generate F_t: p1 x p2, t = p + 1, ..., T
-// vec(F_t) = f_t = H_1 f_{t - 1} + ... + H_s f_{t - s} + u_t
-// u_t ~ N(0, Lambda)
-// H_i = diag(rho_{1, i}, ..., rho_{p1 * p2, i})
-// fac_coef_diag: p1*p2 x s
-// fac_lambda: p1*p2 x 1
+/**
+ * @brief Generate factor matrix of vec(F_t) modeling
+ * 
+ * vec(F_t) = f_t = H_1 f_{t - 1} + ... + H_s f_{t - s} + u_t
+ * u_t ~ N(0, Lambda)
+ * H_i = diag(rho_{1, 1, i}, rho_{2, 1, i}, ..., rho_{p1, p2, i})
+ * 
+ * @param factor_mat Factor matrices
+ * @param factor_lag Lag of the factor model (s)
+ * @param rows_factor Factor matrix number of rows
+ * @param cols_factor Factor matrix number of columns
+ * @param fac_coef_diag Each column is the j-th lag coefficient diagonal: p1*p2 x s dimension matrix from H_i = diag(rho_{1, i}, ..., rho_{p1 * p2, i})
+ * @param fac_lambda Diagonal of factor model variance: p1*p2 size vector
+ * @param row_coef Transpose of MAR row coefficient
+ * @param row_sig_lower MAR row covariance L decomposition
+ * @param col_coef Transpose of MAR column coefficient
+ * @param col_sig_lower MAR column covariance L decomposition
+ * @param y Matrix time series
+ * @param rng boost rng
+ */
 inline void draw_dfm_factor(std::vector<Eigen::MatrixXd>& factor_mat, int factor_lag, int rows_factor, int cols_factor,
 													  Eigen::Ref<Eigen::MatrixXd> fac_coef_diag, Eigen::Ref<Eigen::VectorXd> fac_lambda,
 													  Eigen::Ref<const Eigen::MatrixXd> row_coef, Eigen::Ref<const Eigen::MatrixXd> row_sig_lower,
 													  Eigen::Ref<const Eigen::MatrixXd> col_coef, Eigen::Ref<const Eigen::MatrixXd> col_sig_lower,
 													  std::vector<Eigen::MatrixXd>& y, BHRNG& rng) {
-	// Eigen::MatrixXd col_inv_sig_coef = col_sig_lower.triangularView<Eigen::Lower>().solve(col_coef);
-	// Eigen::MatrixXd row_inv_sig_coef = row_sig_lower.triangularView<Eigen::Lower>().solve(row_coef);
-	// Eigen::MatrixXd post_solve = bvhar::kronecker_eigen(
-	// 	col_sig_lower.triangularView<Eigen::Lower>().solve<Eigen::OnTheRight>(col_inv_sig_coef.transpose()),
-	// 	row_sig_lower.triangularView<Eigen::Lower>().solve<Eigen::OnTheRight>(row_inv_sig_coef.transpose())
-	// );
 	Eigen::MatrixXd col_inv_sig_coef = col_sig_lower.triangularView<Eigen::Lower>().solve<Eigen::OnTheRight>(
 		col_sig_lower.triangularView<Eigen::Lower>().solve(col_coef).transpose()
 	);
@@ -31,8 +39,6 @@ inline void draw_dfm_factor(std::vector<Eigen::MatrixXd>& factor_mat, int factor
 	Eigen::MatrixXd post_solve = bvhar::kronecker_eigen(col_inv_sig_coef, row_inv_sig_coef);
 	Eigen::MatrixXd post_cov = post_solve * bvhar::kronecker_eigen(col_coef, row_coef);
 	Eigen::LLT<Eigen::MatrixXd> llt_of_prec;
-	// int cols_factor = factor_mat[0].cols();
-	// int len_factor = factor_mat[0].rows() * cols_factor;
 	int len_factor = rows_factor * cols_factor;
 	Eigen::VectorXd vec_normal(len_factor);
 	Eigen::VectorXd post_mean(len_factor);
@@ -64,7 +70,17 @@ inline void draw_dfm_factor(std::vector<Eigen::MatrixXd>& factor_mat, int factor
 	}
 }
 
-// Generate lambda^2
+/**
+ * @brief Generate the diagonal of vec(F_t) model variance
+ * 
+ * @param fac_lambda Diagonal of factor model variance: p1*p2 size vector
+ * @param factor_lag Lag of the factor model (s)
+ * @param ig_shp Inverse-gamma shape
+ * @param ig_scl Inverse-gamma scale
+ * @param factor_mat Factor matrix
+ * @param fac_coef_diag Each column is the j-th lag coefficient diagonal: p1*p2 x s dimension matrix from H_i = diag(rho_{1, i}, ..., rho_{p1 * p2, i})
+ * @param rng boost rng
+ */
 inline void draw_dfm_prec(Eigen::Ref<Eigen::VectorXd> fac_lambda, int factor_lag,
 													Eigen::Ref<Eigen::VectorXd> ig_shp, Eigen::Ref<Eigen::VectorXd> ig_scl,
 													std::vector<Eigen::MatrixXd>& factor_mat, Eigen::Ref<Eigen::MatrixXd> fac_coef_diag,
@@ -94,20 +110,35 @@ inline void draw_dfm_prec(Eigen::Ref<Eigen::VectorXd> fac_lambda, int factor_lag
 	}
 }
 
-// log of proposal density for rho
-// cand_coef: rho_{jk, 1}, ... rho_{jk, s}
-// fac_row: f_{jk, p + 1}, ... f_{jk, p + s}
+/**
+ * @brief Log of proposal density for factor model coefficient
+ * 
+ * @param cand_coef Candidate rho_{jk, 1}, ... rho_{jk, s}
+ * @param lambda_i lambda^2
+ * @param fac_init Initial factor
+ * @return double 
+ */
 inline double compute_dfmcoef_logdens(Eigen::Ref<const Eigen::VectorXd> cand_coef,
 																			double lambda_i, Eigen::Ref<const Eigen::VectorXd> fac_init) {
 	double res = 0;
 	double variance = lambda_i / (1 - cand_coef.squaredNorm());
-	for (int i = 0; i < cand_coef.size(); ++i) {
+	for (int i = 0; i < fac_init.size(); ++i) {
 		res += -log(variance) / 2 - fac_init[i] * fac_init[i] / (2 * variance);
 	}
 	return res;
 }
 
-// Draw rho_{jk}: Each row of fac_coef_diag
+/**
+ * @brief Draw factor model coefficient
+ * 
+ * @param fac_coef_diag Each column is the j-th lag coefficient diagonal: p1*p2 x s dimension matrix from H_i = diag(rho_{1, i}, ..., rho_{p1 * p2, i})
+ * @param fac_lambda Diagonal of factor model variance: p1*p2 size vector
+ * @param prior_mean Prior mean of the factor coefficient
+ * @param prior_prec Prior precision of the factor coefficient
+ * @param factor_mat Factor matrix
+ * @param factor_lag Lag of the factor model (s)
+ * @param rng boost rng
+ */
 inline void draw_dfm_coef(Eigen::Ref<Eigen::MatrixXd> fac_coef_diag, Eigen::Ref<Eigen::VectorXd> fac_lambda,
 													Eigen::Ref<Eigen::VectorXd> prior_mean, Eigen::Ref<Eigen::VectorXd> prior_prec,
 													std::vector<Eigen::MatrixXd>& factor_mat, int factor_lag,
@@ -126,6 +157,8 @@ inline void draw_dfm_coef(Eigen::Ref<Eigen::MatrixXd> fac_coef_diag, Eigen::Ref<
 		int row_id = i % rows_factor;
 		int col_id = i / rows_factor;
 		for (int j = 0; j < num_design; ++j) {
+			// ambiguous if factor_response and factor_design is updated correctly
+			// How about std::accumulate to use the same (j, k) index?
 			factor_response[j] = factor_mat[j + factor_lag](row_id, col_id);
 			for (int k = 0; k < factor_lag; ++k) {
 				factor_design(j, k) = factor_mat[j + k](row_id, col_id);
