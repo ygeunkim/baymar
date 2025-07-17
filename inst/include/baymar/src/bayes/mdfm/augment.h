@@ -25,12 +25,12 @@ public:
 	virtual void updateFactor(
 		Eigen::Ref<const Eigen::MatrixXd> row_coef, Eigen::Ref<const Eigen::MatrixXd> row_sig_lower,
 		Eigen::Ref<const Eigen::MatrixXd> col_coef, Eigen::Ref<const Eigen::MatrixXd> col_sig_lower,
-		BHRNG& rng
+		BVHAR_BHRNG& rng
 	) {}
 
 	virtual void updateRecords(int id) {}
 
-	virtual void appendRecords(LIST& list) {}
+	virtual void appendRecords(BVHAR_LIST& list) {}
 };
 
 class MatFactorAugmenter : public MatAugmenter {
@@ -70,7 +70,7 @@ public:
 	void updateFactor(
 		Eigen::Ref<const Eigen::MatrixXd> row_coef, Eigen::Ref<const Eigen::MatrixXd> row_sig_lower,
 		Eigen::Ref<const Eigen::MatrixXd> col_coef, Eigen::Ref<const Eigen::MatrixXd> col_sig_lower,
-		BHRNG& rng
+		BVHAR_BHRNG& rng
 	) override {
 		draw_dfm_factor(
 			factor_mat, lag, nrow_factor, ncol_factor, dfm_coef, dfm_prec,
@@ -91,7 +91,7 @@ public:
 		prec_record.row(id) = dfm_prec;
 	}
 
-	void appendRecords(LIST& list) override {
+	void appendRecords(BVHAR_LIST& list) override {
 		list["F_record"] = factor_record;
 		list["Rho_record"] = coef_record;
 		list["Lambda_record"] = prec_record;

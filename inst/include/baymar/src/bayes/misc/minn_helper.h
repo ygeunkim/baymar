@@ -9,7 +9,7 @@ namespace baymar {
 inline void minnesota_kappa(
 	double& kappa, Eigen::Ref<Eigen::MatrixXd> prior_mean, Eigen::Ref<Eigen::VectorXd> prec,
 	Eigen::Ref<Eigen::MatrixXd> coef, Eigen::Ref<Eigen::MatrixXd> sig_lower,
-	const double gamma_shp, const double gamma_rate, BHRNG& rng
+	const double gamma_shp, const double gamma_rate, BVHAR_BHRNG& rng
 ) {
 	prec.array() *= kappa;
 	Eigen::MatrixXd inv_sig_coef = sig_lower.triangularView<Eigen::Lower>().solve((coef - prior_mean).transpose());

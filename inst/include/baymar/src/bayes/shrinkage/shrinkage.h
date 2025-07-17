@@ -18,7 +18,7 @@ public:
 		Eigen::Ref<Eigen::VectorXd> prior_prec,
 		Eigen::Ref<Eigen::MatrixXd> coef, Eigen::Ref<Eigen::MatrixXd> sig_lower,
 		Eigen::Ref<Eigen::MatrixXd> prior_mean,
-		BHRNG& rng
+		BVHAR_BHRNG& rng
 	) {}
 };
 
@@ -48,7 +48,7 @@ class MatHierMinnUpdater : public MatShrinkageUpdater {
 			Eigen::Ref<Eigen::VectorXd> prior_prec,
 			Eigen::Ref<Eigen::MatrixXd> coef, Eigen::Ref<Eigen::MatrixXd> sig_lower,
 			Eigen::Ref<Eigen::MatrixXd> prior_mean,
-			BHRNG& rng
+			BVHAR_BHRNG& rng
 		) override {
 			minnesota_kappa(kappa, prior_mean, prior_prec, coef, sig_lower, shp, rate, rng);
 		}
@@ -74,7 +74,7 @@ public:
 		Eigen::Ref<Eigen::VectorXd> prior_prec,
 		Eigen::Ref<Eigen::MatrixXd> coef, Eigen::Ref<Eigen::MatrixXd> sig_lower,
 		Eigen::Ref<Eigen::MatrixXd> prior_mean,
-		BHRNG& rng
+		BVHAR_BHRNG& rng
 	) override {
 		bvhar::horseshoe_latent(latent_local, local_lev, rng);
 		bvhar::horseshoe_latent(latent_global, global_lev, rng);
@@ -88,7 +88,7 @@ private:
 	double latent_global;
 };
 
-inline std::unique_ptr<MatShrinkageUpdater> initialize_matshrinkageupdater(int num_iter, LIST& param_prior, LIST& param_init, int prior_type) {
+inline std::unique_ptr<MatShrinkageUpdater> initialize_matshrinkageupdater(int num_iter, BVHAR_LIST& param_prior, BVHAR_LIST& param_init, int prior_type) {
 	std::unique_ptr<MatShrinkageUpdater> shrinkage_ptr;
 	switch (prior_type) {
 		case 1: {
@@ -110,7 +110,7 @@ inline std::unique_ptr<MatShrinkageUpdater> initialize_matshrinkageupdater(int n
 			return shrinkage_ptr;
 		}
 		default: {
-			STOP("Not defined yet");
+			BVHAR_STOP("Not defined yet");
 		}
 	}
 	return shrinkage_ptr;

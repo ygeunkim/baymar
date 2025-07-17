@@ -30,7 +30,7 @@ inline void draw_coef_sig(
 	Eigen::Ref<Eigen::MatrixXd> iw_scl,
 	double iw_df, int num_mat, int other_dim,
 	std::vector<xType>& x, std::vector<Eigen::MatrixXd>& y,
-	BHRNG& rng
+	BVHAR_BHRNG& rng
 ) {
 	using is_row = std::integral_constant<bool, isRow>;
 	Eigen::MatrixXd post_cov = prior_prec.asDiagonal();

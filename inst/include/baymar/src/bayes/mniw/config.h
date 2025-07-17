@@ -21,13 +21,13 @@ struct MatMniwParams : public bvhar::McmcParams {
 	double _row_iw_df, _col_iw_df;
 	int _row_row_coef, _row_col_coef;
 
-	MatMniwParams(int num_iter, std::vector<Eigen::MatrixXd>& y, LIST& priors)
+	MatMniwParams(int num_iter, std::vector<Eigen::MatrixXd>& y, BVHAR_LIST& priors)
 	: bvhar::McmcParams(num_iter),
 		_y(y), _row(y[0].rows()), _col(y[0].cols()), _design(y.size()),
-		_row_mean(CAST<Eigen::MatrixXd>(priors["row_prior_mean"])), _row_iw_scl(CAST<Eigen::MatrixXd>(priors["row_iw_scl"])),
-		_col_mean(CAST<Eigen::MatrixXd>(priors["col_prior_mean"])), _col_iw_scl(CAST<Eigen::MatrixXd>(priors["col_iw_scl"])),
-		_row_prec(CAST<Eigen::VectorXd>(priors["row_prior_prec"])), _col_prec(CAST<Eigen::VectorXd>(priors["col_prior_prec"])),
-		_row_iw_df(CAST_DOUBLE(priors["row_iw_df"])), _col_iw_df(CAST_DOUBLE(priors["col_iw_df"])),
+		_row_mean(BVHAR_CAST<Eigen::MatrixXd>(priors["row_prior_mean"])), _row_iw_scl(BVHAR_CAST<Eigen::MatrixXd>(priors["row_iw_scl"])),
+		_col_mean(BVHAR_CAST<Eigen::MatrixXd>(priors["col_prior_mean"])), _col_iw_scl(BVHAR_CAST<Eigen::MatrixXd>(priors["col_iw_scl"])),
+		_row_prec(BVHAR_CAST<Eigen::VectorXd>(priors["row_prior_prec"])), _col_prec(BVHAR_CAST<Eigen::VectorXd>(priors["col_prior_prec"])),
+		_row_iw_df(BVHAR_CAST_DOUBLE(priors["row_iw_df"])), _col_iw_df(BVHAR_CAST_DOUBLE(priors["col_iw_df"])),
 		_row_row_coef(_row_mean.rows()), _row_col_coef(_col_mean.rows()) {}
 };
 
@@ -38,7 +38,7 @@ struct MatMniwRegParams : public MatMniwParams {
 
 	MatMniwRegParams(
 		int num_iter, std::vector<Eigen::SparseMatrix<double>>& x, std::vector<Eigen::MatrixXd>& y,
-		LIST& priors,
+		BVHAR_LIST& priors,
 		Optional<int> exogen_rows = NULLOPT, Optional<int> exogen_cols = NULLOPT,
 		Optional<int> factor_rows = NULLOPT, Optional<int> factor_cols = NULLOPT
 	)
@@ -54,11 +54,11 @@ struct MatMniwRegParams : public MatMniwParams {
 struct MatMniwInits {
 	Eigen::MatrixXd _init_row_coef, _init_row_lower, _init_col_coef, _init_col_lower;
 
-	MatMniwInits(LIST& init)
-	: _init_row_coef(CAST<Eigen::MatrixXd>(init["row_init_coef"])),
-		_init_row_lower(CAST<Eigen::MatrixXd>(init["row_init_lower"])),
-		_init_col_coef(CAST<Eigen::MatrixXd>(init["col_init_coef"])),
-		_init_col_lower(CAST<Eigen::MatrixXd>(init["col_init_lower"])) {}
+	MatMniwInits(BVHAR_LIST& init)
+	: _init_row_coef(BVHAR_CAST<Eigen::MatrixXd>(init["row_init_coef"])),
+		_init_row_lower(BVHAR_CAST<Eigen::MatrixXd>(init["row_init_lower"])),
+		_init_col_coef(BVHAR_CAST<Eigen::MatrixXd>(init["col_init_coef"])),
+		_init_col_lower(BVHAR_CAST<Eigen::MatrixXd>(init["col_init_lower"])) {}
 };
 
 struct MatMniwRecords {
@@ -132,15 +132,15 @@ struct MatMniwRecords {
 		}
 	}
 
-	LIST returnListRecords(
+	BVHAR_LIST returnListRecords(
 		int nrow_row_coef, int num_row, int nrow_row_exogen, int nrow_factor,
 		int nrow_col_coef, int num_col, int nrow_col_exogen, int ncol_factor
 	) {
-		LIST res = CREATE_LIST(
-			NAMED("A_record") = row_coef_record.leftCols(num_row * nrow_row_coef),
-			NAMED("SigmaR_record") = row_sigma_record,
-			NAMED("B_record") = col_coef_record.leftCols(num_col * nrow_col_coef),
-			NAMED("SigmaC_record") = col_sigma_record
+		BVHAR_LIST res = BVHAR_CREATE_LIST(
+			BVHAR_NAMED("A_record") = row_coef_record.leftCols(num_row * nrow_row_coef),
+			BVHAR_NAMED("SigmaR_record") = row_sigma_record,
+			BVHAR_NAMED("B_record") = col_coef_record.leftCols(num_col * nrow_col_coef),
+			BVHAR_NAMED("SigmaC_record") = col_sigma_record
 		);
 		if (nrow_row_exogen > 0) {
 			res["C_record"] = row_coef_record.middleCols(num_row * nrow_row_coef, num_row * nrow_row_exogen);
@@ -150,11 +150,11 @@ struct MatMniwRecords {
 			res["G_record"] = row_coef_record.rightCols(num_row * nrow_factor);
 			res["H_record"] = col_coef_record.rightCols(num_col * ncol_factor);
 		}
-		// return CREATE_LIST(
-		// 	NAMED("A_record") = row_coef_record,
-		// 	NAMED("SigmaR_record") = row_sigma_record,
-		// 	NAMED("B_record") = col_coef_record,
-		// 	NAMED("SigmaC_record") = col_sigma_record
+		// return BVHAR_CREATE_LIST(
+		// 	BVHAR_NAMED("A_record") = row_coef_record,
+		// 	BVHAR_NAMED("SigmaR_record") = row_sigma_record,
+		// 	BVHAR_NAMED("B_record") = col_coef_record,
+		// 	BVHAR_NAMED("SigmaC_record") = col_sigma_record
 		// );
 		return res;
 	}
@@ -178,31 +178,31 @@ inline MatMniwRecords MatMniwRecords::returnRecords(int num_iter, int num_burn, 
 }
 
 inline void initialize_matmniw_record(
-	std::unique_ptr<MatMniwRecords>& record, int chain_id, LIST& fit_record,
-	STRING& a_name, STRING& sigr_name, STRING& b_name, STRING& sigc_name,
-	Optional<STRING> c_name = NULLOPT, Optional<STRING> d_name = NULLOPT
+	std::unique_ptr<MatMniwRecords>& record, int chain_id, BVHAR_LIST& fit_record,
+	BVHAR_STRING& a_name, BVHAR_STRING& sigr_name, BVHAR_STRING& b_name, BVHAR_STRING& sigc_name,
+	Optional<BVHAR_STRING> c_name = NULLOPT, Optional<BVHAR_STRING> d_name = NULLOPT
 ) {
-	PY_LIST row_coef_list = fit_record[a_name];
-	PY_LIST row_sigma_list = fit_record[sigr_name];
-	PY_LIST col_coef_list = fit_record[b_name];
-	PY_LIST col_sigma_list = fit_record[sigc_name];
+	BVHAR_PY_LIST row_coef_list = fit_record[a_name];
+	BVHAR_PY_LIST row_sigma_list = fit_record[sigr_name];
+	BVHAR_PY_LIST col_coef_list = fit_record[b_name];
+	BVHAR_PY_LIST col_sigma_list = fit_record[sigc_name];
 	if (c_name && d_name) {
-		PY_LIST exogen_row_list = fit_record[*c_name];
-		PY_LIST exogen_col_list = fit_record[*d_name];
+		BVHAR_PY_LIST exogen_row_list = fit_record[*c_name];
+		BVHAR_PY_LIST exogen_col_list = fit_record[*d_name];
 		record = std::make_unique<MatMniwRecords>(
-			CAST<Eigen::MatrixXd>(row_coef_list[chain_id]),
-			CAST<Eigen::MatrixXd>(row_sigma_list[chain_id]),
-			CAST<Eigen::MatrixXd>(col_coef_list[chain_id]),
-			CAST<Eigen::MatrixXd>(col_sigma_list[chain_id]),
-			CAST<Eigen::MatrixXd>(exogen_row_list[chain_id]),
-			CAST<Eigen::MatrixXd>(exogen_col_list[chain_id])
+			BVHAR_CAST<Eigen::MatrixXd>(row_coef_list[chain_id]),
+			BVHAR_CAST<Eigen::MatrixXd>(row_sigma_list[chain_id]),
+			BVHAR_CAST<Eigen::MatrixXd>(col_coef_list[chain_id]),
+			BVHAR_CAST<Eigen::MatrixXd>(col_sigma_list[chain_id]),
+			BVHAR_CAST<Eigen::MatrixXd>(exogen_row_list[chain_id]),
+			BVHAR_CAST<Eigen::MatrixXd>(exogen_col_list[chain_id])
 		);
 	} else {
 		record = std::make_unique<MatMniwRecords>(
-			CAST<Eigen::MatrixXd>(row_coef_list[chain_id]),
-			CAST<Eigen::MatrixXd>(row_sigma_list[chain_id]),
-			CAST<Eigen::MatrixXd>(col_coef_list[chain_id]),
-			CAST<Eigen::MatrixXd>(col_sigma_list[chain_id])
+			BVHAR_CAST<Eigen::MatrixXd>(row_coef_list[chain_id]),
+			BVHAR_CAST<Eigen::MatrixXd>(row_sigma_list[chain_id]),
+			BVHAR_CAST<Eigen::MatrixXd>(col_coef_list[chain_id]),
+			BVHAR_CAST<Eigen::MatrixXd>(col_sigma_list[chain_id])
 		);
 	}
 }

@@ -14,41 +14,41 @@ struct MatGlInits;
 
 struct MatShrinkageParams {
 	MatShrinkageParams() {}
-	MatShrinkageParams(LIST& priors) {}
+	MatShrinkageParams(BVHAR_LIST& priors) {}
 };
 
 struct MatMinnParams : public MatShrinkageParams {
 	double _kappa;
 
-	MatMinnParams(LIST& priors)
+	MatMinnParams(BVHAR_LIST& priors)
 	: MatShrinkageParams(priors),
-		_kappa(CAST_DOUBLE(priors["kappa"])) {}
+		_kappa(BVHAR_CAST_DOUBLE(priors["kappa"])) {}
 };
 
 struct MatHierMinnParams : public MatShrinkageParams {
 	double _shp, _rate;
 
-	MatHierMinnParams(LIST& priors)
+	MatHierMinnParams(BVHAR_LIST& priors)
 	: MatShrinkageParams(priors),
-		_shp(CAST_DOUBLE(priors["shape"])),
-		_rate(CAST_DOUBLE(priors["rate"])) {}
+		_shp(BVHAR_CAST_DOUBLE(priors["shape"])),
+		_rate(BVHAR_CAST_DOUBLE(priors["rate"])) {}
 };
 
 struct MatShrinkageInits {
 	MatShrinkageInits() {}
-	MatShrinkageInits(LIST& init) {}
-	MatShrinkageInits(LIST& init, int num_design) {}
-	MatShrinkageInits(BHRNG& rng) {}
+	MatShrinkageInits(BVHAR_LIST& init) {}
+	MatShrinkageInits(BVHAR_LIST& init, int num_design) {}
+	MatShrinkageInits(BVHAR_BHRNG& rng) {}
 };
 
 struct MatHierMinnInits : public MatShrinkageInits {
 	double _kappa;
 
-	MatHierMinnInits(LIST& init)
+	MatHierMinnInits(BVHAR_LIST& init)
 	: MatShrinkageInits(init),
-		_kappa(CAST_DOUBLE(init["kappa"])) {}
+		_kappa(BVHAR_CAST_DOUBLE(init["kappa"])) {}
 	
-	MatHierMinnInits(BHRNG& rng)
+	MatHierMinnInits(BVHAR_BHRNG& rng)
 	: MatShrinkageInits(rng),
 		_kappa(bvhar::unif_rand(.001, 1, rng)) {}
 };
@@ -57,10 +57,10 @@ struct MatGlInits : public MatShrinkageInits {
 	Eigen::VectorXd _local;
 	double _global;
 	
-	MatGlInits(LIST& init)
+	MatGlInits(BVHAR_LIST& init)
 	: MatShrinkageInits(init),
-		_local(CAST<Eigen::VectorXd>(init["local_sparsity"])),
-		_global(CAST_DOUBLE(init["global_sparsity"])) {}
+		_local(BVHAR_CAST<Eigen::VectorXd>(init["local_sparsity"])),
+		_global(BVHAR_CAST_DOUBLE(init["global_sparsity"])) {}
 };
 
 } // namespace baymar

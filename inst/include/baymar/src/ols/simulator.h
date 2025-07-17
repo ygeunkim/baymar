@@ -64,7 +64,7 @@ public:
 	}
 	virtual ~MdfmSimulator() = default;
 
-	LIST returnDgp() {
+	BVHAR_LIST returnDgp() {
 		generateFactor();
 		// Eigen::MatrixXd factor_acc = std::accumulate(
 		// 	factor_mat.begin() + 1, factor_mat.end(), factor_mat[0],
@@ -87,9 +87,9 @@ public:
 			dgp_updater->appendError(pred);
 			res[i] = pred;
 		}
-		return CREATE_LIST(
-			NAMED("y") = WRAP(res),
-			NAMED("factor") = WRAP(factor_mat)
+		return BVHAR_CREATE_LIST(
+			BVHAR_NAMED("y") = BVHAR_WRAP(res),
+			BVHAR_NAMED("factor") = BVHAR_WRAP(factor_mat)
 		);
 	}
 

@@ -15,7 +15,7 @@ inline void draw_dfm_factor(std::vector<Eigen::MatrixXd>& factor_mat, int factor
 													  Eigen::Ref<Eigen::MatrixXd> fac_coef_diag, Eigen::Ref<Eigen::VectorXd> fac_lambda,
 													  Eigen::Ref<const Eigen::MatrixXd> row_coef, Eigen::Ref<const Eigen::MatrixXd> row_sig_lower,
 													  Eigen::Ref<const Eigen::MatrixXd> col_coef, Eigen::Ref<const Eigen::MatrixXd> col_sig_lower,
-													  std::vector<Eigen::MatrixXd>& y, BHRNG& rng) {
+													  std::vector<Eigen::MatrixXd>& y, BVHAR_BHRNG& rng) {
 	// Eigen::MatrixXd col_inv_sig_coef = col_sig_lower.triangularView<Eigen::Lower>().solve(col_coef);
 	// Eigen::MatrixXd row_inv_sig_coef = row_sig_lower.triangularView<Eigen::Lower>().solve(row_coef);
 	// Eigen::MatrixXd post_solve = bvhar::kronecker_eigen(
@@ -68,7 +68,7 @@ inline void draw_dfm_factor(std::vector<Eigen::MatrixXd>& factor_mat, int factor
 inline void draw_dfm_prec(Eigen::Ref<Eigen::VectorXd> fac_lambda, int factor_lag,
 													Eigen::Ref<Eigen::VectorXd> ig_shp, Eigen::Ref<Eigen::VectorXd> ig_scl,
 													std::vector<Eigen::MatrixXd>& factor_mat, Eigen::Ref<Eigen::MatrixXd> fac_coef_diag,
-													BHRNG& rng) {
+													BVHAR_BHRNG& rng) {
 	int num_design = factor_mat.size();
 	int rows_factor = factor_mat[0].rows();
 	int cols_factor = factor_mat[0].cols();
@@ -111,7 +111,7 @@ inline double compute_dfmcoef_logdens(Eigen::Ref<const Eigen::VectorXd> cand_coe
 inline void draw_dfm_coef(Eigen::Ref<Eigen::MatrixXd> fac_coef_diag, Eigen::Ref<Eigen::VectorXd> fac_lambda,
 													Eigen::Ref<Eigen::VectorXd> prior_mean, Eigen::Ref<Eigen::VectorXd> prior_prec,
 													std::vector<Eigen::MatrixXd>& factor_mat, int factor_lag,
-													BHRNG& rng) {
+													BVHAR_BHRNG& rng) {
 	int num_design = factor_mat.size() - factor_lag;
 	int num_coef = fac_coef_diag.rows(); // p1 * p2
 	int rows_factor = factor_mat[0].rows(); // p1
