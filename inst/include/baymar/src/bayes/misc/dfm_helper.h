@@ -91,7 +91,7 @@ inline void draw_dfm_prec(Eigen::Ref<Eigen::VectorXd> fac_lambda, int factor_lag
 													Eigen::Ref<Eigen::VectorXd> ig_shp, Eigen::Ref<Eigen::VectorXd> ig_scl,
 													std::vector<Eigen::MatrixXd>& factor_mat, Eigen::Ref<Eigen::MatrixXd> fac_coef_diag,
 													BVHAR_BHRNG& rng) {
-	int num_design = factor_mat.size();
+	int num_factor = factor_mat.size();
 	int rows_factor = factor_mat[0].rows();
 	double post_scl, coef_square, resid;
 	for (int i = 0; i < rows_factor * factor_mat[0].cols(); ++i) {
