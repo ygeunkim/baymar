@@ -9,7 +9,7 @@ inline void horseshoe_sparsity(
 	Eigen::Ref<Eigen::VectorXd> local_sparsity, double& global_sparsity, Eigen::Ref<Eigen::VectorXd> prec,
 	Eigen::Ref<Eigen::MatrixXd> coef, Eigen::Ref<Eigen::MatrixXd> sig_lower,
 	Eigen::Ref<Eigen::VectorXd> local_latent, double& global_latent,
-	BHRNG& rng
+	BVHAR_BHRNG& rng
 ) {
 	int col_coef = coef.cols();
 	Eigen::MatrixXd inv_sig_coef = sig_lower.triangularView<Eigen::Lower>().solve(coef.transpose());

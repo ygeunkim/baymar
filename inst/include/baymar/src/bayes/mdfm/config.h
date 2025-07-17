@@ -17,20 +17,20 @@ struct MatDfmVarRecords;
 struct MatDfmParams : public MatMniwParams {
 	int _nrow_factor, _ncol_factor, _size_factor, _lag;
 
-	MatDfmParams(int num_iter, std::vector<Eigen::MatrixXd>& y, LIST& priors)
+	MatDfmParams(int num_iter, std::vector<Eigen::MatrixXd>& y, BVHAR_LIST& priors)
 	: MatMniwParams(num_iter, y, priors),
-		_nrow_factor(CAST_INT(priors["nrow_factor"])), _ncol_factor(CAST_INT(priors["ncol_factor"])), _size_factor(_nrow_factor * _ncol_factor),
-		_lag(CAST_INT(priors["lag"])) {}
+		_nrow_factor(BVHAR_CAST_INT(priors["nrow_factor"])), _ncol_factor(BVHAR_CAST_INT(priors["ncol_factor"])), _size_factor(_nrow_factor * _ncol_factor),
+		_lag(BVHAR_CAST_INT(priors["lag"])) {}
 };
 
 struct MatDfmVarParams : public MatDfmParams {
 	Eigen::VectorXd _sig_shp, _sig_scl;
 	Eigen::VectorXd _mean, _prec;
 
-	MatDfmVarParams(int num_iter, std::vector<Eigen::MatrixXd>& y, LIST& priors)
+	MatDfmVarParams(int num_iter, std::vector<Eigen::MatrixXd>& y, BVHAR_LIST& priors)
 	: MatDfmParams(num_iter, y, priors),
-		_sig_shp(CAST<Eigen::VectorXd>(priors["shape"])),
-		_sig_scl(CAST<Eigen::VectorXd>(priors["scale"])),
+		_sig_shp(BVHAR_CAST<Eigen::VectorXd>(priors["shape"])),
+		_sig_scl(BVHAR_CAST<Eigen::VectorXd>(priors["scale"])),
 		_mean(Eigen::VectorXd::Zero(_lag)), _prec(Eigen::VectorXd::Ones(_lag)) {}
 };
 
@@ -38,10 +38,10 @@ struct MatDfmVarInits : public MatMniwInits {
 	Eigen::MatrixXd _init_factor_coef;
 	Eigen::VectorXd _init_factor_prec;
 
-	MatDfmVarInits(LIST& init)
+	MatDfmVarInits(BVHAR_LIST& init)
 	: MatMniwInits(init),
-		_init_factor_coef(CAST<Eigen::MatrixXd>(init["factor_arcoef_init"])),
-		_init_factor_prec(CAST<Eigen::VectorXd>(init["factor_arprec_init"])) {}
+		_init_factor_coef(BVHAR_CAST<Eigen::MatrixXd>(init["factor_arcoef_init"])),
+		_init_factor_prec(BVHAR_CAST<Eigen::VectorXd>(init["factor_arprec_init"])) {}
 };
 
 struct MatDfmRecords : public MatMniwRecords {
@@ -94,13 +94,13 @@ struct MatDfmRecords : public MatMniwRecords {
 		int num_design, int size_factor
 	) = 0;
 
-	LIST returnListRecords(int nrow_row_coef, int num_row, int nrow_col_coef, int num_col, int num_design, int size_factor) {
-		LIST res = MatMniwRecords::returnListRecords(nrow_row_coef, num_row, 0, 0, nrow_col_coef, num_col, 0, 0);
+	BVHAR_LIST returnListRecords(int nrow_row_coef, int num_row, int nrow_col_coef, int num_col, int num_design, int size_factor) {
+		BVHAR_LIST res = MatMniwRecords::returnListRecords(nrow_row_coef, num_row, 0, 0, nrow_col_coef, num_col, 0, 0);
 		// res["F_record"] = factor_record;
 		return res;
 	}
 
-	virtual void appendRecords(LIST& list) {
+	virtual void appendRecords(BVHAR_LIST& list) {
 		list["F_record"] = factor_record;
 	}
 
@@ -164,7 +164,7 @@ struct MatDfmVarRecords : public MatDfmRecords {
 		factor_prec_record.row(id) = factor_prec;
 	}
 
-	void appendRecords(LIST& list) override {
+	void appendRecords(BVHAR_LIST& list) override {
 		list["F_record"] = factor_record;
 		list["Rho_record"] = factor_coef_record;
 		list["Lambda_record"] = factor_prec_record;
