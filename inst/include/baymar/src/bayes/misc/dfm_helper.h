@@ -129,6 +129,38 @@ inline double compute_dfmcoef_logdens(Eigen::Ref<const Eigen::VectorXd> cand_coe
 }
 
 /**
+ * @brief Build response and design for factor linear equation
+ * 
+ * f_{j,k} = F_{j,k} rho_{j,k} + u_{j,k}
+ * 
+ * @param factor_response Vector f_{j,k} = (f_{j,k, s + 1}, ..., f_{j,k, T})^T
+ * @param factor_design Matrix F_{j,k} = rbind((f_{j,k,1}, ... f_{j,k,s}), (f_{j,k,2}, ... f_{j,k,s + 1}), ..., (f_{j,k,T-s}, ... f_{j,k,T}))
+ * @param row_id j
+ * @param col_id k
+ * @param factor_mat F_t
+ * @param factor_lag s
+ */
+inline void build_factor_lin(Eigen::Ref<Eigen::VectorXd> factor_response, Eigen::Ref<Eigen::MatrixXd> factor_design,
+														 int row_id, int col_id,
+														 std::vector<Eigen::MatrixXd>& factor_mat, int factor_lag, int num_design) {
+	// for (int i = 0; i < num_design; ++i) {
+	// 	factor_response[i] = factor_mat[i + factor_lag](row_id, col_id);
+	// 	for (int j = 0; j < factor_lag; ++j) {
+	// 		factor_design(i, j) = factor_mat[i + j](row_id, col_id);
+	// 	}
+	// }
+	int len_factor_series = factor_mat.size();
+	Eigen::VectorXd full_fjk(len_factor_series); // (f_{j,k, 1}, ..., f_{j,k, T})^T
+	for (int i = 0; i < len_factor_series; ++i) {
+		full_fjk[i] = factor_mat[i](row_id, col_id);
+	}
+	factor_response = full_fjk.tail(num_design);
+	for (int i = 0; i < num_design; ++i) {
+		factor_design.row(i) = full_fjk.segment(i, factor_lag);
+	}
+}
+
+/**
  * @brief Draw factor model coefficient
  * 
  * @param fac_coef_diag Each column is the j-th lag coefficient diagonal: p1*p2 x s dimension matrix from H_i = diag(rho_{1, i}, ..., rho_{p1 * p2, i})
@@ -156,15 +188,8 @@ inline void draw_dfm_coef(Eigen::Ref<Eigen::MatrixXd> fac_coef_diag, Eigen::Ref<
 	for (int i = 0; i < num_coef; ++i) {
 		int row_id = i % rows_factor;
 		int col_id = i / rows_factor;
-		for (int j = 0; j < num_design; ++j) {
-			// ambiguous if factor_response and factor_design is updated correctly
-			// How about std::accumulate to use the same (j, k) index?
-			factor_response[j] = factor_mat[j + factor_lag](row_id, col_id);
-			for (int k = 0; k < factor_lag; ++k) {
-				factor_design(j, k) = factor_mat[j + k](row_id, col_id);
-			}
-		}
-		llt_of_prec.compute(prior_prec.asDiagonal().toDenseMatrix() + factor_design.transpose() * factor_design / fac_lambda[i]);
+		build_factor_lin(factor_response, factor_design, row_id, col_id, factor_mat, factor_lag, num_design);
+		llt_of_prec.compute((prior_prec.asDiagonal().toDenseMatrix() + factor_design.transpose() * factor_design / fac_lambda[i]).selfadjointView<Eigen::Lower>());
 		post_mean = llt_of_prec.solve(prior_prec.cwiseProduct(prior_mean) + factor_design.transpose() * factor_response / fac_lambda[i]);
 		for (int j = 0; j < factor_lag; ++j) {
 			normal_vector[j] = bvhar::normal_rand(rng);
