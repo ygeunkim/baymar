@@ -85,11 +85,10 @@ inline void draw_dfm_prec(Eigen::Ref<Eigen::VectorXd> fac_lambda, int factor_lag
 													Eigen::Ref<Eigen::VectorXd> ig_shp, Eigen::Ref<Eigen::VectorXd> ig_scl,
 													std::vector<Eigen::MatrixXd>& factor_mat, Eigen::Ref<Eigen::MatrixXd> fac_coef_diag,
 													BHRNG& rng) {
-	int num_design = factor_mat.size();
+	int num_factor = factor_mat.size();
 	int rows_factor = factor_mat[0].rows();
-	int cols_factor = factor_mat[0].cols();
 	double post_scl, coef_square, resid;
-	for (int i = 0; i < rows_factor * cols_factor; ++i) {
+	for (int i = 0; i < rows_factor * factor_mat[0].cols(); ++i) {
 		int row_id = i % rows_factor;
 		int col_id = i / rows_factor;
 		post_scl = ig_scl[i];
@@ -99,14 +98,14 @@ inline void draw_dfm_prec(Eigen::Ref<Eigen::VectorXd> fac_lambda, int factor_lag
 			post_scl += factor_mat[j](row_id, col_id) * factor_mat[j](row_id, col_id) * coef_square / 2;
 		}
 		// 2) t = p + s + 1, ..., T => sum_t (f_{jk, t} - rho_{jk, 1} f_{jk, t - 1} - ... - rho_{jk, s} f_{jk, t - s})^2
-		for (int j = factor_lag; j < num_design; ++j) {
+		for (int j = factor_lag; j < num_factor; ++j) {
 			resid = factor_mat[j](row_id, col_id);
 			for (int l = 0; l < factor_lag; ++l) {
 				resid -= fac_coef_diag(i, l) * factor_mat[j - l - 1](row_id, col_id);
 			}
 			post_scl += resid * resid / 2;
 		}
-		fac_lambda[i] = 1 / bvhar::gamma_rand(ig_shp[i] + num_design / 2, 1 / post_scl, rng);
+		fac_lambda[i] = 1 / bvhar::gamma_rand(ig_shp[i] + num_factor / 2, 1 / post_scl, rng);
 	}
 }
 
@@ -149,9 +148,9 @@ inline void build_factor_lin(Eigen::Ref<Eigen::VectorXd> factor_response, Eigen:
 	// 		factor_design(i, j) = factor_mat[i + j](row_id, col_id);
 	// 	}
 	// }
-	int len_factor_series = factor_mat.size();
-	Eigen::VectorXd full_fjk(len_factor_series); // (f_{j,k, 1}, ..., f_{j,k, T})^T
-	for (int i = 0; i < len_factor_series; ++i) {
+	int num_factor = factor_mat.size();
+	Eigen::VectorXd full_fjk(num_factor); // (f_{j,k, 1}, ..., f_{j,k, T})^T
+	for (int i = 0; i < num_factor; ++i) {
 		full_fjk[i] = factor_mat[i](row_id, col_id);
 	}
 	factor_response = full_fjk.tail(num_design);
