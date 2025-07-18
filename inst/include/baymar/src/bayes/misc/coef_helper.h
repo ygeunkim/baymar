@@ -59,8 +59,7 @@ inline void draw_coef_sig(
 			coef(i, j) = bvhar::normal_rand(rng); // MN(0, I_n, I_k)
 		}
 	}
-	coef = llt_of_prec.matrixU().solve(coef * sig_lower.transpose());
-	coef += post_mean;
+	coef = llt_of_prec.matrixU().solve(coef * sig_lower.transpose()) + post_mean;
 }
 
 } // namespace baymar
