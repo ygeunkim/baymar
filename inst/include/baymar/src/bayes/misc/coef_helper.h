@@ -51,15 +51,15 @@ inline void draw_coef_sig(
 	}
 	Eigen::LLT<Eigen::MatrixXd> llt_of_prec(post_cov.selfadjointView<Eigen::Lower>());
 	Eigen::MatrixXd post_mean = llt_of_prec.solve(post_solve);
+	post_iw_scl -= post_mean.transpose() * post_cov * post_mean;
 	double post_df = iw_df + num_mat * other_dim;
 	sig_lower = bvhar::sim_iw_tri(post_iw_scl, post_df, rng);
-	for (int j = 0; j < prior_mean.cols(); ++j) {
-		for (int i = 0; i < prior_mean.rows(); ++i) {
-			coef(i, j) = bvhar::normal_rand(rng);
+	for (int i = 0; i < prior_mean.rows(); ++i) {
+		for (int j = 0; j < prior_mean.cols(); ++j) {
+			coef(i, j) = bvhar::normal_rand(rng); // MN(0, I_n, I_k)
 		}
 	}
-	coef = llt_of_prec.matrixU().solve(coef * sig_lower.transpose());
-	coef += post_mean;
+	coef = llt_of_prec.matrixU().solve(coef * sig_lower.transpose()) + post_mean;
 }
 
 } // namespace baymar
