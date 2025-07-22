@@ -26,6 +26,7 @@ public:
 		row_updater(std::move(row_updater)), col_updater(std::move(col_updater)),
 		row_coef(inits._init_row_coef), row_sig_lower(inits._init_row_lower),
 		col_coef(inits._init_col_coef), col_sig_lower(inits._init_col_lower),
+		mniw_record(std::make_unique<MatMniwRecords>(num_iter, num_row, num_col, row_coef.rows(), col_coef.rows())),
 		// mdfm_record(std::make_unique<MatDfmRecords>(num_iter, num_row, num_col, nrow_row_coef, nrow_col_coef, num_design, size_factor)),
 		row_prior_mean(params._row_mean), row_iw_scl(params._row_iw_scl),
 		col_prior_mean(params._col_mean), col_iw_scl(params._col_iw_scl),
@@ -73,7 +74,8 @@ public:
 
 	BVHAR_LIST returnRecords(int num_burn, int thin) override {
 		BVHAR_DEBUG_LOG(debug_logger, "returnRecords(num_burn={}, thin={}) called", num_burn, thin);
-		BVHAR_LIST res = mdfm_record->returnListRecords(nrow_row_coef, num_row, nrow_col_coef, num_col, num_design, size_factor);
+		// BVHAR_LIST res = mdfm_record->returnListRecords(nrow_row_coef, num_row, nrow_col_coef, num_col, num_design, size_factor);
+		BVHAR_LIST res = mniw_record->returnListRecords(nrow_row_coef, num_row, 0, 0, nrow_col_coef, num_col, 0, 0);
 		mdfm_record->appendRecords(res);
 		for (auto& record : res) {
 			if (BVHAR_IS_MATRIX(BVHAR_ACCESS_LIST(record, res))) {
@@ -83,6 +85,10 @@ public:
 			}
 		}
 		return res;
+	}
+
+	MatMniwRecords returnMniwRecords(int num_burn, int thin) const {
+		return mniw_record->returnRecords<MatMniwRecords>(num_iter, num_burn, thin);
 	}
 
 	template <typename RecordType>
@@ -99,6 +105,7 @@ protected:
 	std::unique_ptr<MatShrinkageUpdater> row_updater;
 	std::unique_ptr<MatShrinkageUpdater> col_updater;
 	Eigen::MatrixXd row_coef, row_sig_lower, col_coef, col_sig_lower;
+	std::unique_ptr<MatMniwRecords> mniw_record;
 	std::unique_ptr<MatDfmRecords> mdfm_record;
 	Eigen::MatrixXd row_prior_mean, row_iw_scl;
 	Eigen::MatrixXd col_prior_mean, col_iw_scl;
@@ -143,7 +150,17 @@ protected:
 		);
 	}
 
-	virtual void updateRecords() = 0;
+	void updateRecords() {
+		BVHAR_DEBUG_LOG(debug_logger, "updateRecords() called");
+		mniw_record->assignRecords(
+			mcmc_step, row_coef, row_sig_lower, col_coef, col_sig_lower,
+			nrow_row_coef, num_row, 0, 0,
+			nrow_col_coef, num_col, 0, 0
+		);
+		updateDfmRecords();
+	}
+
+	virtual void updateDfmRecords() = 0;
 };
 
 class McmcMatDfmVar : public McmcMatDfm {
@@ -181,8 +198,8 @@ protected:
 		draw_dfm_coef(factor_coef, factor_prec, prior_mean, prior_prec, factor_mat, lag, rng);
 	}
 
-	void updateRecords() override {
-		BVHAR_DEBUG_LOG(debug_logger, "updateRecords() called");
+	void updateDfmRecords() override {
+		BVHAR_DEBUG_LOG(debug_logger, "updateDfmRecords() called");
 		mdfm_record->assignRecords(
 			mcmc_step, row_coef, row_sig_lower, col_coef, col_sig_lower,
 			factor_mat, factor_coef, factor_prec,
