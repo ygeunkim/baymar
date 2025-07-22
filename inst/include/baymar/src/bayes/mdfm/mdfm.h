@@ -181,7 +181,7 @@ public:
 			ig_shp.size(), ig_scl.size(),
 			prior_mean.size(), prior_prec.size()
 		);
-		mdfm_record = std::make_unique<MatDfmVarRecords>(num_iter, num_row, num_col, nrow_row_coef, nrow_col_coef, num_design, size_factor, lag);
+		mdfm_record = std::make_unique<MatDfmVarRecords>(num_iter, num_design, size_factor, lag);
 	}
 	virtual ~McmcMatDfmVar() = default;
 
@@ -201,9 +201,8 @@ protected:
 	void updateDfmRecords() override {
 		BVHAR_DEBUG_LOG(debug_logger, "updateDfmRecords() called");
 		mdfm_record->assignRecords(
-			mcmc_step, row_coef, row_sig_lower, col_coef, col_sig_lower,
+			mcmc_step,
 			factor_mat, factor_coef, factor_prec,
-			nrow_row_coef, num_row, nrow_col_coef, num_col,
 			num_design, size_factor
 		);
 	}
