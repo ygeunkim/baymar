@@ -68,16 +68,18 @@ public:
 	// 	prec_record.row(id) = dfm_prec;
 	// }
 
-	// void appendRecords(BVHAR_LIST& list) override {
-	// 	list["F_record"] = factor_record;
-	// 	list["Rho_record"] = coef_record;
-	// 	list["Lambda_record"] = prec_record;
-	// }
+	void appendRecords(BVHAR_LIST& list) override {
+		// list["F_record"] = factor_record;
+		// list["Rho_record"] = coef_record;
+		// list["Lambda_record"] = prec_record;
+		mdfm_record->appendRecords(list);
+	}
 	
 protected:
 	int nrow_factor, ncol_factor, size_factor, lag, num_design;
 	std::vector<Eigen::MatrixXd> resid;
 	std::vector<Eigen::MatrixXd> factor_mat; // F_{p + 1}, ..., F_t
+	std::unique_ptr<MatDfmRecords> mdfm_record;
 };
 
 class MatFactorVarAugmenter : public MatFactorAugmenter {
@@ -85,10 +87,8 @@ public:
 	MatFactorVarAugmenter(int num_iter, int num_design, const MatDfmVarParams& params, const MatDfmVarInits& inits)
 	: MatFactorAugmenter(num_iter, num_design, params),
 		dfm_coef(inits._init_factor_coef), dfm_prec(inits._init_factor_prec),
-		ig_shp(params._sig_shp), ig_scl(params._sig_scl), prior_mean(params._mean), prior_prec(params._prec),
-		factor_record(Eigen::MatrixXd::Zero(num_iter + 1, num_design * size_factor)),
-		coef_record(Eigen::MatrixXd::Zero(num_iter + 1, size_factor * lag)),
-		prec_record(Eigen::MatrixXd::Zero(num_iter + 1, size_factor)) {
+		ig_shp(params._sig_shp), ig_scl(params._sig_scl), prior_mean(params._mean), prior_prec(params._prec) {
+		mdfm_record = std::make_unique<MatDfmVarRecords>(num_iter, num_design, size_factor, lag);
 		// use ShrinkageUpdater for prior_prec later!
 	}
 	virtual ~MatFactorVarAugmenter() = default;
@@ -109,18 +109,11 @@ public:
 	}
 
 	void updateRecords(int id) override {
-		for (int i = 0; i < num_design; ++i) {
-			// f_{11, p + 1}, f_{21, p + 1}, ..., f_{p1p2, p + 1}, f_{11, p + 2}, ..., f_{p1p2, T}
-			factor_record.row(id).segment(i * size_factor, size_factor) = factor_mat[i].reshaped();
-		}
-		coef_record.row(id) = dfm_coef.reshaped();
-		prec_record.row(id) = dfm_prec;
-	}
-
-	void appendRecords(BVHAR_LIST& list) override {
-		list["F_record"] = factor_record;
-		list["Rho_record"] = coef_record;
-		list["Lambda_record"] = prec_record;
+		mdfm_record->assignRecords(
+			id,
+			factor_mat, dfm_coef, dfm_prec,
+			num_design, size_factor
+		);
 	}
 
 private:
@@ -128,7 +121,6 @@ private:
 	Eigen::VectorXd dfm_prec; // lambda_{1, 1}, ..., lambda_{p1, p2}
 	Eigen::VectorXd ig_shp, ig_scl;
 	Eigen::VectorXd prior_mean, prior_prec;
-	Eigen::MatrixXd factor_record, coef_record, prec_record;
 };
 
 } // namespace baymar
