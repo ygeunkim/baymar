@@ -1,6 +1,7 @@
 #ifndef BAYMAR_BAYES_MDFM_MDFM_H
 #define BAYMAR_BAYES_MDFM_MDFM_H
 
+#include "../mniw/config.h"
 #include "./config.h"
 // #include "../shrinkage/shrinkage.h"
 
@@ -13,24 +14,26 @@ template <typename BaseDfm> class MatDfmRun;
 class McmcMatDfm : public bvhar::McmcAlgo {
 public:
 	McmcMatDfm(
-		const MatDfmParams& params, const MatMniwInits& inits,
+		const MatMniwParams& mniw_params, const MatMniwInits& mniw_inits,
+		const MatDfmParams& params,
 		std::unique_ptr<MatShrinkageUpdater>& row_updater, std::unique_ptr<MatShrinkageUpdater>& col_updater,
 		unsigned int seed
 	)
-	: bvhar::McmcAlgo(params, seed),
+	: bvhar::McmcAlgo(mniw_params, seed),
 		nrow_factor(params._nrow_factor), ncol_factor(params._ncol_factor), size_factor(params._size_factor),
-		lag(params._lag), num_design(params._design),
-		num_row(params._row), num_col(params._col),
-		nrow_row_coef(params._row_row_coef), nrow_col_coef(params._row_col_coef),
-		y(params._y), /*x(num_design),*/ factor_mat(num_design),
+		lag(params._lag), num_design(mniw_params._design),
+		num_row(mniw_params._row), num_col(mniw_params._col),
+		nrow_row_coef(mniw_params._row_row_coef), nrow_col_coef(mniw_params._row_col_coef),
+		y(mniw_params._y), /*x(num_design),*/ factor_mat(num_design),
 		row_updater(std::move(row_updater)), col_updater(std::move(col_updater)),
-		row_coef(inits._init_row_coef), row_sig_lower(inits._init_row_lower),
-		col_coef(inits._init_col_coef), col_sig_lower(inits._init_col_lower),
+		row_coef(mniw_inits._init_row_coef), row_sig_lower(mniw_inits._init_row_lower),
+		col_coef(mniw_inits._init_col_coef), col_sig_lower(mniw_inits._init_col_lower),
+		mniw_record(std::make_unique<MatMniwRecords>(num_iter, num_row, num_col, row_coef.rows(), col_coef.rows())),
 		// mdfm_record(std::make_unique<MatDfmRecords>(num_iter, num_row, num_col, nrow_row_coef, nrow_col_coef, num_design, size_factor)),
-		row_prior_mean(params._row_mean), row_iw_scl(params._row_iw_scl),
-		col_prior_mean(params._col_mean), col_iw_scl(params._col_iw_scl),
-		row_prior_prec(params._row_prec), col_prior_prec(params._col_prec),
-		row_iw_df(params._row_iw_df), col_iw_df(params._col_iw_df) {
+		row_prior_mean(mniw_params._row_mean), row_iw_scl(mniw_params._row_iw_scl),
+		col_prior_mean(mniw_params._col_mean), col_iw_scl(mniw_params._col_iw_scl),
+		row_prior_prec(mniw_params._row_prec), col_prior_prec(mniw_params._col_prec),
+		row_iw_df(mniw_params._row_iw_df), col_iw_df(mniw_params._col_iw_df) {
 		BVHAR_DEBUG_LOG(
 			debug_logger,
 			"McmcMatDfm Constructor: row_coef: {} x {}, row_sig_lower: {} x {}, row_prior_mean: {} x {}, row_prior_prec: {}",
@@ -73,7 +76,8 @@ public:
 
 	BVHAR_LIST returnRecords(int num_burn, int thin) override {
 		BVHAR_DEBUG_LOG(debug_logger, "returnRecords(num_burn={}, thin={}) called", num_burn, thin);
-		BVHAR_LIST res = mdfm_record->returnListRecords(nrow_row_coef, num_row, nrow_col_coef, num_col, num_design, size_factor);
+		// BVHAR_LIST res = mdfm_record->returnListRecords(nrow_row_coef, num_row, nrow_col_coef, num_col, num_design, size_factor);
+		BVHAR_LIST res = mniw_record->returnListRecords(nrow_row_coef, num_row, 0, 0, nrow_col_coef, num_col, 0, 0);
 		mdfm_record->appendRecords(res);
 		for (auto& record : res) {
 			if (BVHAR_IS_MATRIX(BVHAR_ACCESS_LIST(record, res))) {
@@ -83,6 +87,10 @@ public:
 			}
 		}
 		return res;
+	}
+
+	MatMniwRecords returnMniwRecords(int num_burn, int thin) const {
+		return mniw_record->returnRecords<MatMniwRecords>(num_iter, num_burn, thin);
 	}
 
 	template <typename RecordType>
@@ -99,6 +107,7 @@ protected:
 	std::unique_ptr<MatShrinkageUpdater> row_updater;
 	std::unique_ptr<MatShrinkageUpdater> col_updater;
 	Eigen::MatrixXd row_coef, row_sig_lower, col_coef, col_sig_lower;
+	std::unique_ptr<MatMniwRecords> mniw_record;
 	std::unique_ptr<MatDfmRecords> mdfm_record;
 	Eigen::MatrixXd row_prior_mean, row_iw_scl;
 	Eigen::MatrixXd col_prior_mean, col_iw_scl;
@@ -143,17 +152,28 @@ protected:
 		);
 	}
 
-	virtual void updateRecords() = 0;
+	void updateRecords() {
+		BVHAR_DEBUG_LOG(debug_logger, "updateRecords() called");
+		mniw_record->assignRecords(
+			mcmc_step, row_coef, row_sig_lower, col_coef, col_sig_lower,
+			nrow_row_coef, num_row, 0, 0,
+			nrow_col_coef, num_col, 0, 0
+		);
+		updateDfmRecords();
+	}
+
+	virtual void updateDfmRecords() = 0;
 };
 
 class McmcMatDfmVar : public McmcMatDfm {
 public:
 	McmcMatDfmVar(
+		const MatMniwParams& mniw_params, const MatMniwInits& mniw_inits,
 		const MatDfmVarParams& params, const MatDfmVarInits& inits,
 		std::unique_ptr<MatShrinkageUpdater>& row_updater, std::unique_ptr<MatShrinkageUpdater>& col_updater,
 		unsigned int seed
 	)
-	: McmcMatDfm(params, inits, row_updater, col_updater, seed),
+	: McmcMatDfm(mniw_params, mniw_inits, params, row_updater, col_updater, seed),
 		ig_shp(params._sig_shp), ig_scl(params._sig_scl),
 		prior_mean(params._mean), prior_prec(params._prec),
 		factor_coef(inits._init_factor_coef), factor_prec(inits._init_factor_prec) {
@@ -164,7 +184,7 @@ public:
 			ig_shp.size(), ig_scl.size(),
 			prior_mean.size(), prior_prec.size()
 		);
-		mdfm_record = std::make_unique<MatDfmVarRecords>(num_iter, num_row, num_col, nrow_row_coef, nrow_col_coef, num_design, size_factor, lag);
+		mdfm_record = std::make_unique<MatDfmVarRecords>(num_iter, num_design, size_factor, lag);
 	}
 	virtual ~McmcMatDfmVar() = default;
 
@@ -181,12 +201,11 @@ protected:
 		draw_dfm_coef(factor_coef, factor_prec, prior_mean, prior_prec, factor_mat, lag, rng);
 	}
 
-	void updateRecords() override {
-		BVHAR_DEBUG_LOG(debug_logger, "updateRecords() called");
+	void updateDfmRecords() override {
+		BVHAR_DEBUG_LOG(debug_logger, "updateDfmRecords() called");
 		mdfm_record->assignRecords(
-			mcmc_step, row_coef, row_sig_lower, col_coef, col_sig_lower,
+			mcmc_step,
 			factor_mat, factor_coef, factor_prec,
-			nrow_row_coef, num_row, nrow_col_coef, num_col,
 			num_design, size_factor
 		);
 	}
@@ -209,18 +228,20 @@ inline std::vector<std::unique_ptr<McmcMatDfm>> initialize_matdfm(
 ) {
 	using PARAMS = typename std::conditional<std::is_same<BaseDfm, McmcMatDfmVar>::value, MatDfmVarParams, MatDfmParams>::type;
 	using INITS = typename std::conditional<std::is_same<BaseDfm, McmcMatDfmVar>::value, MatDfmVarInits, MatMniwInits>::type;
-	PARAMS params(num_iter, y, param_dfm);
+	MatMniwParams mniw_params(num_iter, y, param_dfm);
+	PARAMS params(param_dfm);
 	std::vector<std::unique_ptr<McmcMatDfm>> mcmc_ptr(num_chains);
 	for (int i = 0; i < num_chains; ++i) {
 		BVHAR_LIST row_init_spec = row_init[i];
 		BVHAR_LIST col_init_spec = col_init[i];
 		auto row_updater = initialize_matshrinkageupdater(num_iter, row_prior, row_init_spec, row_prior_type);
 		auto col_updater = initialize_matshrinkageupdater(num_iter, col_prior, col_init_spec, col_prior_type);
-		row_updater->initPrec(params._row_prec.head(params._row_row_coef));
-		col_updater->initPrec(params._col_prec.head(params._row_col_coef));
+		row_updater->initPrec(mniw_params._row_prec.head(mniw_params._row_row_coef));
+		col_updater->initPrec(mniw_params._col_prec.head(mniw_params._row_col_coef));
 		BVHAR_LIST init_spec = dfm_init[i];
+		MatMniwInits mniw_inits(init_spec);
 		INITS inits(init_spec);
-		mcmc_ptr[i] = std::make_unique<BaseDfm>(params, inits, row_updater, col_updater, static_cast<unsigned int>(seed_chain[i]));
+		mcmc_ptr[i] = std::make_unique<BaseDfm>(mniw_params, mniw_inits, params, inits, row_updater, col_updater, static_cast<unsigned int>(seed_chain[i]));
 	}
 	return mcmc_ptr;
 }
