@@ -14,12 +14,11 @@ struct MatDfmVarInits;
 struct MatDfmRecords;
 struct MatDfmVarRecords;
 
-struct MatDfmParams : public MatMniwParams {
+struct MatDfmParams {
 	int _nrow_factor, _ncol_factor, _size_factor, _lag;
 
-	MatDfmParams(int num_iter, std::vector<Eigen::MatrixXd>& y, BVHAR_LIST& priors)
-	: MatMniwParams(num_iter, y, priors),
-		_nrow_factor(BVHAR_CAST_INT(priors["nrow_factor"])), _ncol_factor(BVHAR_CAST_INT(priors["ncol_factor"])), _size_factor(_nrow_factor * _ncol_factor),
+	MatDfmParams(BVHAR_LIST& priors)
+	: _nrow_factor(BVHAR_CAST_INT(priors["nrow_factor"])), _ncol_factor(BVHAR_CAST_INT(priors["ncol_factor"])), _size_factor(_nrow_factor * _ncol_factor),
 		_lag(BVHAR_CAST_INT(priors["lag"])) {}
 };
 
@@ -27,8 +26,8 @@ struct MatDfmVarParams : public MatDfmParams {
 	Eigen::VectorXd _sig_shp, _sig_scl;
 	Eigen::VectorXd _mean, _prec;
 
-	MatDfmVarParams(int num_iter, std::vector<Eigen::MatrixXd>& y, BVHAR_LIST& priors)
-	: MatDfmParams(num_iter, y, priors),
+	MatDfmVarParams(BVHAR_LIST& priors)
+	: MatDfmParams(priors),
 		_sig_shp(BVHAR_CAST<Eigen::VectorXd>(priors["shape"])),
 		_sig_scl(BVHAR_CAST<Eigen::VectorXd>(priors["scale"])),
 		_mean(Eigen::VectorXd::Zero(_lag)), _prec(Eigen::VectorXd::Ones(_lag)) {}
