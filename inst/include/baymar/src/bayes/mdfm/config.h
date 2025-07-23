@@ -17,6 +17,10 @@ struct MatDfmVarRecords;
 struct MatDfmParams {
 	int _nrow_factor, _ncol_factor, _size_factor, _lag;
 
+	MatDfmParams(int lag, int nrow_factor, int ncol_factor)
+	: _nrow_factor(nrow_factor), _ncol_factor(ncol_factor), _size_factor(_nrow_factor * _ncol_factor),
+		_lag(lag) {}
+
 	MatDfmParams(BVHAR_LIST& priors)
 	: _nrow_factor(BVHAR_CAST_INT(priors["nrow_factor"])), _ncol_factor(BVHAR_CAST_INT(priors["ncol_factor"])), _size_factor(_nrow_factor * _ncol_factor),
 		_lag(BVHAR_CAST_INT(priors["lag"])) {}
@@ -25,6 +29,12 @@ struct MatDfmParams {
 struct MatDfmVarParams : public MatDfmParams {
 	Eigen::VectorXd _sig_shp, _sig_scl;
 	Eigen::VectorXd _mean, _prec;
+
+	MatDfmVarParams(int lag, int nrow_factor, int ncol_factor)
+	: MatDfmParams(lag, nrow_factor, ncol_factor),
+		_sig_shp(Eigen::VectorXd::Constant(_size_factor, 2.0)),
+		_sig_scl(Eigen::VectorXd::Ones(_size_factor)),
+		_mean(Eigen::VectorXd::Zero(_lag)), _prec(Eigen::VectorXd::Ones(_lag)) {}
 
 	MatDfmVarParams(BVHAR_LIST& priors)
 	: MatDfmParams(priors),
@@ -36,6 +46,10 @@ struct MatDfmVarParams : public MatDfmParams {
 struct MatDfmVarInits {
 	Eigen::MatrixXd _init_factor_coef;
 	Eigen::VectorXd _init_factor_prec;
+
+	MatDfmVarInits(int size_factor, int lag)
+	: _init_factor_coef(Eigen::MatrixXd::Zero(size_factor, lag)),
+		_init_factor_prec(Eigen::VectorXd::Ones(size_factor)) {}
 
 	MatDfmVarInits(BVHAR_LIST& init)
 	: _init_factor_coef(BVHAR_CAST<Eigen::MatrixXd>(init["factor_arcoef_init"])),

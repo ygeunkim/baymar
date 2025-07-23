@@ -1,14 +1,15 @@
 #ifndef BAYMAR_BAYES_MDFM_AUGMENT_H
 #define BAYMAR_BAYES_MDFM_AUGMENT_H
 
-// #include "./config.h"
-#include "../misc/draw.h"
-#include "../../math/design.h"
+#include "./config.h"
+// #include "../misc/draw.h"
+// #include "../../math/design.h"
 
 namespace baymar {
 
 class MatAugmenter;
 class MatFactorAugmenter;
+class MatFactorVarAugmenter;
 
 class MatAugmenter {
 public:
@@ -35,19 +36,10 @@ public:
 
 class MatFactorAugmenter : public MatAugmenter {
 public:
-	MatFactorAugmenter(int num_iter, int num_design, int lag, int nrow_factor, int ncol_factor)
-	: nrow_factor(nrow_factor), ncol_factor(ncol_factor),
-		size_factor(nrow_factor * ncol_factor), lag(lag), num_design(num_design),
-		resid(num_design), factor_mat(num_design),
-		dfm_coef(Eigen::MatrixXd::Zero(size_factor, lag)),
-		dfm_prec(Eigen::VectorXd::Ones(size_factor)),
-		ig_shp(Eigen::VectorXd::Constant(size_factor, 3.0)), ig_scl(Eigen::VectorXd::Ones(size_factor)),
-		prior_mean(Eigen::VectorXd::Zero(lag)), prior_prec(Eigen::VectorXd::Ones(lag)),
-		factor_record(Eigen::MatrixXd::Zero(num_iter + 1, num_design * size_factor)),
-		coef_record(Eigen::MatrixXd::Zero(num_iter + 1, size_factor * lag)),
-		prec_record(Eigen::MatrixXd::Zero(num_iter + 1, size_factor)) {
-		// use ShrinkageUpdater for prior_prec later!
-	}
+	MatFactorAugmenter(int num_iter, int num_design, const MatDfmParams& params)
+	: nrow_factor(params._nrow_factor), ncol_factor(params._ncol_factor),
+		size_factor(params._size_factor), lag(params._lag), num_design(num_design),
+		resid(num_design), factor_mat(num_design) {}
 	virtual ~MatFactorAugmenter() = default;
 
 	void appendDesign(std::vector<Eigen::SparseMatrix<double>>& x) override {
@@ -66,6 +58,40 @@ public:
 			resid[i] = y[i] - row_coef.transpose() * x[i].topLeftCorner(x[i].rows() - nrow_factor, x[i].cols() - ncol_factor) * col_coef;
 		}
 	}
+
+	// void updateRecords(int id) override {
+	// 	for (int i = 0; i < num_design; ++i) {
+	// 		// f_{11, p + 1}, f_{21, p + 1}, ..., f_{p1p2, p + 1}, f_{11, p + 2}, ..., f_{p1p2, T}
+	// 		factor_record.row(id).segment(i * size_factor, size_factor) = factor_mat[i].reshaped();
+	// 	}
+	// 	coef_record.row(id) = dfm_coef.reshaped();
+	// 	prec_record.row(id) = dfm_prec;
+	// }
+
+	// void appendRecords(BVHAR_LIST& list) override {
+	// 	list["F_record"] = factor_record;
+	// 	list["Rho_record"] = coef_record;
+	// 	list["Lambda_record"] = prec_record;
+	// }
+	
+protected:
+	int nrow_factor, ncol_factor, size_factor, lag, num_design;
+	std::vector<Eigen::MatrixXd> resid;
+	std::vector<Eigen::MatrixXd> factor_mat; // F_{p + 1}, ..., F_t
+};
+
+class MatFactorVarAugmenter : public MatFactorAugmenter {
+public:
+	MatFactorVarAugmenter(int num_iter, int num_design, const MatDfmVarParams& params, const MatDfmVarInits& inits)
+	: MatFactorAugmenter(num_iter, num_design, params),
+		dfm_coef(inits._init_factor_coef), dfm_prec(inits._init_factor_prec),
+		ig_shp(params._sig_shp), ig_scl(params._sig_scl), prior_mean(params._mean), prior_prec(params._prec),
+		factor_record(Eigen::MatrixXd::Zero(num_iter + 1, num_design * size_factor)),
+		coef_record(Eigen::MatrixXd::Zero(num_iter + 1, size_factor * lag)),
+		prec_record(Eigen::MatrixXd::Zero(num_iter + 1, size_factor)) {
+		// use ShrinkageUpdater for prior_prec later!
+	}
+	virtual ~MatFactorVarAugmenter() = default;
 	
 	void updateFactor(
 		Eigen::Ref<const Eigen::MatrixXd> row_coef, Eigen::Ref<const Eigen::MatrixXd> row_sig_lower,
@@ -96,11 +122,8 @@ public:
 		list["Rho_record"] = coef_record;
 		list["Lambda_record"] = prec_record;
 	}
-	
-protected:
-	int nrow_factor, ncol_factor, size_factor, lag, num_design;
-	std::vector<Eigen::MatrixXd> resid;
-	std::vector<Eigen::MatrixXd> factor_mat; // F_{p + 1}, ..., F_t
+
+private:
 	Eigen::MatrixXd dfm_coef; // p1*p2 x s
 	Eigen::VectorXd dfm_prec; // lambda_{1, 1}, ..., lambda_{p1, p2}
 	Eigen::VectorXd ig_shp, ig_scl;
