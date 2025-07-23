@@ -2,6 +2,7 @@
 #define BAYMAR_BAYES_MNIW_MNIW_H
 
 #include "./config.h"
+#include "../mdfm/augment.h"
 
 namespace baymar {
 

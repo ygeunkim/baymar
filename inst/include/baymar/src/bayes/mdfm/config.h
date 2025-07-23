@@ -1,10 +1,10 @@
 #ifndef BAYMAR_BAYES_MDFM_CONFIG_H
 #define BAYMAR_BAYES_MDFM_CONFIG_H
 
-// #include <bvhar/base>
-// #include "../misc/draw.h"
-// #include "../../math/design.h"
-#include "../mniw/config.h"
+#include <bvhar/base>
+#include "../misc/draw.h"
+#include "../../math/design.h"
+// #include "../mniw/config.h"
 
 namespace baymar {
 
@@ -33,13 +33,12 @@ struct MatDfmVarParams : public MatDfmParams {
 		_mean(Eigen::VectorXd::Zero(_lag)), _prec(Eigen::VectorXd::Ones(_lag)) {}
 };
 
-struct MatDfmVarInits : public MatMniwInits {
+struct MatDfmVarInits {
 	Eigen::MatrixXd _init_factor_coef;
 	Eigen::VectorXd _init_factor_prec;
 
 	MatDfmVarInits(BVHAR_LIST& init)
-	: MatMniwInits(init),
-		_init_factor_coef(BVHAR_CAST<Eigen::MatrixXd>(init["factor_arcoef_init"])),
+	: _init_factor_coef(BVHAR_CAST<Eigen::MatrixXd>(init["factor_arcoef_init"])),
 		_init_factor_prec(BVHAR_CAST<Eigen::VectorXd>(init["factor_arprec_init"])) {}
 };
 
