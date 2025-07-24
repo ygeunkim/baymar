@@ -204,7 +204,8 @@ protected:
 inline std::vector<std::unique_ptr<MatMniwForecaster>> initialize_matmniwforecaster(
 	int num_chains, int lag, int step, const Eigen::MatrixXd& y, int num_data,
 	BVHAR_LIST& fit_record, Eigen::Ref<const Eigen::VectorXi> seed_chain, int nthreads,
-	BVHAR_OPTIONAL<Eigen::MatrixXd> exogen = BVHAR_NULLOPT, BVHAR_OPTIONAL<int> exogen_lag = BVHAR_NULLOPT
+	BVHAR_OPTIONAL<Eigen::MatrixXd> exogen = BVHAR_NULLOPT, BVHAR_OPTIONAL<int> exogen_lag = BVHAR_NULLOPT,
+	BVHAR_OPTIONAL<int> nrow_factor = BVHAR_NULLOPT, BVHAR_OPTIONAL<int> ncol_factor = BVHAR_NULLOPT, BVHAR_OPTIONAL<int> factor_lag = BVHAR_NULLOPT
 ) {
 	// BVHAR_PY_LIST row_coef_record = fit_record["A_record"];
 	// BVHAR_PY_LIST row_sigma_record = fit_record["SigmaR_record"];
@@ -218,6 +219,8 @@ inline std::vector<std::unique_ptr<MatMniwForecaster>> initialize_matmniwforecas
 	for (int i = 0; i < num_chains; ++i) {
 		std::unique_ptr<MatMniwRecords> mat_record;
 		BVHAR_OPTIONAL<std::unique_ptr<MatMniwExogenForecaster>> exogen_updater = BVHAR_NULLOPT;
+		std::unique_ptr<MatDfmRecords> mdfm_record;
+		BVHAR_OPTIONAL<std::unique_ptr<MatFactorForecaster>> factor_updater = BVHAR_NULLOPT;
 		if (exogen) {
 			BVHAR_STRING c_name = "C_record";
 			BVHAR_STRING d_name = "D_record";
@@ -226,9 +229,17 @@ inline std::vector<std::unique_ptr<MatMniwForecaster>> initialize_matmniwforecas
 		} else {
 			initialize_matmniw_record(mat_record, i, fit_record, a_name, sigr_name, b_name, sigc_name);
 		}
+		if (nrow_factor) {
+			BVHAR_STRING f_name = "F_record";
+			BVHAR_STRING rho_name = "Rho_record";
+			BVHAR_STRING prec_name = "Lambda_record";
+			initialize_matdfm_record(mdfm_record, i, fit_record, f_name, rho_name, prec_name);
+			auto* mdfm_var_record = dynamic_cast<MatDfmVarRecords*>(mdfm_record.get());
+			factor_updater = std::make_unique<MatFactorVarForecaster>(*mdfm_var_record, step, *factor_lag, y.rows() / num_data, y.cols(), *nrow_factor, *ncol_factor);
+		}
 		forecaster[i] = std::make_unique<MatMniwForecaster>(
 			*mat_record, step, y, num_data, lag, static_cast<unsigned int>(seed_chain[i]),
-			std::move(exogen_updater)
+			std::move(exogen_updater), std::move(factor_updater)
 		);
 	}
 	return forecaster;
@@ -239,7 +250,8 @@ public:
 	MatMniwForecastRun(
 		int num_chains, int lag, int step, const Eigen::MatrixXd& y, int num_data,
 		BVHAR_LIST& fit_record, const Eigen::VectorXi& seed_chain, int nthreads,
-		BVHAR_OPTIONAL<Eigen::MatrixXd> exogen = BVHAR_NULLOPT, BVHAR_OPTIONAL<int> exogen_lag = BVHAR_NULLOPT
+		BVHAR_OPTIONAL<Eigen::MatrixXd> exogen = BVHAR_NULLOPT, BVHAR_OPTIONAL<int> exogen_lag = BVHAR_NULLOPT,
+		BVHAR_OPTIONAL<int> nrow_factor = BVHAR_NULLOPT, BVHAR_OPTIONAL<int> ncol_factor = BVHAR_NULLOPT, BVHAR_OPTIONAL<int> factor_lag = BVHAR_NULLOPT
 	)
 	: bvhar::McmcForecastRun<Eigen::MatrixXd, Eigen::MatrixXd>(num_chains, lag, step, nthreads) {
 		BVHAR_DEBUG_LOG(
@@ -249,7 +261,8 @@ public:
 		);
 		auto temp_forecaster = initialize_matmniwforecaster(
 			num_chains, lag, step, y, num_data, fit_record, seed_chain, nthreads,
-			exogen, exogen_lag
+			exogen, exogen_lag,
+			nrow_factor, ncol_factor, factor_lag
 		);
 		for (int i = 0; i < num_chains; ++i) {
 			forecaster[i] = std::move(temp_forecaster[i]);
