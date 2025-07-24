@@ -95,6 +95,8 @@ struct MatDfmRecords {
 		list["F_record"] = factor_record;
 	}
 
+	virtual void updateParams(const int id, Eigen::Ref<Eigen::MatrixXd> factor_coef, Eigen::Ref<Eigen::VectorXd> factor_sig) = 0;
+
 	// MatDfmRecords returnDfmRecords(int num_iter, int num_burn, int thin) const {
 	// 	return MatDfmRecords(
 	// 		bvhar::thin_record(row_coef_record, num_iter, num_burn, thin).derived(),
@@ -141,6 +143,11 @@ struct MatDfmVarRecords : public MatDfmRecords {
 		list["F_record"] = factor_record;
 		list["Rho_record"] = factor_coef_record;
 		list["Lambda_record"] = factor_prec_record;
+	}
+
+	void updateParams(const int id, Eigen::Ref<Eigen::MatrixXd> factor_coef, Eigen::Ref<Eigen::VectorXd> factor_sig) override {
+		factor_coef = bvhar::unvectorize(factor_coef_record.row(id), factor_coef.cols());
+		factor_sig.array() = 1 / factor_prec_record.row(id).array();
 	}
 
 	MatDfmVarRecords returnDfmVarRecords(int num_iter, int num_burn, int thin) const override {

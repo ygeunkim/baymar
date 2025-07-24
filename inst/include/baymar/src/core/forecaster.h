@@ -26,6 +26,14 @@ public:
 	}
 	virtual ~MatExogenForecaster() = default;
 
+	int get_nrow_row_exogen() {
+		return nrow_row_exogen;
+	}
+
+	int get_nrow_col_exogen() {
+		return nrow_col_exogen;
+	}
+
 	void updateCoef(Eigen::Ref<const Eigen::MatrixXd> row_coef_mat, Eigen::Ref<const Eigen::MatrixXd> col_coef_mat) {
 		BVHAR_DEBUG_LOG(debug_logger, "updateCoef() called");
 		row_coef = row_coef_mat;
