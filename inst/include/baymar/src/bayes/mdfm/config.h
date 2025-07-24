@@ -172,7 +172,7 @@ inline MatDfmVarRecords MatDfmRecords::returnRecords(int num_iter, int num_burn,
 inline void initialize_matdfm_record(
 	std::unique_ptr<MatDfmRecords>& record, int chain_id, BVHAR_LIST& dfm_record,
 	BVHAR_STRING& factor_name,
-	Optional<BVHAR_STRING> rho_name = NULLOPT, Optional<BVHAR_STRING> lambda_name = NULLOPT
+	BVHAR_OPTIONAL<BVHAR_STRING> rho_name = BVHAR_NULLOPT, BVHAR_OPTIONAL<BVHAR_STRING> lambda_name = BVHAR_NULLOPT
 ) {
 	BVHAR_PY_LIST factor_list = dfm_record[factor_name];
 	if (rho_name && lambda_name) {

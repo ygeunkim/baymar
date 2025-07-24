@@ -39,8 +39,8 @@ struct MatMniwRegParams : public MatMniwParams {
 	MatMniwRegParams(
 		int num_iter, std::vector<Eigen::SparseMatrix<double>>& x, std::vector<Eigen::MatrixXd>& y,
 		BVHAR_LIST& priors,
-		Optional<int> exogen_rows = NULLOPT, Optional<int> exogen_cols = NULLOPT,
-		Optional<int> factor_rows = NULLOPT, Optional<int> factor_cols = NULLOPT
+		BVHAR_OPTIONAL<int> exogen_rows = BVHAR_NULLOPT, BVHAR_OPTIONAL<int> exogen_cols = BVHAR_NULLOPT,
+		BVHAR_OPTIONAL<int> factor_rows = BVHAR_NULLOPT, BVHAR_OPTIONAL<int> factor_cols = BVHAR_NULLOPT
 	)
 	: MatMniwParams(num_iter, y, priors),
 		_x(x),
@@ -180,7 +180,7 @@ inline MatMniwRecords MatMniwRecords::returnRecords(int num_iter, int num_burn, 
 inline void initialize_matmniw_record(
 	std::unique_ptr<MatMniwRecords>& record, int chain_id, BVHAR_LIST& fit_record,
 	BVHAR_STRING& a_name, BVHAR_STRING& sigr_name, BVHAR_STRING& b_name, BVHAR_STRING& sigc_name,
-	Optional<BVHAR_STRING> c_name = NULLOPT, Optional<BVHAR_STRING> d_name = NULLOPT
+	BVHAR_OPTIONAL<BVHAR_STRING> c_name = BVHAR_NULLOPT, BVHAR_OPTIONAL<BVHAR_STRING> d_name = BVHAR_NULLOPT
 ) {
 	BVHAR_PY_LIST row_coef_list = fit_record[a_name];
 	BVHAR_PY_LIST row_sigma_list = fit_record[sigr_name];

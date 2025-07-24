@@ -38,7 +38,7 @@ Rcpp::List estimate_bmar_mniw(int num_chains, int num_iter, int num_burn, int th
 					col_prior, col_init, col_prior_type,
 					seed_chain, display_progress, nthreads,
 					exogen_row_prior, exogen_row_init, exogen_row_prior_type, exogen_rows,
-					NULLOPT, NULLOPT, NULLOPT, NULLOPT,
+					BVHAR_NULLOPT, BVHAR_NULLOPT, BVHAR_NULLOPT, BVHAR_NULLOPT,
 					factor_row_prior, factor_row_init, factor_row_prior_type, factor_rows,
 					factor_col_prior, factor_col_init, factor_col_prior_type, factor_cols,
 					factor_lag
@@ -51,7 +51,7 @@ Rcpp::List estimate_bmar_mniw(int num_chains, int num_iter, int num_burn, int th
 					row_prior, row_init, row_prior_type,
 					col_prior, col_init, col_prior_type,
 					seed_chain, display_progress, nthreads,
-					NULLOPT, NULLOPT, NULLOPT, NULLOPT,
+					BVHAR_NULLOPT, BVHAR_NULLOPT, BVHAR_NULLOPT, BVHAR_NULLOPT,
 					exogen_col_prior, exogen_col_init, exogen_col_prior_type, exogen_cols,
 					factor_row_prior, factor_row_init, factor_row_prior_type, factor_rows,
 					factor_col_prior, factor_col_init, factor_col_prior_type, factor_cols,
@@ -65,8 +65,8 @@ Rcpp::List estimate_bmar_mniw(int num_chains, int num_iter, int num_burn, int th
 				row_prior, row_init, row_prior_type,
 				col_prior, col_init, col_prior_type,
 				seed_chain, display_progress, nthreads,
-				NULLOPT, NULLOPT, NULLOPT, NULLOPT,
-				NULLOPT, NULLOPT, NULLOPT, NULLOPT,
+				BVHAR_NULLOPT, BVHAR_NULLOPT, BVHAR_NULLOPT, BVHAR_NULLOPT,
+				BVHAR_NULLOPT, BVHAR_NULLOPT, BVHAR_NULLOPT, BVHAR_NULLOPT,
 				factor_row_prior, factor_row_init, factor_row_prior_type, factor_rows,
 				factor_col_prior, factor_col_init, factor_col_prior_type, factor_cols,
 				factor_lag
@@ -101,7 +101,7 @@ Rcpp::List estimate_bmar_mniw(int num_chains, int num_iter, int num_burn, int th
 				row_prior, row_init, row_prior_type,
 				col_prior, col_init, col_prior_type,
 				seed_chain, display_progress, nthreads,
-				NULLOPT, NULLOPT, NULLOPT, NULLOPT,
+				BVHAR_NULLOPT, BVHAR_NULLOPT, BVHAR_NULLOPT, BVHAR_NULLOPT,
 				exogen_col_prior, exogen_col_init, exogen_col_prior_type, exogen_cols
 			);
 		}

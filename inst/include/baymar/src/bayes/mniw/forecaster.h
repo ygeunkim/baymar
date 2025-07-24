@@ -76,8 +76,8 @@ class MatMniwForecaster : public bvhar::BayesForecaster<Eigen::MatrixXd, Eigen::
 public:
 	MatMniwForecaster(
 		const MatMniwRecords& records, int step, const Eigen::MatrixXd& y, int num_data, int lag, unsigned int seed,
-		Optional<std::unique_ptr<MatMniwExogenForecaster>> exogen_forecaster = NULLOPT,
-		Optional<std::unique_ptr<MatFactorForecaster>> famar_forecaster = NULLOPT
+		BVHAR_OPTIONAL<std::unique_ptr<MatMniwExogenForecaster>> exogen_forecaster = BVHAR_NULLOPT,
+		BVHAR_OPTIONAL<std::unique_ptr<MatFactorForecaster>> famar_forecaster = BVHAR_NULLOPT
 	)
 	: bvhar::BayesForecaster<Eigen::MatrixXd, Eigen::MatrixXd>(step, y, lag, records.row_coef_record.rows(), seed),
 		mat_record(std::make_unique<MatMniwRecords>(records)),
@@ -204,7 +204,7 @@ protected:
 inline std::vector<std::unique_ptr<MatMniwForecaster>> initialize_matmniwforecaster(
 	int num_chains, int lag, int step, const Eigen::MatrixXd& y, int num_data,
 	BVHAR_LIST& fit_record, Eigen::Ref<const Eigen::VectorXi> seed_chain, int nthreads,
-	Optional<Eigen::MatrixXd> exogen = NULLOPT, Optional<int> exogen_lag = NULLOPT
+	BVHAR_OPTIONAL<Eigen::MatrixXd> exogen = BVHAR_NULLOPT, BVHAR_OPTIONAL<int> exogen_lag = BVHAR_NULLOPT
 ) {
 	// BVHAR_PY_LIST row_coef_record = fit_record["A_record"];
 	// BVHAR_PY_LIST row_sigma_record = fit_record["SigmaR_record"];
@@ -217,7 +217,7 @@ inline std::vector<std::unique_ptr<MatMniwForecaster>> initialize_matmniwforecas
 	std::vector<std::unique_ptr<MatMniwForecaster>> forecaster(num_chains);
 	for (int i = 0; i < num_chains; ++i) {
 		std::unique_ptr<MatMniwRecords> mat_record;
-		Optional<std::unique_ptr<MatMniwExogenForecaster>> exogen_updater = NULLOPT;
+		BVHAR_OPTIONAL<std::unique_ptr<MatMniwExogenForecaster>> exogen_updater = BVHAR_NULLOPT;
 		if (exogen) {
 			BVHAR_STRING c_name = "C_record";
 			BVHAR_STRING d_name = "D_record";
@@ -239,7 +239,7 @@ public:
 	MatMniwForecastRun(
 		int num_chains, int lag, int step, const Eigen::MatrixXd& y, int num_data,
 		BVHAR_LIST& fit_record, const Eigen::VectorXi& seed_chain, int nthreads,
-		Optional<Eigen::MatrixXd> exogen = NULLOPT, Optional<int> exogen_lag = NULLOPT
+		BVHAR_OPTIONAL<Eigen::MatrixXd> exogen = BVHAR_NULLOPT, BVHAR_OPTIONAL<int> exogen_lag = BVHAR_NULLOPT
 	)
 	: bvhar::McmcForecastRun<Eigen::MatrixXd, Eigen::MatrixXd>(num_chains, lag, step, nthreads) {
 		BVHAR_DEBUG_LOG(
@@ -269,9 +269,9 @@ public:
 		BVHAR_LIST& col_prior, BVHAR_LIST_OF_LIST& col_init, const int col_prior_type,
 		int step, const Eigen::MatrixXd& y_test,
 		const Eigen::MatrixXi& seed_chain, const Eigen::VectorXi& seed_forecast, bool display_progress, int nthreads,
-		Optional<BVHAR_LIST> row_exogen_prior = NULLOPT, Optional<BVHAR_LIST_OF_LIST> row_exogen_init = NULLOPT, Optional<int> row_exogen_prior_type = NULLOPT,
-		Optional<BVHAR_LIST> col_exogen_prior = NULLOPT, Optional<BVHAR_LIST_OF_LIST> col_exogen_init = NULLOPT, Optional<int> col_exogen_prior_type = NULLOPT,
-		Optional<Eigen::MatrixXd> exogen = NULLOPT, Optional<int> exogen_lag = NULLOPT
+		BVHAR_OPTIONAL<BVHAR_LIST> row_exogen_prior = BVHAR_NULLOPT, BVHAR_OPTIONAL<BVHAR_LIST_OF_LIST> row_exogen_init = BVHAR_NULLOPT, BVHAR_OPTIONAL<int> row_exogen_prior_type = BVHAR_NULLOPT,
+		BVHAR_OPTIONAL<BVHAR_LIST> col_exogen_prior = BVHAR_NULLOPT, BVHAR_OPTIONAL<BVHAR_LIST_OF_LIST> col_exogen_init = BVHAR_NULLOPT, BVHAR_OPTIONAL<int> col_exogen_prior_type = BVHAR_NULLOPT,
+		BVHAR_OPTIONAL<Eigen::MatrixXd> exogen = BVHAR_NULLOPT, BVHAR_OPTIONAL<int> exogen_lag = BVHAR_NULLOPT
 	)
 	: bvhar::McmcOutForecastRun<Eigen::MatrixXd, Eigen::MatrixXd, isUpdate>(
 			num_data, lag, num_chains, num_iter, num_burn, thin, step, y_test, false,
@@ -333,9 +333,9 @@ protected:
 		BVHAR_LIST& row_prior, BVHAR_LIST_OF_LIST& row_init, const int row_prior_type,
 		BVHAR_LIST& col_prior, BVHAR_LIST_OF_LIST& col_init, const int col_prior_type,
 		const Eigen::MatrixXi& seed_chain,
-		Optional<BVHAR_LIST> row_exogen_prior = NULLOPT, Optional<BVHAR_LIST_OF_LIST> row_exogen_init = NULLOPT, Optional<int> row_exogen_prior_type = NULLOPT,
-		Optional<BVHAR_LIST> col_exogen_prior = NULLOPT, Optional<BVHAR_LIST_OF_LIST> col_exogen_init = NULLOPT, Optional<int> col_exogen_prior_type = NULLOPT,
-		Optional<Eigen::MatrixXd> exogen = NULLOPT, Optional<int> exogen_lag = NULLOPT
+		BVHAR_OPTIONAL<BVHAR_LIST> row_exogen_prior = BVHAR_NULLOPT, BVHAR_OPTIONAL<BVHAR_LIST_OF_LIST> row_exogen_init = BVHAR_NULLOPT, BVHAR_OPTIONAL<int> row_exogen_prior_type = BVHAR_NULLOPT,
+		BVHAR_OPTIONAL<BVHAR_LIST> col_exogen_prior = BVHAR_NULLOPT, BVHAR_OPTIONAL<BVHAR_LIST_OF_LIST> col_exogen_init = BVHAR_NULLOPT, BVHAR_OPTIONAL<int> col_exogen_prior_type = BVHAR_NULLOPT,
+		BVHAR_OPTIONAL<Eigen::MatrixXd> exogen = BVHAR_NULLOPT, BVHAR_OPTIONAL<int> exogen_lag = BVHAR_NULLOPT
 	) {
 		BVHAR_DEBUG_LOG(debug_logger, "initialize(...) called");
 		initData(y, exogen);
@@ -346,12 +346,12 @@ protected:
 			// 	param_coef_sig, coef_sig_init, row_prior, row_init, row_prior_type, col_prior, col_init, col_prior_type,
 			// 	seed_chain
 			// );
-			Optional<int> exogen_rows = NULLOPT;
- 			Optional<int> exogen_cols = NULLOPT;
+			BVHAR_OPTIONAL<int> exogen_rows = BVHAR_NULLOPT;
+ 			BVHAR_OPTIONAL<int> exogen_cols = BVHAR_NULLOPT;
 			for (int window = 0; window < num_horizon; ++window) {
 				std::vector<Eigen::MatrixXd> y_data = marmatrix_to_vector(roll_mat[window], num_row);
 				std::vector<Eigen::MatrixXd> response = build_mar_response(y_data, lag);
-				Optional<std::vector<Eigen::MatrixXd>> exogen_data = NULLOPT;
+				BVHAR_OPTIONAL<std::vector<Eigen::MatrixXd>> exogen_data = BVHAR_NULLOPT;
 				if (lag_exogen) {
 					int nrow_exogen = exogen->rows() / (num_window + num_test);
 					exogen_data = marmatrix_to_vector(*(roll_exogen_mat[window]), nrow_exogen);
@@ -389,13 +389,13 @@ protected:
 		}
 	}
 
-	virtual void initData(const Eigen::MatrixXd& y, Optional<Eigen::MatrixXd> exogen = NULLOPT) = 0;
+	virtual void initData(const Eigen::MatrixXd& y, BVHAR_OPTIONAL<Eigen::MatrixXd> exogen = BVHAR_NULLOPT) = 0;
 
 	void updateForecaster(int window, int chain) override {
 		BVHAR_DEBUG_LOG(debug_logger, "updateForecaster(window={}, chain={}) called", window, chain);
 		auto* mcmc_mniw = dynamic_cast<McmcMatMniw*>(model[window][chain].get());
 		MatMniwRecords mniw_record = mcmc_mniw->returnStructRecords(0, thin);
-		Optional<std::unique_ptr<MatMniwExogenForecaster>> exogen_updater = NULLOPT;
+		BVHAR_OPTIONAL<std::unique_ptr<MatMniwExogenForecaster>> exogen_updater = BVHAR_NULLOPT;
 		if (lag_exogen) {
 			exogen_updater = std::make_unique<MatMniwExogenForecaster>(*lag_exogen, *(roll_exogen[window]), *lag_exogen + step, num_row, num_col);
 		}
@@ -417,9 +417,9 @@ public:
 		BVHAR_LIST& col_prior, BVHAR_LIST_OF_LIST& col_init, const int col_prior_type,
 		int step, const Eigen::MatrixXd& y_test,
 		const Eigen::MatrixXi& seed_chain, const Eigen::VectorXi& seed_forecast, bool display_progress, int nthreads,
-		Optional<BVHAR_LIST> row_exogen_prior = NULLOPT, Optional<BVHAR_LIST_OF_LIST> row_exogen_init = NULLOPT, Optional<int> row_exogen_prior_type = NULLOPT,
-		Optional<BVHAR_LIST> col_exogen_prior = NULLOPT, Optional<BVHAR_LIST_OF_LIST> col_exogen_init = NULLOPT, Optional<int> col_exogen_prior_type = NULLOPT,
-		Optional<Eigen::MatrixXd> exogen = NULLOPT, Optional<int> exogen_lag = NULLOPT
+		BVHAR_OPTIONAL<BVHAR_LIST> row_exogen_prior = BVHAR_NULLOPT, BVHAR_OPTIONAL<BVHAR_LIST_OF_LIST> row_exogen_init = BVHAR_NULLOPT, BVHAR_OPTIONAL<int> row_exogen_prior_type = BVHAR_NULLOPT,
+		BVHAR_OPTIONAL<BVHAR_LIST> col_exogen_prior = BVHAR_NULLOPT, BVHAR_OPTIONAL<BVHAR_LIST_OF_LIST> col_exogen_init = BVHAR_NULLOPT, BVHAR_OPTIONAL<int> col_exogen_prior_type = BVHAR_NULLOPT,
+		BVHAR_OPTIONAL<Eigen::MatrixXd> exogen = BVHAR_NULLOPT, BVHAR_OPTIONAL<int> exogen_lag = BVHAR_NULLOPT
 	)
 	: MatMniwOutForecastRun<isUpdate>(
 			y, num_data, lag,
@@ -458,7 +458,7 @@ protected:
 	using MatMniwOutForecastRun<isUpdate>::lag_exogen;
 	using MatMniwOutForecastRun<isUpdate>::debug_logger;
 
-	void initData(const Eigen::MatrixXd& y, Optional<Eigen::MatrixXd> exogen = NULLOPT) override {
+	void initData(const Eigen::MatrixXd& y, BVHAR_OPTIONAL<Eigen::MatrixXd> exogen = BVHAR_NULLOPT) override {
 		BVHAR_DEBUG_LOG(debug_logger, "initData(y, ...) called");
 		Eigen::MatrixXd tot_mat((num_window + num_test) * num_row, num_col);
 		tot_mat << y,
@@ -490,9 +490,9 @@ public:
 		BVHAR_LIST& col_prior, BVHAR_LIST_OF_LIST& col_init, const int col_prior_type,
 		int step, const Eigen::MatrixXd& y_test,
 		const Eigen::MatrixXi& seed_chain, const Eigen::VectorXi& seed_forecast, bool display_progress, int nthreads,
-		Optional<BVHAR_LIST> row_exogen_prior = NULLOPT, Optional<BVHAR_LIST_OF_LIST> row_exogen_init = NULLOPT, Optional<int> row_exogen_prior_type = NULLOPT,
-		Optional<BVHAR_LIST> col_exogen_prior = NULLOPT, Optional<BVHAR_LIST_OF_LIST> col_exogen_init = NULLOPT, Optional<int> col_exogen_prior_type = NULLOPT,
-		Optional<Eigen::MatrixXd> exogen = NULLOPT, Optional<int> exogen_lag = NULLOPT
+		BVHAR_OPTIONAL<BVHAR_LIST> row_exogen_prior = BVHAR_NULLOPT, BVHAR_OPTIONAL<BVHAR_LIST_OF_LIST> row_exogen_init = BVHAR_NULLOPT, BVHAR_OPTIONAL<int> row_exogen_prior_type = BVHAR_NULLOPT,
+		BVHAR_OPTIONAL<BVHAR_LIST> col_exogen_prior = BVHAR_NULLOPT, BVHAR_OPTIONAL<BVHAR_LIST_OF_LIST> col_exogen_init = BVHAR_NULLOPT, BVHAR_OPTIONAL<int> col_exogen_prior_type = BVHAR_NULLOPT,
+		BVHAR_OPTIONAL<Eigen::MatrixXd> exogen = BVHAR_NULLOPT, BVHAR_OPTIONAL<int> exogen_lag = BVHAR_NULLOPT
 	)
 	: MatMniwOutForecastRun<isUpdate>(
 			y, num_data, lag,
@@ -531,7 +531,7 @@ protected:
 	using MatMniwOutForecastRun<isUpdate>::lag_exogen;
 	using MatMniwOutForecastRun<isUpdate>::debug_logger;
 
-	void initData(const Eigen::MatrixXd& y, Optional<Eigen::MatrixXd> exogen = NULLOPT) override {
+	void initData(const Eigen::MatrixXd& y, BVHAR_OPTIONAL<Eigen::MatrixXd> exogen = BVHAR_NULLOPT) override {
 		BVHAR_DEBUG_LOG(debug_logger, "initData(y, ...) called");
 		Eigen::MatrixXd tot_mat((num_window + num_test) * num_row, num_col);
 		tot_mat << y,
@@ -561,9 +561,9 @@ inline std::unique_ptr<bvhar::McmcOutforecastInterface> initialize_matmniwoutfor
 	BVHAR_LIST& col_prior, BVHAR_LIST_OF_LIST& col_init, const int col_prior_type,
 	int step, const Eigen::MatrixXd& y_test,
 	const Eigen::MatrixXi& seed_chain, const Eigen::VectorXi& seed_forecast, bool display_progress, int nthreads,
-	Optional<BVHAR_LIST> row_exogen_prior = NULLOPT, Optional<BVHAR_LIST_OF_LIST> row_exogen_init = NULLOPT, Optional<int> row_exogen_prior_type = NULLOPT,
-	Optional<BVHAR_LIST> col_exogen_prior = NULLOPT, Optional<BVHAR_LIST_OF_LIST> col_exogen_init = NULLOPT, Optional<int> col_exogen_prior_type = NULLOPT,
-	Optional<Eigen::MatrixXd> exogen = NULLOPT, Optional<int> exogen_lag = NULLOPT
+	BVHAR_OPTIONAL<BVHAR_LIST> row_exogen_prior = BVHAR_NULLOPT, BVHAR_OPTIONAL<BVHAR_LIST_OF_LIST> row_exogen_init = BVHAR_NULLOPT, BVHAR_OPTIONAL<int> row_exogen_prior_type = BVHAR_NULLOPT,
+	BVHAR_OPTIONAL<BVHAR_LIST> col_exogen_prior = BVHAR_NULLOPT, BVHAR_OPTIONAL<BVHAR_LIST_OF_LIST> col_exogen_init = BVHAR_NULLOPT, BVHAR_OPTIONAL<int> col_exogen_prior_type = BVHAR_NULLOPT,
+	BVHAR_OPTIONAL<Eigen::MatrixXd> exogen = BVHAR_NULLOPT, BVHAR_OPTIONAL<int> exogen_lag = BVHAR_NULLOPT
 ) {
 	if (run_mcmc) {
 		return std::make_unique<BaseOutForecast<true>>(

@@ -14,11 +14,11 @@ public:
 		const MatMniwRegParams& params, const MatMniwInits& inits,
 		std::unique_ptr<MatShrinkageUpdater>& row_updater, std::unique_ptr<MatShrinkageUpdater>& col_updater,
 		unsigned int seed,
-		Optional<std::unique_ptr<MatShrinkageUpdater>> row_exogen = NULLOPT,
-		Optional<std::unique_ptr<MatShrinkageUpdater>> col_exogen = NULLOPT,
-		Optional<std::unique_ptr<MatAugmenter>> famar = NULLOPT,
-		Optional<std::unique_ptr<MatShrinkageUpdater>> row_factor = NULLOPT,
-		Optional<std::unique_ptr<MatShrinkageUpdater>> col_factor = NULLOPT
+		BVHAR_OPTIONAL<std::unique_ptr<MatShrinkageUpdater>> row_exogen = BVHAR_NULLOPT,
+		BVHAR_OPTIONAL<std::unique_ptr<MatShrinkageUpdater>> col_exogen = BVHAR_NULLOPT,
+		BVHAR_OPTIONAL<std::unique_ptr<MatAugmenter>> famar = BVHAR_NULLOPT,
+		BVHAR_OPTIONAL<std::unique_ptr<MatShrinkageUpdater>> row_factor = BVHAR_NULLOPT,
+		BVHAR_OPTIONAL<std::unique_ptr<MatShrinkageUpdater>> col_factor = BVHAR_NULLOPT
 	)
 	: bvhar::McmcAlgo(params, seed),
 		x(params._x), y(params._y),
@@ -236,17 +236,17 @@ inline std::vector<std::unique_ptr<McmcMatMniw>> initialize_matmcmc(
 	BVHAR_LIST& row_prior, BVHAR_LIST_OF_LIST& row_init, const int row_prior_type,
 	BVHAR_LIST& col_prior, BVHAR_LIST_OF_LIST& col_init, const int col_prior_type,
   Eigen::Ref<const Eigen::VectorXi> seed_chain,
-	Optional<BVHAR_LIST> row_exogen_prior = NULLOPT, Optional<BVHAR_LIST_OF_LIST> row_exogen_init = NULLOPT, Optional<int> row_exogen_prior_type = NULLOPT, Optional<int> exogen_rows = NULLOPT,
-	Optional<BVHAR_LIST> col_exogen_prior = NULLOPT, Optional<BVHAR_LIST_OF_LIST> col_exogen_init = NULLOPT, Optional<int> col_exogen_prior_type = NULLOPT, Optional<int> exogen_cols = NULLOPT,
-	Optional<BVHAR_LIST> row_factor_prior = NULLOPT, Optional<BVHAR_LIST_OF_LIST> row_factor_init = NULLOPT, Optional<int> row_factor_prior_type = NULLOPT, Optional<int> nrow_factor = NULLOPT,
-	Optional<BVHAR_LIST> col_factor_prior = NULLOPT, Optional<BVHAR_LIST_OF_LIST> col_factor_init = NULLOPT, Optional<int> col_factor_prior_type = NULLOPT, Optional<int> ncol_factor = NULLOPT,
-	Optional<int> factor_lag = NULLOPT
+	BVHAR_OPTIONAL<BVHAR_LIST> row_exogen_prior = BVHAR_NULLOPT, BVHAR_OPTIONAL<BVHAR_LIST_OF_LIST> row_exogen_init = BVHAR_NULLOPT, BVHAR_OPTIONAL<int> row_exogen_prior_type = BVHAR_NULLOPT, BVHAR_OPTIONAL<int> exogen_rows = BVHAR_NULLOPT,
+	BVHAR_OPTIONAL<BVHAR_LIST> col_exogen_prior = BVHAR_NULLOPT, BVHAR_OPTIONAL<BVHAR_LIST_OF_LIST> col_exogen_init = BVHAR_NULLOPT, BVHAR_OPTIONAL<int> col_exogen_prior_type = BVHAR_NULLOPT, BVHAR_OPTIONAL<int> exogen_cols = BVHAR_NULLOPT,
+	BVHAR_OPTIONAL<BVHAR_LIST> row_factor_prior = BVHAR_NULLOPT, BVHAR_OPTIONAL<BVHAR_LIST_OF_LIST> row_factor_init = BVHAR_NULLOPT, BVHAR_OPTIONAL<int> row_factor_prior_type = BVHAR_NULLOPT, BVHAR_OPTIONAL<int> nrow_factor = BVHAR_NULLOPT,
+	BVHAR_OPTIONAL<BVHAR_LIST> col_factor_prior = BVHAR_NULLOPT, BVHAR_OPTIONAL<BVHAR_LIST_OF_LIST> col_factor_init = BVHAR_NULLOPT, BVHAR_OPTIONAL<int> col_factor_prior_type = BVHAR_NULLOPT, BVHAR_OPTIONAL<int> ncol_factor = BVHAR_NULLOPT,
+	BVHAR_OPTIONAL<int> factor_lag = BVHAR_NULLOPT
 ) {
 	std::vector<std::unique_ptr<McmcMatMniw>> mcmc_ptr(num_chains);
 	// MatMniwRegParams params(num_iter, x, y, param_coef_sig);
 	MatMniwRegParams params = exogen_rows
 		? (nrow_factor ? MatMniwRegParams(num_iter, x, y, param_coef_sig, *exogen_rows, *exogen_cols, *nrow_factor, *ncol_factor) : MatMniwRegParams(num_iter, x, y, param_coef_sig, *exogen_rows, *exogen_cols))
-		: (nrow_factor ? MatMniwRegParams(num_iter, x, y, param_coef_sig, NULLOPT, NULLOPT, *nrow_factor, *ncol_factor) : MatMniwRegParams(num_iter, x, y, param_coef_sig));
+		: (nrow_factor ? MatMniwRegParams(num_iter, x, y, param_coef_sig, BVHAR_NULLOPT, BVHAR_NULLOPT, *nrow_factor, *ncol_factor) : MatMniwRegParams(num_iter, x, y, param_coef_sig));
 	for (int i = 0; i < num_chains; ++i) {
 		BVHAR_LIST row_init_spec = row_init[i];
 		BVHAR_LIST col_init_spec = col_init[i];
@@ -256,8 +256,8 @@ inline std::vector<std::unique_ptr<McmcMatMniw>> initialize_matmcmc(
 		col_updater->initPrec(params._col_prec.head(params._row_col_coef));
 		BVHAR_LIST init_spec = coef_sig_init[i];
 		MatMniwInits inits(init_spec);
-		Optional<std::unique_ptr<MatShrinkageUpdater>> row_exogen_updater = NULLOPT;
-		Optional<std::unique_ptr<MatShrinkageUpdater>> col_exogen_updater = NULLOPT;
+		BVHAR_OPTIONAL<std::unique_ptr<MatShrinkageUpdater>> row_exogen_updater = BVHAR_NULLOPT;
+		BVHAR_OPTIONAL<std::unique_ptr<MatShrinkageUpdater>> col_exogen_updater = BVHAR_NULLOPT;
 		if (row_exogen_prior_type) {
 			BVHAR_LIST row_exogen_init_spec = (*row_exogen_init)[i];
 			// auto temp_row_exogen_updater = initialize_matshrinkageupdater(num_iter, *row_exogen_prior, row_exogen_init_spec, *row_exogen_prior_type);
@@ -272,9 +272,9 @@ inline std::vector<std::unique_ptr<McmcMatMniw>> initialize_matmcmc(
 			col_exogen_updater = initialize_matshrinkageupdater(num_iter, *col_exogen_prior, col_exogen_init_spec, *col_exogen_prior_type);
 			(*col_exogen_updater)->initPrec(params._col_prec.segment(params._row_col_coef, params._col_exogen));
 		}
-		Optional<std::unique_ptr<MatAugmenter>> famar_updater = NULLOPT;
-		Optional<std::unique_ptr<MatShrinkageUpdater>> row_factor_updater = NULLOPT;
-		Optional<std::unique_ptr<MatShrinkageUpdater>> col_factor_updater = NULLOPT;
+		BVHAR_OPTIONAL<std::unique_ptr<MatAugmenter>> famar_updater = BVHAR_NULLOPT;
+		BVHAR_OPTIONAL<std::unique_ptr<MatShrinkageUpdater>> row_factor_updater = BVHAR_NULLOPT;
+		BVHAR_OPTIONAL<std::unique_ptr<MatShrinkageUpdater>> col_factor_updater = BVHAR_NULLOPT;
 		if (row_factor_prior_type) {
 			BVHAR_LIST row_factor_init_spec = (*row_factor_init)[i];
 			row_factor_updater = initialize_matshrinkageupdater(num_iter, *row_factor_prior, row_factor_init_spec, *row_factor_prior_type);
@@ -309,11 +309,11 @@ public:
 		BVHAR_LIST& row_prior, BVHAR_LIST_OF_LIST& row_init, const int row_prior_type,
 		BVHAR_LIST& col_prior, BVHAR_LIST_OF_LIST& col_init, const int col_prior_type,
 		const Eigen::VectorXi& seed_chain, bool display_progress, int nthreads,
-		Optional<BVHAR_LIST> row_exogen_prior = NULLOPT, Optional<BVHAR_LIST_OF_LIST> row_exogen_init = NULLOPT, Optional<int> row_exogen_prior_type = NULLOPT, Optional<int> exogen_rows = NULLOPT,
-		Optional<BVHAR_LIST> col_exogen_prior = NULLOPT, Optional<BVHAR_LIST_OF_LIST> col_exogen_init = NULLOPT, Optional<int> col_exogen_prior_type = NULLOPT, Optional<int> exogen_cols = NULLOPT,
-		Optional<BVHAR_LIST> row_factor_prior = NULLOPT, Optional<BVHAR_LIST_OF_LIST> row_factor_init = NULLOPT, Optional<int> row_factor_prior_type = NULLOPT, Optional<int> nrow_factor = NULLOPT,
-		Optional<BVHAR_LIST> col_factor_prior = NULLOPT, Optional<BVHAR_LIST_OF_LIST> col_factor_init = NULLOPT, Optional<int> col_factor_prior_type = NULLOPT, Optional<int> ncol_factor = NULLOPT,
-		Optional<int> factor_lag = NULLOPT
+		BVHAR_OPTIONAL<BVHAR_LIST> row_exogen_prior = BVHAR_NULLOPT, BVHAR_OPTIONAL<BVHAR_LIST_OF_LIST> row_exogen_init = BVHAR_NULLOPT, BVHAR_OPTIONAL<int> row_exogen_prior_type = BVHAR_NULLOPT, BVHAR_OPTIONAL<int> exogen_rows = BVHAR_NULLOPT,
+		BVHAR_OPTIONAL<BVHAR_LIST> col_exogen_prior = BVHAR_NULLOPT, BVHAR_OPTIONAL<BVHAR_LIST_OF_LIST> col_exogen_init = BVHAR_NULLOPT, BVHAR_OPTIONAL<int> col_exogen_prior_type = BVHAR_NULLOPT, BVHAR_OPTIONAL<int> exogen_cols = BVHAR_NULLOPT,
+		BVHAR_OPTIONAL<BVHAR_LIST> row_factor_prior = BVHAR_NULLOPT, BVHAR_OPTIONAL<BVHAR_LIST_OF_LIST> row_factor_init = BVHAR_NULLOPT, BVHAR_OPTIONAL<int> row_factor_prior_type = BVHAR_NULLOPT, BVHAR_OPTIONAL<int> nrow_factor = BVHAR_NULLOPT,
+		BVHAR_OPTIONAL<BVHAR_LIST> col_factor_prior = BVHAR_NULLOPT, BVHAR_OPTIONAL<BVHAR_LIST_OF_LIST> col_factor_init = BVHAR_NULLOPT, BVHAR_OPTIONAL<int> col_factor_prior_type = BVHAR_NULLOPT, BVHAR_OPTIONAL<int> ncol_factor = BVHAR_NULLOPT,
+		BVHAR_OPTIONAL<int> factor_lag = BVHAR_NULLOPT
 	)
 	: bvhar::McmcRun(num_chains, num_iter, num_burn, thin, display_progress, nthreads) {
 		auto temp_mcmc = initialize_matmcmc(
