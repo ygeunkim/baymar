@@ -169,6 +169,25 @@ inline MatDfmVarRecords MatDfmRecords::returnRecords(int num_iter, int num_burn,
   return returnDfmVarRecords(num_iter, num_burn, thin);
 }
 
+inline void initialize_matdfm_record(
+	std::unique_ptr<MatDfmRecords>& record, int chain_id, BVHAR_LIST& dfm_record,
+	BVHAR_STRING& factor_name,
+	Optional<BVHAR_STRING> rho_name = NULLOPT, Optional<BVHAR_STRING> lambda_name = NULLOPT
+) {
+	BVHAR_PY_LIST factor_list = dfm_record[factor_name];
+	if (rho_name && lambda_name) {
+		BVHAR_PY_LIST factor_coef_list = dfm_record[*rho_name];
+		BVHAR_PY_LIST factor_prec_list = dfm_record[*lambda_name];
+		record = std::make_unique<MatDfmVarRecords>(
+			BVHAR_CAST<Eigen::MatrixXd>(factor_list[chain_id]),
+			BVHAR_CAST<Eigen::MatrixXd>(factor_coef_list[chain_id]),
+			BVHAR_CAST<Eigen::MatrixXd>(factor_prec_list[chain_id])
+		);
+	} else {
+		// Add when other priors are defined
+	}
+}
+
 } // namespace baymar
 
 #endif // BAYMAR_BAYES_MDFM_CONFIG_H
