@@ -461,12 +461,16 @@ protected:
 		auto* mcmc_mniw = dynamic_cast<McmcMatMniw*>(model[window][chain].get());
 		MatMniwRecords mniw_record = mcmc_mniw->returnStructRecords(0, thin);
 		BVHAR_OPTIONAL<std::unique_ptr<MatMniwExogenForecaster>> exogen_updater = BVHAR_NULLOPT;
+		BVHAR_OPTIONAL<std::unique_ptr<MatFactorForecaster>> factor_updater = BVHAR_NULLOPT;
 		if (lag_exogen) {
 			exogen_updater = std::make_unique<MatMniwExogenForecaster>(*lag_exogen, *(roll_exogen[window]), *lag_exogen + step, num_row, num_col);
 		}
+		if (nrow_factor) {
+			// Need mdfm_record -> update mniw.h
+		}
 		forecaster[window][chain] = std::make_unique<MatMniwForecaster>(
 			mniw_record, step, roll_mat[window], num_window, lag, static_cast<unsigned int>(seed_forecast[chain]),
-			std::move(exogen_updater)
+			std::move(exogen_updater), std::move(factor_updater)
 		);
 	}
 };
