@@ -37,7 +37,7 @@ public:
 class MatFactorAugmenter : public MatAugmenter {
 public:
 	MatFactorAugmenter(int num_iter, int num_design, const MatDfmParams& params)
-	: nrow_factor(params._nrow_factor), ncol_factor(params._ncol_factor),
+	: num_iter(num_iter), nrow_factor(params._nrow_factor), ncol_factor(params._ncol_factor),
 		size_factor(params._size_factor), lag(params._lag), num_design(num_design),
 		resid(num_design), factor_mat(num_design) {}
 	virtual ~MatFactorAugmenter() = default;
@@ -74,9 +74,14 @@ public:
 		// list["Lambda_record"] = prec_record;
 		mdfm_record->appendRecords(list);
 	}
+
+	template <typename RecordType>
+	RecordType returnStructRecords(int num_burn, int thin) const {
+		return mdfm_record->returnRecords<RecordType>(num_iter, num_burn, thin);
+	}
 	
 protected:
-	int nrow_factor, ncol_factor, size_factor, lag, num_design;
+	int num_iter, nrow_factor, ncol_factor, size_factor, lag, num_design;
 	std::vector<Eigen::MatrixXd> resid;
 	std::vector<Eigen::MatrixXd> factor_mat; // F_{p + 1}, ..., F_t
 	std::unique_ptr<MatDfmRecords> mdfm_record;

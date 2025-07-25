@@ -29,12 +29,13 @@ inline std::vector<Eigen::MatrixXd> build_mar_response(const std::vector<Eigen::
 // diag(Y_{t - 1}, ..., Y_{t - p}), t = p + 1, ..., T
 // @param y Y_1, ..., Y_T
 // @param lag MAR lag
-inline std::vector<Eigen::SparseMatrix<double>> build_mar_design(const std::vector<Eigen::MatrixXd>& y, int lag) {
+inline std::vector<Eigen::SparseMatrix<double>> build_mar_design(const std::vector<Eigen::MatrixXd>& y, int lag,
+																																 int nrow_factor = 0, int ncol_factor = 0) {
 	int num_design = y.size() - lag;
 	int num_row = y[0].rows();
 	int num_col = y[0].cols();
 	std::vector<Eigen::SparseMatrix<double>> x(num_design); // t = p + 1, ..., T
-	Eigen::MatrixXd dense_x = Eigen::MatrixXd(num_row * lag, num_col * lag);
+	Eigen::MatrixXd dense_x = Eigen::MatrixXd::Zero(num_row * lag + nrow_factor, num_col * lag + ncol_factor);
 	for (int i = 0; i < num_design; ++i) {
 		for (int j = 0; j < lag; ++j) {
 			dense_x.block(j * num_row, j * num_col, num_row, num_col) = y[lag + i - j - 1]; // diag(Y_{t - 1}, ..., Y_{t - p})
@@ -49,14 +50,15 @@ inline std::vector<Eigen::SparseMatrix<double>> build_mar_design(const std::vect
 // @param exogen_lag s
 inline std::vector<Eigen::SparseMatrix<double>> build_mar_design(const std::vector<Eigen::MatrixXd>& y,
 																																 const std::vector<Eigen::MatrixXd>& exogen,
-																																 int lag, int exogen_lag) {
+																																 int lag, int exogen_lag,
+																																 int nrow_factor = 0, int ncol_factor = 0) {
 	int num_design = y.size() - lag;
 	int num_row = y[0].rows();
 	int num_col = y[0].cols();
 	int nrow_exogen = exogen[0].rows();
 	int ncol_exogen = exogen[0].cols();
 	std::vector<Eigen::SparseMatrix<double>> design(num_design); // t = p + 1, ..., T
-	Eigen::MatrixXd dense_x = Eigen::MatrixXd(num_row * lag + nrow_exogen * (exogen_lag + 1), num_col * lag + ncol_exogen * (exogen_lag + 1));
+	Eigen::MatrixXd dense_x = Eigen::MatrixXd::Zero(num_row * lag + nrow_exogen * (exogen_lag + 1) + nrow_factor, num_col * lag + ncol_exogen * (exogen_lag + 1) + ncol_factor);
 	for (int i = 0; i < num_design; ++i) {
 		for (int j = 0; j < lag; ++j) {
 			dense_x.block(j * num_row, j * num_col, num_row, num_col) = y[lag + i - j - 1]; // Y_{t - 1}, ..., Y_{t - p}

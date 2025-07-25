@@ -16,7 +16,7 @@ public:
 		unsigned int seed,
 		BVHAR_OPTIONAL<std::unique_ptr<MatShrinkageUpdater>> row_exogen = BVHAR_NULLOPT,
 		BVHAR_OPTIONAL<std::unique_ptr<MatShrinkageUpdater>> col_exogen = BVHAR_NULLOPT,
-		BVHAR_OPTIONAL<std::unique_ptr<MatAugmenter>> famar = BVHAR_NULLOPT,
+		BVHAR_OPTIONAL<std::unique_ptr<MatFactorAugmenter>> famar = BVHAR_NULLOPT,
 		BVHAR_OPTIONAL<std::unique_ptr<MatShrinkageUpdater>> row_factor = BVHAR_NULLOPT,
 		BVHAR_OPTIONAL<std::unique_ptr<MatShrinkageUpdater>> col_factor = BVHAR_NULLOPT
 	)
@@ -107,6 +107,12 @@ public:
 		return mniw_record->returnRecords<MatMniwRecords>(num_iter, num_burn, thin);
 	}
 
+	template <typename RecordType>
+	RecordType returnFactorRecords(int num_burn, int thin) const {
+		BVHAR_DEBUG_LOG(debug_logger, "returnFactorRecords(num_burn={}, thin={}) called", num_burn, thin);
+		return famar_updater->returnStructRecords<RecordType>(num_burn, thin);
+	}
+
 protected:
 	std::vector<Eigen::SparseMatrix<double>> x;
 	std::vector<Eigen::MatrixXd> y;
@@ -116,7 +122,7 @@ protected:
 	std::unique_ptr<MatShrinkageUpdater> exogen_col_updater;
 	std::unique_ptr<MatShrinkageUpdater> factor_row_updater;
 	std::unique_ptr<MatShrinkageUpdater> factor_col_updater;
-	std::unique_ptr<MatAugmenter> famar_updater;
+	std::unique_ptr<MatFactorAugmenter> famar_updater;
 	int num_row;
 	int num_col;
 	int num_design;
@@ -272,7 +278,7 @@ inline std::vector<std::unique_ptr<McmcMatMniw>> initialize_matmcmc(
 			col_exogen_updater = initialize_matshrinkageupdater(num_iter, *col_exogen_prior, col_exogen_init_spec, *col_exogen_prior_type);
 			(*col_exogen_updater)->initPrec(params._col_prec.segment(params._row_col_coef, params._col_exogen));
 		}
-		BVHAR_OPTIONAL<std::unique_ptr<MatAugmenter>> famar_updater = BVHAR_NULLOPT;
+		BVHAR_OPTIONAL<std::unique_ptr<MatFactorAugmenter>> famar_updater = BVHAR_NULLOPT;
 		BVHAR_OPTIONAL<std::unique_ptr<MatShrinkageUpdater>> row_factor_updater = BVHAR_NULLOPT;
 		BVHAR_OPTIONAL<std::unique_ptr<MatShrinkageUpdater>> col_factor_updater = BVHAR_NULLOPT;
 		if (row_factor_prior_type) {
