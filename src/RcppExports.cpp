@@ -84,8 +84,8 @@ BEGIN_RCPP
 END_RCPP
 }
 // forecast_bmar_mniw
-Rcpp::List forecast_bmar_mniw(int num_chains, int lag, int step, Eigen::MatrixXd response_mat, int num_data, Rcpp::List fit_record, Eigen::VectorXi seed_chain, int nthreads);
-RcppExport SEXP _baymar_forecast_bmar_mniw(SEXP num_chainsSEXP, SEXP lagSEXP, SEXP stepSEXP, SEXP response_matSEXP, SEXP num_dataSEXP, SEXP fit_recordSEXP, SEXP seed_chainSEXP, SEXP nthreadsSEXP) {
+Rcpp::List forecast_bmar_mniw(int num_chains, int lag, int step, Eigen::MatrixXd response_mat, int num_data, int nrow_factor, int ncol_factor, int factor_lag, Rcpp::List fit_record, Eigen::VectorXi seed_chain, int nthreads);
+RcppExport SEXP _baymar_forecast_bmar_mniw(SEXP num_chainsSEXP, SEXP lagSEXP, SEXP stepSEXP, SEXP response_matSEXP, SEXP num_dataSEXP, SEXP nrow_factorSEXP, SEXP ncol_factorSEXP, SEXP factor_lagSEXP, SEXP fit_recordSEXP, SEXP seed_chainSEXP, SEXP nthreadsSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
@@ -94,16 +94,19 @@ BEGIN_RCPP
     Rcpp::traits::input_parameter< int >::type step(stepSEXP);
     Rcpp::traits::input_parameter< Eigen::MatrixXd >::type response_mat(response_matSEXP);
     Rcpp::traits::input_parameter< int >::type num_data(num_dataSEXP);
+    Rcpp::traits::input_parameter< int >::type nrow_factor(nrow_factorSEXP);
+    Rcpp::traits::input_parameter< int >::type ncol_factor(ncol_factorSEXP);
+    Rcpp::traits::input_parameter< int >::type factor_lag(factor_lagSEXP);
     Rcpp::traits::input_parameter< Rcpp::List >::type fit_record(fit_recordSEXP);
     Rcpp::traits::input_parameter< Eigen::VectorXi >::type seed_chain(seed_chainSEXP);
     Rcpp::traits::input_parameter< int >::type nthreads(nthreadsSEXP);
-    rcpp_result_gen = Rcpp::wrap(forecast_bmar_mniw(num_chains, lag, step, response_mat, num_data, fit_record, seed_chain, nthreads));
+    rcpp_result_gen = Rcpp::wrap(forecast_bmar_mniw(num_chains, lag, step, response_mat, num_data, nrow_factor, ncol_factor, factor_lag, fit_record, seed_chain, nthreads));
     return rcpp_result_gen;
 END_RCPP
 }
 // forecast_bmarx_mniw
-Rcpp::List forecast_bmarx_mniw(int num_chains, int lag, int step, Eigen::MatrixXd response_mat, int num_data, Rcpp::List fit_record, Eigen::VectorXi seed_chain, Eigen::MatrixXd exogen, int exogen_lag, int nthreads);
-RcppExport SEXP _baymar_forecast_bmarx_mniw(SEXP num_chainsSEXP, SEXP lagSEXP, SEXP stepSEXP, SEXP response_matSEXP, SEXP num_dataSEXP, SEXP fit_recordSEXP, SEXP seed_chainSEXP, SEXP exogenSEXP, SEXP exogen_lagSEXP, SEXP nthreadsSEXP) {
+Rcpp::List forecast_bmarx_mniw(int num_chains, int lag, int step, Eigen::MatrixXd response_mat, int num_data, int nrow_factor, int ncol_factor, int factor_lag, Rcpp::List fit_record, Eigen::VectorXi seed_chain, Eigen::MatrixXd exogen, int exogen_lag, int nthreads);
+RcppExport SEXP _baymar_forecast_bmarx_mniw(SEXP num_chainsSEXP, SEXP lagSEXP, SEXP stepSEXP, SEXP response_matSEXP, SEXP num_dataSEXP, SEXP nrow_factorSEXP, SEXP ncol_factorSEXP, SEXP factor_lagSEXP, SEXP fit_recordSEXP, SEXP seed_chainSEXP, SEXP exogenSEXP, SEXP exogen_lagSEXP, SEXP nthreadsSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
@@ -112,12 +115,15 @@ BEGIN_RCPP
     Rcpp::traits::input_parameter< int >::type step(stepSEXP);
     Rcpp::traits::input_parameter< Eigen::MatrixXd >::type response_mat(response_matSEXP);
     Rcpp::traits::input_parameter< int >::type num_data(num_dataSEXP);
+    Rcpp::traits::input_parameter< int >::type nrow_factor(nrow_factorSEXP);
+    Rcpp::traits::input_parameter< int >::type ncol_factor(ncol_factorSEXP);
+    Rcpp::traits::input_parameter< int >::type factor_lag(factor_lagSEXP);
     Rcpp::traits::input_parameter< Rcpp::List >::type fit_record(fit_recordSEXP);
     Rcpp::traits::input_parameter< Eigen::VectorXi >::type seed_chain(seed_chainSEXP);
     Rcpp::traits::input_parameter< Eigen::MatrixXd >::type exogen(exogenSEXP);
     Rcpp::traits::input_parameter< int >::type exogen_lag(exogen_lagSEXP);
     Rcpp::traits::input_parameter< int >::type nthreads(nthreadsSEXP);
-    rcpp_result_gen = Rcpp::wrap(forecast_bmarx_mniw(num_chains, lag, step, response_mat, num_data, fit_record, seed_chain, exogen, exogen_lag, nthreads));
+    rcpp_result_gen = Rcpp::wrap(forecast_bmarx_mniw(num_chains, lag, step, response_mat, num_data, nrow_factor, ncol_factor, factor_lag, fit_record, seed_chain, exogen, exogen_lag, nthreads));
     return rcpp_result_gen;
 END_RCPP
 }
@@ -336,8 +342,8 @@ END_RCPP
 static const R_CallMethodDef CallEntries[] = {
     {"_baymar_estimate_bmdfm", (DL_FUNC) &_baymar_estimate_bmdfm, 17},
     {"_baymar_estimate_bmar_mniw", (DL_FUNC) &_baymar_estimate_bmar_mniw, 34},
-    {"_baymar_forecast_bmar_mniw", (DL_FUNC) &_baymar_forecast_bmar_mniw, 8},
-    {"_baymar_forecast_bmarx_mniw", (DL_FUNC) &_baymar_forecast_bmarx_mniw, 10},
+    {"_baymar_forecast_bmar_mniw", (DL_FUNC) &_baymar_forecast_bmar_mniw, 11},
+    {"_baymar_forecast_bmarx_mniw", (DL_FUNC) &_baymar_forecast_bmarx_mniw, 13},
     {"_baymar_roll_bmar_mniw", (DL_FUNC) &_baymar_roll_bmar_mniw, 23},
     {"_baymar_roll_bmarx_mniw", (DL_FUNC) &_baymar_roll_bmarx_mniw, 31},
     {"_baymar_expand_bmar_mniw", (DL_FUNC) &_baymar_expand_bmar_mniw, 23},

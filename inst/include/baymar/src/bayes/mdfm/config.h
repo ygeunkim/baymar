@@ -95,6 +95,8 @@ struct MatDfmRecords {
 		list["F_record"] = factor_record;
 	}
 
+	virtual void updateParams(const int id, Eigen::Ref<Eigen::MatrixXd> factor_coef, Eigen::Ref<Eigen::VectorXd> factor_sig, const int lag) = 0;
+
 	// MatDfmRecords returnDfmRecords(int num_iter, int num_burn, int thin) const {
 	// 	return MatDfmRecords(
 	// 		bvhar::thin_record(row_coef_record, num_iter, num_burn, thin).derived(),
@@ -143,6 +145,16 @@ struct MatDfmVarRecords : public MatDfmRecords {
 		list["Lambda_record"] = factor_prec_record;
 	}
 
+	void updateParams(const int id, Eigen::Ref<Eigen::MatrixXd> factor_coef, Eigen::Ref<Eigen::VectorXd> factor_sig, const int lag) override {
+		Eigen::MatrixXd temp_coef = bvhar::unvectorize(factor_coef_record.row(id).transpose(), lag);
+		int size_factor = factor_sig.size();
+		for (int i = 0; i < lag; ++i) {
+			// factor_coef.middleRows(i * size_factor, size_factor) = factor_coef_record.row(id).segment(i * size_factor, size_factor).asDiagonal();
+			factor_coef.middleRows(i * size_factor, size_factor) = temp_coef.col(i).asDiagonal();
+		}
+		factor_sig.array() = 1 / factor_prec_record.row(id).array();
+	}
+
 	MatDfmVarRecords returnDfmVarRecords(int num_iter, int num_burn, int thin) const override {
 		return MatDfmVarRecords(
 			bvhar::thin_record(factor_record, num_iter, num_burn, thin).derived(),
@@ -160,6 +172,25 @@ struct MatDfmVarRecords : public MatDfmRecords {
 template <>
 inline MatDfmVarRecords MatDfmRecords::returnRecords(int num_iter, int num_burn, int thin) const {
   return returnDfmVarRecords(num_iter, num_burn, thin);
+}
+
+inline void initialize_matdfm_record(
+	std::unique_ptr<MatDfmRecords>& record, int chain_id, BVHAR_LIST& dfm_record,
+	BVHAR_STRING& factor_name,
+	BVHAR_OPTIONAL<BVHAR_STRING> rho_name = BVHAR_NULLOPT, BVHAR_OPTIONAL<BVHAR_STRING> lambda_name = BVHAR_NULLOPT
+) {
+	BVHAR_PY_LIST factor_list = dfm_record[factor_name];
+	if (rho_name && lambda_name) {
+		BVHAR_PY_LIST factor_coef_list = dfm_record[*rho_name];
+		BVHAR_PY_LIST factor_prec_list = dfm_record[*lambda_name];
+		record = std::make_unique<MatDfmVarRecords>(
+			BVHAR_CAST<Eigen::MatrixXd>(factor_list[chain_id]),
+			BVHAR_CAST<Eigen::MatrixXd>(factor_coef_list[chain_id]),
+			BVHAR_CAST<Eigen::MatrixXd>(factor_prec_list[chain_id])
+		);
+	} else {
+		// Add when other priors are defined
+	}
 }
 
 } // namespace baymar

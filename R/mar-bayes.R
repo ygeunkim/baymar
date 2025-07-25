@@ -370,6 +370,10 @@ mar_bayes <- function(y,
     res$exogen_col_id <- col_exogen_id
   }
   if (is_famar) {
+    res$spec <- append(
+      res$spec,
+      list(factor = famar_spec)
+    )
     dimnames(fac_series) <- list(name_factor_row, name_factor_col, seq_len(length(y_list) - p) + p)
     res$factor <- fac_series
   }

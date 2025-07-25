@@ -38,7 +38,7 @@ Rcpp::List estimate_bmar_mniw(int num_chains, int num_iter, int num_burn, int th
 					col_prior, col_init, col_prior_type,
 					seed_chain, display_progress, nthreads,
 					exogen_row_prior, exogen_row_init, exogen_row_prior_type, exogen_rows,
-					NULLOPT, NULLOPT, NULLOPT, NULLOPT,
+					BVHAR_NULLOPT, BVHAR_NULLOPT, BVHAR_NULLOPT, BVHAR_NULLOPT,
 					factor_row_prior, factor_row_init, factor_row_prior_type, factor_rows,
 					factor_col_prior, factor_col_init, factor_col_prior_type, factor_cols,
 					factor_lag
@@ -51,7 +51,7 @@ Rcpp::List estimate_bmar_mniw(int num_chains, int num_iter, int num_burn, int th
 					row_prior, row_init, row_prior_type,
 					col_prior, col_init, col_prior_type,
 					seed_chain, display_progress, nthreads,
-					NULLOPT, NULLOPT, NULLOPT, NULLOPT,
+					BVHAR_NULLOPT, BVHAR_NULLOPT, BVHAR_NULLOPT, BVHAR_NULLOPT,
 					exogen_col_prior, exogen_col_init, exogen_col_prior_type, exogen_cols,
 					factor_row_prior, factor_row_init, factor_row_prior_type, factor_rows,
 					factor_col_prior, factor_col_init, factor_col_prior_type, factor_cols,
@@ -65,8 +65,8 @@ Rcpp::List estimate_bmar_mniw(int num_chains, int num_iter, int num_burn, int th
 				row_prior, row_init, row_prior_type,
 				col_prior, col_init, col_prior_type,
 				seed_chain, display_progress, nthreads,
-				NULLOPT, NULLOPT, NULLOPT, NULLOPT,
-				NULLOPT, NULLOPT, NULLOPT, NULLOPT,
+				BVHAR_NULLOPT, BVHAR_NULLOPT, BVHAR_NULLOPT, BVHAR_NULLOPT,
+				BVHAR_NULLOPT, BVHAR_NULLOPT, BVHAR_NULLOPT, BVHAR_NULLOPT,
 				factor_row_prior, factor_row_init, factor_row_prior_type, factor_rows,
 				factor_col_prior, factor_col_init, factor_col_prior_type, factor_cols,
 				factor_lag
@@ -101,7 +101,7 @@ Rcpp::List estimate_bmar_mniw(int num_chains, int num_iter, int num_burn, int th
 				row_prior, row_init, row_prior_type,
 				col_prior, col_init, col_prior_type,
 				seed_chain, display_progress, nthreads,
-				NULLOPT, NULLOPT, NULLOPT, NULLOPT,
+				BVHAR_NULLOPT, BVHAR_NULLOPT, BVHAR_NULLOPT, BVHAR_NULLOPT,
 				exogen_col_prior, exogen_col_init, exogen_col_prior_type, exogen_cols
 			);
 		}
@@ -120,20 +120,40 @@ Rcpp::List estimate_bmar_mniw(int num_chains, int num_iter, int num_burn, int th
 //' @noRd
 // [[Rcpp::export]]
 Rcpp::List forecast_bmar_mniw(int num_chains, int lag, int step, Eigen::MatrixXd response_mat, int num_data,
+															int nrow_factor, int ncol_factor, int factor_lag,
 													 	 	Rcpp::List fit_record, Eigen::VectorXi seed_chain, int nthreads) {
-	auto forecaster = std::make_unique<baymar::MatMniwForecastRun>(num_chains, lag, step, response_mat, num_data, fit_record, seed_chain, nthreads);
+	auto forecaster = [&]() -> std::unique_ptr<baymar::MatMniwForecastRun> {
+		if (nrow_factor > 0 && ncol_factor > 0 && factor_lag > 0) {
+			return std::make_unique<baymar::MatMniwForecastRun>(
+				num_chains, lag, step, response_mat, num_data, fit_record, seed_chain, nthreads,
+				BVHAR_NULLOPT, BVHAR_NULLOPT,
+				nrow_factor, ncol_factor, factor_lag
+			);
+		}
+		return std::make_unique<baymar::MatMniwForecastRun>(num_chains, lag, step, response_mat, num_data, fit_record, seed_chain, nthreads);
+	}();
 	return Rcpp::wrap(forecaster->returnForecast());
 }
 
 //' @noRd
 // [[Rcpp::export]]
 Rcpp::List forecast_bmarx_mniw(int num_chains, int lag, int step, Eigen::MatrixXd response_mat, int num_data,
+															 int nrow_factor, int ncol_factor, int factor_lag,
 													 	 	 Rcpp::List fit_record, Eigen::VectorXi seed_chain,
 															 Eigen::MatrixXd exogen, int exogen_lag, int nthreads) {
-	auto forecaster = std::make_unique<baymar::MatMniwForecastRun>(
-		num_chains, lag, step, response_mat, num_data, fit_record, seed_chain, nthreads,
-		exogen, exogen_lag
-	);
+	auto forecaster = [&]() -> std::unique_ptr<baymar::MatMniwForecastRun> {
+		if (nrow_factor > 0 && ncol_factor > 0 && factor_lag > 0) {
+			return std::make_unique<baymar::MatMniwForecastRun>(
+				num_chains, lag, step, response_mat, num_data, fit_record, seed_chain, nthreads,
+				exogen, exogen_lag,
+				nrow_factor, ncol_factor, factor_lag
+			);
+		}
+		return std::make_unique<baymar::MatMniwForecastRun>(
+			num_chains, lag, step, response_mat, num_data, fit_record, seed_chain, nthreads,
+			exogen, exogen_lag
+		);
+	}();
 	return Rcpp::wrap(forecaster->returnForecast());
 }
 

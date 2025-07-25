@@ -14,8 +14,8 @@ public:
 	MatForecaster(
 		int step, const Eigen::MatrixXd& y, int lag,
 		const Eigen::MatrixXd& row_coef, const Eigen::MatrixXd& col_coef,
-		Optional<std::unique_ptr<MatExogenForecaster>> exogen_forecaster = NULLOPT,
-		Optional<std::unique_ptr<MatErrorGenerator>> dgp_updater = NULLOPT
+		BVHAR_OPTIONAL<std::unique_ptr<MatExogenForecaster>> exogen_forecaster = BVHAR_NULLOPT,
+		BVHAR_OPTIONAL<std::unique_ptr<MatErrorGenerator>> dgp_updater = BVHAR_NULLOPT
 	)
 	: bvhar::MultistepForecaster<Eigen::MatrixXd, Eigen::MatrixXd>(step, y, lag),
 		num_row(row_coef.cols()), num_col(col_coef.cols()),
@@ -72,8 +72,8 @@ public:
 	MarForecaster(
 		int step, const Eigen::MatrixXd& y, int lag,
 		const Eigen::MatrixXd& row_coef, const Eigen::MatrixXd& col_coef,
-		Optional<std::unique_ptr<MatExogenForecaster>> exogen_forecaster = NULLOPT,
-		Optional<std::unique_ptr<MatErrorGenerator>> dgp_updater = NULLOPT
+		BVHAR_OPTIONAL<std::unique_ptr<MatExogenForecaster>> exogen_forecaster = BVHAR_NULLOPT,
+		BVHAR_OPTIONAL<std::unique_ptr<MatErrorGenerator>> dgp_updater = BVHAR_NULLOPT
 	)
 	: MatForecaster(step, y, lag, row_coef, col_coef, std::move(exogen_forecaster), std::move(dgp_updater)) {}
 	virtual ~MarForecaster() = default;

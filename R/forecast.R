@@ -21,6 +21,14 @@ predict.marbayes <- function(object, n_ahead, level = .05, newxreg, num_thread =
   var_names <- dimnames(object$y)
   var_names[[3]] <- 1:n_ahead
   y_list <- lapply(seq_len(num_data), function(x) object$y[, , x])
+  nrow_factor <- 0
+  ncol_factor <- 0
+  factor_lag <- 0
+  if ("factor" %in% names(object$spec)) {
+    nrow_factor <- object$spec$factor$nrow_factor
+    ncol_factor <- object$spec$factor$ncol_factor
+    factor_lag <- object$spec$factor$lag
+  }
   if (!is.null(eval.parent(object$call$exogen))) {
     newxreg_list <- validate_newxmat(newxreg = newxreg, n_ahead = n_ahead)
     exogen_list <-
@@ -32,6 +40,9 @@ predict.marbayes <- function(object, n_ahead, level = .05, newxreg, num_thread =
       step = n_ahead,
       response_mat = do.call(rbind, y_list),
       num_data = length(y_list),
+      nrow_factor = nrow_factor,
+      ncol_factor = ncol_factor,
+      factor_lag = factor_lag,
       fit_record = fit_record,
       seed_chain = sample.int(.Machine$integer.max, size = object$chain),
       exogen = rbind(
@@ -48,6 +59,9 @@ predict.marbayes <- function(object, n_ahead, level = .05, newxreg, num_thread =
       step = n_ahead,
       response_mat = do.call(rbind, y_list),
       num_data = length(y_list),
+      nrow_factor = nrow_factor,
+      ncol_factor = ncol_factor,
+      factor_lag = factor_lag,
       fit_record = fit_record,
       seed_chain = sample.int(.Machine$integer.max, size = object$chain),
       nthreads = num_thread

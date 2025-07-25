@@ -24,7 +24,7 @@ public:
 	: num_iter(num_iter), num_burn(num_burn), num_row(row_coef.cols()), res(num_iter) {
 		Eigen::MatrixXd error_mean = Eigen::MatrixXd::Zero(num_row, col_coef.cols());
 		auto dgp_updater = std::make_unique<MatGaussianErrorGenerator>(error_mean, row_sig, col_sig, seed);
-		generator = std::make_unique<MarForecaster>(num_iter + num_burn, init, lag, row_coef, col_coef, NULLOPT, std::move(dgp_updater));
+		generator = std::make_unique<MarForecaster>(num_iter + num_burn, init, lag, row_coef, col_coef, BVHAR_NULLOPT, std::move(dgp_updater));
 	}
 	virtual ~MarSimulator() = default;
 
@@ -58,7 +58,7 @@ public:
 		factor_mat(num_iter), res(num_iter) {
 		Eigen::MatrixXd error_mean = Eigen::MatrixXd::Zero(num_row, num_col);
 		dgp_updater = std::make_unique<MatGaussianErrorGenerator>(error_mean, row_sig, col_sig, seed);
-		// generator = std::make_unique<MarForecaster>(num_iter + num_burn, init, lag, row_coef, col_coef, NULLOPT, std::move(dgp_updater));
+		// generator = std::make_unique<MarForecaster>(num_iter + num_burn, init, lag, row_coef, col_coef, BVHAR_NULLOPT, std::move(dgp_updater));
 		// int num_init = init.rows() / nrow_factor;
 		// generator = std::make_unique<MatExogenForecaster>(0, init, num_init, num_row, num_col);
 	}
