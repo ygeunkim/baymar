@@ -192,6 +192,16 @@ forecast_roll.marbayes <- function(object, n_ahead, y_test,
     col_factor_prior_type <- get_prior_id(object$spec$factor_col$prior)
     row_factor_init <- object$init$factor_row
     col_factor_init <- object$init$factor_col
+    param_prior$row_prior_mean <- rbind(
+      param_prior$row_prior_mean,
+      matrix(0L, nrow = nrow_factor, ncol = nrow_data)
+    )
+    param_prior$row_prior_prec <- c(param_prior$row_prior_prec, rep(1, nrow_factor))
+    param_prior$col_prior_mean <- rbind(
+      param_prior$col_prior_mean,
+      matrix(0L, nrow = ncol_factor, ncol = ncol_data)
+    )
+    param_prior$col_prior_prec <- c(param_prior$col_prior_prec, rep(1, ncol_factor))
   }
   is_exogen <- !is.null(eval.parent(object$call$exogen))
   if (is_exogen) {
@@ -387,6 +397,16 @@ forecast_expand.marbayes <- function(object, n_ahead, y_test,
     col_factor_prior_type <- get_prior_id(object$spec$factor_col$prior)
     row_factor_init <- object$init$factor_row
     col_factor_init <- object$init$factor_col
+    param_prior$row_prior_mean <- rbind(
+      param_prior$row_prior_mean,
+      matrix(0L, nrow = nrow_factor, ncol = nrow_data)
+    )
+    param_prior$row_prior_prec <- c(param_prior$row_prior_prec, rep(1, nrow_factor))
+    param_prior$col_prior_mean <- rbind(
+      param_prior$col_prior_mean,
+      matrix(0L, nrow = ncol_factor, ncol = ncol_data)
+    )
+    param_prior$col_prior_prec <- c(param_prior$col_prior_prec, rep(1, ncol_factor))
   }
   is_exogen <- !is.null(eval.parent(object$call$exogen))
   if (is_exogen) {

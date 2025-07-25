@@ -257,7 +257,7 @@ inline std::vector<std::unique_ptr<MatMniwForecaster>> initialize_matmniwforecas
 		BVHAR_OPTIONAL<std::unique_ptr<MatFactorForecaster>> factor_updater = BVHAR_NULLOPT;
 		BVHAR_OPTIONAL<BVHAR_STRING> g_name = BVHAR_NULLOPT;
 		BVHAR_OPTIONAL<BVHAR_STRING> h_name = BVHAR_NULLOPT;
-		if (nrow_factor) {
+		if (factor_lag) {
 			g_name = "G_record";
 			h_name = "H_record";
 		}
@@ -269,7 +269,7 @@ inline std::vector<std::unique_ptr<MatMniwForecaster>> initialize_matmniwforecas
 		} else {
 			initialize_matmniw_record(mat_record, i, fit_record, a_name, sigr_name, b_name, sigc_name, g_name, h_name);
 		}
-		if (nrow_factor) {
+		if (factor_lag) {
 			BVHAR_STRING f_name = "F_record";
 			BVHAR_STRING rho_name = "Rho_record";
 			BVHAR_STRING prec_name = "Lambda_record";
@@ -416,7 +416,11 @@ protected:
 					int nrow_exogen = exogen->rows() / (num_window + num_test);
 					exogen_data = marmatrix_to_vector(*(roll_exogen_mat[window]), nrow_exogen);
 				}
-				std::vector<Eigen::SparseMatrix<double>> design = lag_exogen ? build_mar_design(y_data, *exogen_data, lag, *lag_exogen) : build_mar_design(y_data, lag);
+				// Should append nrow_factor x ncol_factor matrix when factor case
+				// std::vector<Eigen::SparseMatrix<double>> design = lag_exogen ? build_mar_design(y_data, *exogen_data, lag, *lag_exogen) : build_mar_design(y_data, lag);
+				std::vector<Eigen::SparseMatrix<double>> design = lag_exogen ?
+					(factor_lag ? build_mar_design(y_data, *exogen_data, lag, *lag_exogen, *nrow_factor, *ncol_factor) : build_mar_design(y_data, *exogen_data, lag, *lag_exogen)) :
+					(factor_lag ? build_mar_design(y_data, lag, *nrow_factor, *ncol_factor) : build_mar_design(y_data, lag));
 				if (lag_exogen) {
 					exogen_rows = (*lag_exogen + 1) * (*exogen_data)[0].rows();
 					exogen_cols = (*lag_exogen + 1) * (*exogen_data)[0].cols();
@@ -465,7 +469,7 @@ protected:
 		if (lag_exogen) {
 			exogen_updater = std::make_unique<MatMniwExogenForecaster>(*lag_exogen, *(roll_exogen[window]), *lag_exogen + step, num_row, num_col);
 		}
-		if (nrow_factor) {
+		if (factor_lag) {
 			auto mdfm_var_record = mcmc_mniw->returnFactorRecords<MatDfmVarRecords>(0, thin);
 			factor_updater = std::make_unique<MatFactorVarForecaster>(mdfm_var_record, step, *factor_lag, num_row, num_col, *nrow_factor, *ncol_factor);
 		}
