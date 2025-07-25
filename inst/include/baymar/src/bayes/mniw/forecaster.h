@@ -466,7 +466,8 @@ protected:
 			exogen_updater = std::make_unique<MatMniwExogenForecaster>(*lag_exogen, *(roll_exogen[window]), *lag_exogen + step, num_row, num_col);
 		}
 		if (nrow_factor) {
-			// Need mdfm_record -> update mniw.h
+			auto mdfm_var_record = mcmc_mniw->returnFactorRecords<MatDfmVarRecords>(0, thin);
+			factor_updater = std::make_unique<MatFactorVarForecaster>(mdfm_var_record, step, *factor_lag, num_row, num_col, *nrow_factor, *ncol_factor);
 		}
 		forecaster[window][chain] = std::make_unique<MatMniwForecaster>(
 			mniw_record, step, roll_mat[window], num_window, lag, static_cast<unsigned int>(seed_forecast[chain]),
