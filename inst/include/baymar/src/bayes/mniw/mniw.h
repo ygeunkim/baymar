@@ -110,7 +110,7 @@ public:
 	template <typename RecordType>
 	RecordType returnFactorRecords(int num_burn, int thin) const {
 		BVHAR_DEBUG_LOG(debug_logger, "returnFactorRecords(num_burn={}, thin={}) called", num_burn, thin);
-		return famar_updater->returnStructRecords<RecordType>(num_iter, num_burn, thin);
+		return famar_updater->returnStructRecords<RecordType>(num_burn, thin);
 	}
 
 protected:
