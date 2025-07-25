@@ -372,7 +372,11 @@ mar_bayes <- function(y,
   if (is_famar) {
     res$spec <- append(
       res$spec,
-      list(factor = famar_spec)
+      list(factor_row = factor_row_spec, factor_col = factor_col_spec, factor = famar_spec)
+    )
+    res$init <- append(
+      res$init,
+      list(factor_row = row_factor_init, factor_col = col_factor_init)
     )
     dimnames(fac_series) <- list(name_factor_row, name_factor_col, seq_len(length(y_list) - p) + p)
     res$factor <- fac_series

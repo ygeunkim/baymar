@@ -173,6 +173,26 @@ forecast_roll.marbayes <- function(object, n_ahead, y_test,
   row_prior <- validate_bmar_prior(object$spec$row)
   col_prior <- validate_bmar_prior(object$spec$col)
   num_horizon <- length(y_test_list) - n_ahead + 1
+  nrow_factor <- 0
+  ncol_factor <- 0
+  factor_lag <- 0
+  row_factor_prior <- list()
+  col_factor_prior <- list()
+  row_factor_prior_type <- 0
+  col_factor_prior_type <- 0
+  row_factor_init <- list()
+  col_factor_init <- list()
+  if ("factor" %in% names(object$spec)) {
+    nrow_factor <- object$spec$factor$nrow_factor
+    ncol_factor <- object$spec$factor$ncol_factor
+    factor_lag <- object$spec$factor$lag
+    row_factor_prior <- validate_bmar_prior(object$spec$factor_row)
+    col_factor_prior <- validate_bmar_prior(object$spec$factor_col)
+    row_factor_prior_type <- get_prior_id(object$spec$factor_row$prior)
+    col_factor_prior_type <- get_prior_id(object$spec$factor_col$prior)
+    row_factor_init <- object$init$factor_row
+    col_factor_init <- object$init$factor_col
+  }
   is_exogen <- !is.null(eval.parent(object$call$exogen))
   if (is_exogen) {
     newxreg_list <- validate_newxmat(newxreg = newxreg, n_ahead = num_test)
@@ -210,6 +230,9 @@ forecast_roll.marbayes <- function(object, n_ahead, y_test,
       param_coef_sig = param_prior, coef_sig_init = object$init$param,
       row_prior = row_prior, row_init = object$init$row, row_prior_type = get_prior_id(object$spec$row$prior),
       col_prior = col_prior, col_init = object$init$col, col_prior_type = get_prior_id(object$spec$col$prior),
+      factor_row_prior = row_factor_prior, factor_row_init = row_factor_init, factor_row_prior_type = row_factor_prior_type, factor_rows = nrow_factor,
+      factor_col_prior = col_factor_prior, factor_col_init = col_factor_init, factor_col_prior_type = col_factor_prior_type, factor_cols = ncol_factor,
+      factor_lag = factor_lag,
       step = n_ahead, y_test = do.call(rbind, y_test_list),
       seed_chain = sample.int(.Machine$integer.max, size = object$chain * num_horizon) |> matrix(ncol = object$chain),
       seed_forecast = sample.int(.Machine$integer.max, size = object$chain),
@@ -237,6 +260,9 @@ forecast_roll.marbayes <- function(object, n_ahead, y_test,
       param_coef_sig = param_prior, coef_sig_init = object$init$param,
       row_prior = row_prior, row_init = object$init$row, row_prior_type = get_prior_id(object$spec$row$prior),
       col_prior = col_prior, col_init = object$init$col, col_prior_type = get_prior_id(object$spec$col$prior),
+      factor_row_prior = row_factor_prior, factor_row_init = row_factor_init, factor_row_prior_type = row_factor_prior_type, factor_rows = nrow_factor,
+      factor_col_prior = col_factor_prior, factor_col_init = col_factor_init, factor_col_prior_type = col_factor_prior_type, factor_cols = ncol_factor,
+      factor_lag = factor_lag,
       step = n_ahead, y_test = do.call(rbind, y_test_list),
       seed_chain = sample.int(.Machine$integer.max, size = object$chain * num_horizon) |> matrix(ncol = object$chain),
       seed_forecast = sample.int(.Machine$integer.max, size = object$chain),
@@ -342,6 +368,26 @@ forecast_expand.marbayes <- function(object, n_ahead, y_test,
   row_prior <- validate_bmar_prior(object$spec$row)
   col_prior <- validate_bmar_prior(object$spec$col)
   num_horizon <- length(y_test_list) - n_ahead + 1
+  nrow_factor <- 0
+  ncol_factor <- 0
+  factor_lag <- 0
+  row_factor_prior <- list()
+  col_factor_prior <- list()
+  row_factor_prior_type <- 0
+  col_factor_prior_type <- 0
+  row_factor_init <- list()
+  col_factor_init <- list()
+  if ("factor" %in% names(object$spec)) {
+    nrow_factor <- object$spec$factor$nrow_factor
+    ncol_factor <- object$spec$factor$ncol_factor
+    factor_lag <- object$spec$factor$lag
+    row_factor_prior <- validate_bmar_prior(object$spec$factor_row)
+    col_factor_prior <- validate_bmar_prior(object$spec$factor_col)
+    row_factor_prior_type <- get_prior_id(object$spec$factor_row$prior)
+    col_factor_prior_type <- get_prior_id(object$spec$factor_col$prior)
+    row_factor_init <- object$init$factor_row
+    col_factor_init <- object$init$factor_col
+  }
   is_exogen <- !is.null(eval.parent(object$call$exogen))
   if (is_exogen) {
     newxreg_list <- validate_newxmat(newxreg = newxreg, n_ahead = num_test)
@@ -379,6 +425,9 @@ forecast_expand.marbayes <- function(object, n_ahead, y_test,
       param_coef_sig = param_prior, coef_sig_init = object$init$param,
       row_prior = row_prior, row_init = object$init$row, row_prior_type = get_prior_id(object$spec$row$prior),
       col_prior = col_prior, col_init = object$init$col, col_prior_type = get_prior_id(object$spec$col$prior),
+      factor_row_prior = row_factor_prior, factor_row_init = row_factor_init, factor_row_prior_type = row_factor_prior_type, factor_rows = nrow_factor,
+      factor_col_prior = col_factor_prior, factor_col_init = col_factor_init, factor_col_prior_type = col_factor_prior_type, factor_cols = ncol_factor,
+      factor_lag = factor_lag,
       step = n_ahead, y_test = do.call(rbind, y_test_list),
       seed_chain = sample.int(.Machine$integer.max, size = object$chain * num_horizon) |> matrix(ncol = object$chain),
       seed_forecast = sample.int(.Machine$integer.max, size = object$chain),
@@ -406,6 +455,9 @@ forecast_expand.marbayes <- function(object, n_ahead, y_test,
       param_coef_sig = param_prior, coef_sig_init = object$init$param,
       row_prior = row_prior, row_init = object$init$row, row_prior_type = get_prior_id(object$spec$row$prior),
       col_prior = col_prior, col_init = object$init$col, col_prior_type = get_prior_id(object$spec$col$prior),
+      factor_row_prior = row_factor_prior, factor_row_init = row_factor_init, factor_row_prior_type = row_factor_prior_type, factor_rows = nrow_factor,
+      factor_col_prior = col_factor_prior, factor_col_init = col_factor_init, factor_col_prior_type = col_factor_prior_type, factor_cols = ncol_factor,
+      factor_lag = factor_lag,
       step = n_ahead, y_test = do.call(rbind, y_test_list),
       seed_chain = sample.int(.Machine$integer.max, size = object$chain * num_horizon) |> matrix(ncol = object$chain),
       seed_forecast = sample.int(.Machine$integer.max, size = object$chain),
