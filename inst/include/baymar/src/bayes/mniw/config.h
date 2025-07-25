@@ -92,7 +92,21 @@ struct MatMniwRecords {
 		row_coef_record << coef_row_record, exogen_row_coef_record;
 		col_coef_record << coef_col_record, exogen_col_coef_record;
 	}
-	
+
+	MatMniwRecords(
+		const Eigen::MatrixXd& coef_row_record, const Eigen::MatrixXd& row_sigma_record,
+		const Eigen::MatrixXd& coef_col_record, const Eigen::MatrixXd& col_sigma_record,
+		const Eigen::MatrixXd& exogen_row_coef_record, const Eigen::MatrixXd& exogen_col_coef_record,
+		const Eigen::MatrixXd& factor_row_coef_record, const Eigen::MatrixXd& factor_col_coef_record
+	)
+	: row_coef_record(Eigen::MatrixXd::Zero(coef_row_record.rows(), coef_row_record.cols() + exogen_row_coef_record.cols() + factor_row_coef_record.cols())),
+		row_sigma_record(row_sigma_record),
+		col_coef_record(Eigen::MatrixXd::Zero(coef_col_record.rows(), coef_col_record.cols() + exogen_col_coef_record.cols() + factor_col_coef_record.cols())),
+		col_sigma_record(col_sigma_record) {
+		row_coef_record << coef_row_record, exogen_row_coef_record, factor_row_coef_record;
+		col_coef_record << coef_col_record, exogen_col_coef_record, factor_col_coef_record;
+	}
+
 	void assignRecords(
 		int id,
 		const Eigen::MatrixXd& row_coef, const Eigen::MatrixXd& row_sig_lower,
@@ -180,13 +194,29 @@ inline MatMniwRecords MatMniwRecords::returnRecords(int num_iter, int num_burn, 
 inline void initialize_matmniw_record(
 	std::unique_ptr<MatMniwRecords>& record, int chain_id, BVHAR_LIST& fit_record,
 	BVHAR_STRING& a_name, BVHAR_STRING& sigr_name, BVHAR_STRING& b_name, BVHAR_STRING& sigc_name,
-	BVHAR_OPTIONAL<BVHAR_STRING> c_name = BVHAR_NULLOPT, BVHAR_OPTIONAL<BVHAR_STRING> d_name = BVHAR_NULLOPT
+	BVHAR_OPTIONAL<BVHAR_STRING> c_name = BVHAR_NULLOPT, BVHAR_OPTIONAL<BVHAR_STRING> d_name = BVHAR_NULLOPT,
+	BVHAR_OPTIONAL<BVHAR_STRING> g_name = BVHAR_NULLOPT, BVHAR_OPTIONAL<BVHAR_STRING> h_name = BVHAR_NULLOPT
 ) {
 	BVHAR_PY_LIST row_coef_list = fit_record[a_name];
 	BVHAR_PY_LIST row_sigma_list = fit_record[sigr_name];
 	BVHAR_PY_LIST col_coef_list = fit_record[b_name];
 	BVHAR_PY_LIST col_sigma_list = fit_record[sigc_name];
-	if (c_name && d_name) {
+	if ((c_name && d_name) && (g_name && h_name)) {
+		BVHAR_PY_LIST exogen_row_list = fit_record[*c_name];
+		BVHAR_PY_LIST exogen_col_list = fit_record[*d_name];
+		BVHAR_PY_LIST factor_row_list = fit_record[*g_name];
+		BVHAR_PY_LIST factor_col_list = fit_record[*h_name];
+		record = std::make_unique<MatMniwRecords>(
+			BVHAR_CAST<Eigen::MatrixXd>(row_coef_list[chain_id]),
+			BVHAR_CAST<Eigen::MatrixXd>(row_sigma_list[chain_id]),
+			BVHAR_CAST<Eigen::MatrixXd>(col_coef_list[chain_id]),
+			BVHAR_CAST<Eigen::MatrixXd>(col_sigma_list[chain_id]),
+			BVHAR_CAST<Eigen::MatrixXd>(exogen_row_list[chain_id]),
+			BVHAR_CAST<Eigen::MatrixXd>(exogen_col_list[chain_id]),
+			BVHAR_CAST<Eigen::MatrixXd>(factor_row_list[chain_id]),
+			BVHAR_CAST<Eigen::MatrixXd>(factor_col_list[chain_id])
+		);
+	} else if (c_name && d_name) {
 		BVHAR_PY_LIST exogen_row_list = fit_record[*c_name];
 		BVHAR_PY_LIST exogen_col_list = fit_record[*d_name];
 		record = std::make_unique<MatMniwRecords>(

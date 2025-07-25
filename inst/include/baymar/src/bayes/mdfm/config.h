@@ -95,7 +95,7 @@ struct MatDfmRecords {
 		list["F_record"] = factor_record;
 	}
 
-	virtual void updateParams(const int id, Eigen::Ref<Eigen::MatrixXd> factor_coef, Eigen::Ref<Eigen::VectorXd> factor_sig) = 0;
+	virtual void updateParams(const int id, Eigen::Ref<Eigen::MatrixXd> factor_coef, Eigen::Ref<Eigen::VectorXd> factor_sig, const int lag) = 0;
 
 	// MatDfmRecords returnDfmRecords(int num_iter, int num_burn, int thin) const {
 	// 	return MatDfmRecords(
@@ -145,8 +145,13 @@ struct MatDfmVarRecords : public MatDfmRecords {
 		list["Lambda_record"] = factor_prec_record;
 	}
 
-	void updateParams(const int id, Eigen::Ref<Eigen::MatrixXd> factor_coef, Eigen::Ref<Eigen::VectorXd> factor_sig) override {
-		factor_coef = bvhar::unvectorize(factor_coef_record.row(id), factor_coef.cols());
+	void updateParams(const int id, Eigen::Ref<Eigen::MatrixXd> factor_coef, Eigen::Ref<Eigen::VectorXd> factor_sig, const int lag) override {
+		Eigen::MatrixXd temp_coef = bvhar::unvectorize(factor_coef_record.row(id).transpose(), lag);
+		int size_factor = factor_sig.size();
+		for (int i = 0; i < lag; ++i) {
+			// factor_coef.middleRows(i * size_factor, size_factor) = factor_coef_record.row(id).segment(i * size_factor, size_factor).asDiagonal();
+			factor_coef.middleRows(i * size_factor, size_factor) = temp_coef.col(i).asDiagonal();
+		}
 		factor_sig.array() = 1 / factor_prec_record.row(id).array();
 	}
 
