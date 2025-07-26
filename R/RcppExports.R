@@ -12,6 +12,16 @@ forecast_bdfm_mniw <- function(num_chains, step, nrow_factor, ncol_factor, facto
 }
 
 #' @noRd
+roll_bdfm_mniw <- function(y, num_data, num_chains, num_iter, num_burn, thin, fit_record, run_mcmc, param_coef_sig, coef_sig_init, row_prior, row_init, row_prior_type, col_prior, col_init, col_prior_type, factor_rows, factor_cols, factor_lag, step, y_test, seed_chain, seed_forecast, display_progress, nthreads) {
+    .Call(`_baymar_roll_bdfm_mniw`, y, num_data, num_chains, num_iter, num_burn, thin, fit_record, run_mcmc, param_coef_sig, coef_sig_init, row_prior, row_init, row_prior_type, col_prior, col_init, col_prior_type, factor_rows, factor_cols, factor_lag, step, y_test, seed_chain, seed_forecast, display_progress, nthreads)
+}
+
+#' @noRd
+expand_bdfm_mniw <- function(y, num_data, num_chains, num_iter, num_burn, thin, fit_record, run_mcmc, param_coef_sig, coef_sig_init, row_prior, row_init, row_prior_type, col_prior, col_init, col_prior_type, factor_rows, factor_cols, factor_lag, step, y_test, seed_chain, seed_forecast, display_progress, nthreads) {
+    .Call(`_baymar_expand_bdfm_mniw`, y, num_data, num_chains, num_iter, num_burn, thin, fit_record, run_mcmc, param_coef_sig, coef_sig_init, row_prior, row_init, row_prior_type, col_prior, col_init, col_prior_type, factor_rows, factor_cols, factor_lag, step, y_test, seed_chain, seed_forecast, display_progress, nthreads)
+}
+
+#' @noRd
 estimate_bmar_mniw <- function(num_chains, num_iter, num_burn, thin, x, y, param_coef_sig, coef_sig_init, row_prior, row_init, row_prior_type, col_prior, col_init, col_prior_type, exogen_row_prior, exogen_row_init, exogen_row_prior_type, exogen_rows, exogen_col_prior, exogen_col_init, exogen_col_prior_type, exogen_cols, factor_row_prior, factor_row_init, factor_row_prior_type, factor_rows, factor_col_prior, factor_col_init, factor_col_prior_type, factor_cols, factor_lag, seed_chain, display_progress, nthreads) {
     .Call(`_baymar_estimate_bmar_mniw`, num_chains, num_iter, num_burn, thin, x, y, param_coef_sig, coef_sig_init, row_prior, row_init, row_prior_type, col_prior, col_init, col_prior_type, exogen_row_prior, exogen_row_init, exogen_row_prior_type, exogen_rows, exogen_col_prior, exogen_col_init, exogen_col_prior_type, exogen_cols, factor_row_prior, factor_row_init, factor_row_prior_type, factor_rows, factor_col_prior, factor_col_init, factor_col_prior_type, factor_cols, factor_lag, seed_chain, display_progress, nthreads)
 }

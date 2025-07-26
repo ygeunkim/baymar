@@ -192,7 +192,7 @@ predict.mdfmbayes <- function(object, n_ahead, level = .05, num_thread = 1, med 
     upper_joint = upper_quantile,
     y = object$y
   )
-  class(res) <- c("predmdfmbayes", "predmdfm")
+  class(res) <- c("predmarbayes", "predmar")
   res
 }
 
@@ -401,6 +401,139 @@ forecast_roll.marbayes <- function(object, n_ahead, y_test,
   res
 }
 
+#' Pseudo out-of-sample Forecasting for MDFM based on Rolling Window
+#'
+#' @param object Model object
+#' @param n_ahead Step to forecast in rolling window scheme
+#' @param y_test Test data to be compared.
+#' @param level Specify alpha of confidence interval level 100(1 - alpha) percentage. By default, .05.
+#' @param newxreg Not used.
+#' @param num_thread `r lifecycle::badge("experimental")` Number of threads
+#' @param med `r lifecycle::badge("experimental")` If `TRUE`, use median of forecast draws instead of mean (default).
+#' @param mcmc `r lifecycle::badge("experimental")` If `TRUE`, run new MCMC in new windows. By default, `TRUE`.
+#' @param verbose Print the progress bar in the console. By default, `FALSE`.
+#' @param ... Additional arguments
+#' @exportS3Method bvhar::forecast_roll
+forecast_roll.mdfmbayes <- function(object, n_ahead, y_test,
+                                    level = .05,
+                                    newxreg = NULL,
+                                    num_thread = 1,
+                                    med = FALSE,
+                                    mcmc = TRUE,
+                                    verbose = FALSE, ...) {
+  fit_record <- get_bmar_records(object, TRUE)
+  nrow_data <- dim(object$y)[1]
+  ncol_data <- dim(object$y)[2]
+  num_data <- dim(object$y)[3]
+  nrow_factor <- object$spec$factor$nrow_factor
+  ncol_factor <- object$spec$factor$ncol_factor
+  factor_lag <- object$spec$factor$lag
+  # nrow_row_coef <- nrow_data * object$p
+  # nrow_col_coef <- ncol_data * object$p
+  num_test <- dim(y_test)[3]
+  y_list <- lapply(seq_len(num_data), function(x) object$y[, , x])
+  y_test_list <- lapply(seq_len(num_test), function(x) y_test[, , x])
+  var_names <- dimnames(object$y)
+  var_names[[3]] <- n_ahead:length(y_test_list)
+  param_prior <- validate_bmar_row_spec(
+    y = object$y,
+    p = object$p,
+    bayes_spec = object$spec$row,
+    nrow_data = nrow_data,
+    ncol_data = ncol_data,
+    nrow_row_coef = nrow_factor
+  )
+  param_prior <- append(
+    param_prior,
+    validate_bmar_col_spec(
+      y = object$y,
+      p = object$p,
+      bayes_spec = object$spec$col,
+      nrow_data = nrow_data,
+      ncol_data = ncol_data,
+      nrow_col_coef = ncol_factor
+    )
+  )
+  param_prior <- append(
+    param_prior,
+    list(
+      nrow_factor = nrow_factor,
+      ncol_factor = ncol_factor,
+      size_factor = nrow_factor * ncol_factor,
+      lag = factor_lag,
+      shape = object$spec$factor$shape,
+      scale = object$spec$factor$scale
+    )
+  )
+  param_prior$row_prior_prec <- rep(1, nrow_factor)
+  param_prior$col_prior_prec <- rep(1, ncol_factor)
+  row_prior <- validate_bmar_prior(object$spec$row)
+  col_prior <- validate_bmar_prior(object$spec$col)
+  num_horizon <- length(y_test_list) - n_ahead + 1
+  pred_res <- roll_bdfm_mniw(
+    y = do.call(rbind, y_list),
+    num_data = length(y_list),
+    num_chains = object$chain,
+    num_iter = object$iter,
+    num_burn = object$burn,
+    thin = object$thin,
+    fit_record = fit_record,
+    run_mcmc = mcmc,
+    param_coef_sig = param_prior, coef_sig_init = object$init$param,
+    row_prior = row_prior, row_init = object$init$row, row_prior_type = get_prior_id(object$spec$row$prior),
+    col_prior = col_prior, col_init = object$init$col, col_prior_type = get_prior_id(object$spec$col$prior),
+    factor_rows = nrow_factor, factor_cols = ncol_factor, factor_lag = factor_lag,
+    step = n_ahead, y_test = do.call(rbind, y_test_list),
+    seed_chain = sample.int(.Machine$integer.max, size = object$chain * num_horizon) |> matrix(ncol = object$chain),
+    seed_forecast = sample.int(.Machine$integer.max, size = object$chain),
+    display_progress = verbose,
+    nthreads = num_thread
+  )
+  num_draw <- nrow(object$param)
+  y_distn <-
+    lapply(
+      pred_res$forecast,
+      process_mar_ourforecast_draws,
+      n_ahead = n_ahead,
+      ncol_data = ncol_data,
+      num_draw = num_draw
+    )
+  if (med) {
+    pred_mean <-
+      lapply(y_distn, function(x) apply(x, c(1, 2), median)) |>
+      simplify2array()
+  } else {
+    pred_mean <-
+      lapply(y_distn, function(x) apply(x, c(1, 2), mean)) |>
+      simplify2array()
+  }
+  lower_quantile <-
+    lapply(y_distn, function(x) apply(x, c(1, 2), quantile, probs = level / 2)) |>
+    simplify2array()
+  upper_quantile <-
+    lapply(y_distn, function(x) apply(x, c(1, 2), quantile, probs = 1 - level / 2)) |>
+    simplify2array()
+  est_se <-
+    lapply(y_distn, function(x) apply(x, c(1, 2), sd)) |>
+    simplify2array()
+  dimnames(pred_mean) <- var_names
+  dimnames(lower_quantile) <- var_names
+  dimnames(upper_quantile) <- var_names
+  dimnames(est_se) <- var_names
+  res <- list(
+    forecast = pred_mean,
+    se = est_se,
+    lower = lower_quantile,
+    upper = upper_quantile,
+    lower_joint = lower_quantile,
+    upper_joint = upper_quantile,
+    eval_id = n_ahead:length(y_test_list),
+    y = object$y
+  )
+  class(res) <- c("predmarbayes_roll", "predmarcv")
+  res
+}
+
 #' Pseudo out-of-sample Forecasting based on Expanding Window
 #' 
 #' @param object Model object
@@ -561,6 +694,139 @@ forecast_expand.marbayes <- function(object, n_ahead, y_test,
       nthreads = num_thread
     )
   }
+  num_draw <- nrow(object$param)
+  y_distn <-
+    lapply(
+      pred_res$forecast,
+      process_mar_ourforecast_draws,
+      n_ahead = n_ahead,
+      ncol_data = ncol_data,
+      num_draw = num_draw
+    )
+  if (med) {
+    pred_mean <-
+      lapply(y_distn, function(x) apply(x, c(1, 2), median)) |>
+      simplify2array()
+  } else {
+    pred_mean <-
+      lapply(y_distn, function(x) apply(x, c(1, 2), mean)) |>
+      simplify2array()
+  }
+  lower_quantile <-
+    lapply(y_distn, function(x) apply(x, c(1, 2), quantile, probs = level / 2)) |>
+    simplify2array()
+  upper_quantile <-
+    lapply(y_distn, function(x) apply(x, c(1, 2), quantile, probs = 1 - level / 2)) |>
+    simplify2array()
+  est_se <-
+    lapply(y_distn, function(x) apply(x, c(1, 2), sd)) |>
+    simplify2array()
+  dimnames(pred_mean) <- var_names
+  dimnames(lower_quantile) <- var_names
+  dimnames(upper_quantile) <- var_names
+  dimnames(est_se) <- var_names
+  res <- list(
+    forecast = pred_mean,
+    se = est_se,
+    lower = lower_quantile,
+    upper = upper_quantile,
+    lower_joint = lower_quantile,
+    upper_joint = upper_quantile,
+    eval_id = n_ahead:length(y_test_list),
+    y = object$y
+  )
+  class(res) <- c("predmarbayes_expand", "predmarcv")
+  res
+}
+
+#' Pseudo out-of-sample Forecasting for MDFM based on Expanding Window
+#'
+#' @param object Model object
+#' @param n_ahead Step to forecast in rolling window scheme
+#' @param y_test Test data to be compared.
+#' @param level Specify alpha of confidence interval level 100(1 - alpha) percentage. By default, .05.
+#' @param newxreg Not used.
+#' @param num_thread `r lifecycle::badge("experimental")` Number of threads
+#' @param med `r lifecycle::badge("experimental")` If `TRUE`, use median of forecast draws instead of mean (default).
+#' @param mcmc `r lifecycle::badge("experimental")` If `TRUE`, run new MCMC in new windows. By default, `TRUE`.
+#' @param verbose Print the progress bar in the console. By default, `FALSE`.
+#' @param ... Additional arguments
+#' @exportS3Method bvhar::forecast_expand
+forecast_expand.mdfmbayes <- function(object, n_ahead, y_test,
+                                      level = .05,
+                                      newxreg = NULL,
+                                      num_thread = 1,
+                                      med = FALSE,
+                                      mcmc = TRUE,
+                                      verbose = FALSE, ...) {
+  fit_record <- get_bmar_records(object, TRUE)
+  nrow_data <- dim(object$y)[1]
+  ncol_data <- dim(object$y)[2]
+  num_data <- dim(object$y)[3]
+  nrow_factor <- object$spec$factor$nrow_factor
+  ncol_factor <- object$spec$factor$ncol_factor
+  factor_lag <- object$spec$factor$lag
+  # nrow_row_coef <- nrow_data * object$p
+  # nrow_col_coef <- ncol_data * object$p
+  num_test <- dim(y_test)[3]
+  y_list <- lapply(seq_len(num_data), function(x) object$y[, , x])
+  y_test_list <- lapply(seq_len(num_test), function(x) y_test[, , x])
+  var_names <- dimnames(object$y)
+  var_names[[3]] <- n_ahead:length(y_test_list)
+  param_prior <- validate_bmar_row_spec(
+    y = object$y,
+    p = object$p,
+    bayes_spec = object$spec$row,
+    nrow_data = nrow_data,
+    ncol_data = ncol_data,
+    nrow_row_coef = nrow_factor
+  )
+  param_prior <- append(
+    param_prior,
+    validate_bmar_col_spec(
+      y = object$y,
+      p = object$p,
+      bayes_spec = object$spec$col,
+      nrow_data = nrow_data,
+      ncol_data = ncol_data,
+      nrow_col_coef = ncol_factor
+    )
+  )
+  param_prior <- append(
+    param_prior,
+    list(
+      nrow_factor = nrow_factor,
+      ncol_factor = ncol_factor,
+      size_factor = nrow_factor * ncol_factor,
+      lag = factor_lag,
+      shape = object$spec$factor$shape,
+      scale = object$spec$factor$scale
+    )
+  )
+  param_prior$row_prior_prec <- rep(1, nrow_factor)
+  param_prior$col_prior_prec <- rep(1, ncol_factor)
+  row_prior <- validate_bmar_prior(object$spec$row)
+  col_prior <- validate_bmar_prior(object$spec$col)
+  num_horizon <- length(y_test_list) - n_ahead + 1
+  pred_res <- expand_bdfm_mniw(
+    y = do.call(rbind, y_list),
+    num_data = length(y_list),
+    num_chains = object$chain,
+    num_iter = object$iter,
+    num_burn = object$burn,
+    thin = object$thin,
+    fit_record = fit_record,
+    run_mcmc = mcmc,
+    param_coef_sig = param_prior, coef_sig_init = object$init$param,
+    row_prior = row_prior, row_init = object$init$row, row_prior_type = get_prior_id(object$spec$row$prior),
+    col_prior = col_prior, col_init = object$init$col, col_prior_type = get_prior_id(object$spec$col$prior),
+    factor_rows = nrow_factor, factor_cols = ncol_factor, factor_lag = factor_lag,
+    step = n_ahead, y_test = do.call(rbind, y_test_list),
+    seed_chain = sample.int(.Machine$integer.max, size = object$chain * num_horizon) |> matrix(ncol = object$chain),
+    seed_forecast = sample.int(.Machine$integer.max, size = object$chain),
+    display_progress = verbose,
+    nthreads = num_thread
+  )
   num_draw <- nrow(object$param)
   y_distn <-
     lapply(
