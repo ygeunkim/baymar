@@ -190,7 +190,8 @@ mdfm_bayes <- function(y,
   res$factor <- fac_series
   res$spec <- list(
     row = row_spec,
-    col = col_spec
+    col = col_spec,
+    factor = dfm_spec
   )
   res$init <- list(
     param = param_init,

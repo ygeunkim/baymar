@@ -120,6 +120,82 @@ predict.marbayes <- function(object, n_ahead, level = .05, newxreg, num_thread =
   res
 }
 
+#' Forecasting MDFM
+#'
+#' Forecasts matrix dynamic factor model.
+#'
+#' @param object Model object
+#' @param n_ahead step to forecast
+#' @param level Specify alpha of confidence interval level 100(1 - alpha) percentage. By default, .05.
+#' @param num_thread Number of threads
+#' @param med `r lifecycle::badge("experimental")` If `TRUE`, use median of forecast draws instead of mean (default).
+#' @param ... not used
+#' @order 1
+#' @export
+predict.mdfmbayes <- function(object, n_ahead, level = .05, num_thread = 1, med = FALSE, ...) {
+  fit_record <- get_bmar_records(object, TRUE)
+  nrow_data <- dim(object$y)[1]
+  ncol_data <- dim(object$y)[2]
+  num_data <- dim(object$y)[3]
+  var_names <- dimnames(object$y)
+  var_names[[3]] <- 1:n_ahead
+  y_list <- lapply(seq_len(num_data), function(x) object$y[, , x])
+  nrow_factor <- object$spec$factor$nrow_factor
+  ncol_factor <- object$spec$factor$ncol_factor
+  factor_lag <- object$spec$factor$lag
+  pred_res <- forecast_bdfm_mniw(
+    num_chains = object$chain,
+    step = n_ahead,
+    nrow_factor = nrow_factor,
+    ncol_factor = ncol_factor,
+    factor_lag = factor_lag,
+    fit_record = fit_record,
+    seed_chain = sample.int(.Machine$integer.max, size = object$chain),
+    nthreads = num_thread
+  )
+  num_draw <- nrow(object$param)
+  y_distn <- process_mar_forecast_draws(
+    x = pred_res,
+    n_ahead = n_ahead,
+    nrow_data = nrow_data,
+    ncol_data = ncol_data,
+    num_draw = num_draw
+  )
+  if (med) {
+    pred_mean <-
+      lapply(y_distn, function(x) apply(x, c(1, 2), median)) |>
+      simplify2array()
+  } else {
+    pred_mean <-
+      lapply(y_distn, function(x) apply(x, c(1, 2), mean)) |>
+      simplify2array()
+  }
+  lower_quantile <-
+    lapply(y_distn, function(x) apply(x, c(1, 2), quantile, probs = level / 2)) |>
+    simplify2array()
+  upper_quantile <-
+    lapply(y_distn, function(x) apply(x, c(1, 2), quantile, probs = 1 - level / 2)) |>
+    simplify2array()
+  est_se <-
+    lapply(y_distn, function(x) apply(x, c(1, 2), sd)) |>
+    simplify2array()
+  dimnames(pred_mean) <- var_names
+  dimnames(lower_quantile) <- var_names
+  dimnames(upper_quantile) <- var_names
+  dimnames(est_se) <- var_names
+  res <- list(
+    forecast = pred_mean,
+    se = est_se,
+    lower = lower_quantile,
+    upper = upper_quantile,
+    lower_joint = lower_quantile,
+    upper_joint = upper_quantile,
+    y = object$y
+  )
+  class(res) <- c("predmdfmbayes", "predmdfm")
+  res
+}
+
 #' Pseudo out-of-sample Forecasting based on Rolling Window
 #' 
 #' @param object Model object

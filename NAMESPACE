@@ -3,6 +3,7 @@
 S3method(bvhar::forecast_expand,marbayes)
 S3method(bvhar::forecast_roll,marbayes)
 S3method(predict,marbayes)
+S3method(predict,mdfmbayes)
 export(is.bmarspec)
 export(is.dfmspec)
 export(is.famarspec)
