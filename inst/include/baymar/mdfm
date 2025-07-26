@@ -2,5 +2,6 @@
 #define BAYMAR_MDFM_H
 
 #include "src/bayes/mdfm/mdfm.h"
+#include "src/bayes/mdfm/forecaster.h"
 
 #endif // BAYMAR_MDFM_H
