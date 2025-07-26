@@ -38,3 +38,43 @@ Rcpp::List forecast_bdfm_mniw(int num_chains, int step,
 	);
 	return Rcpp::wrap(forecaster->returnForecast());
 }
+
+//' @noRd
+// [[Rcpp::export]]
+Rcpp::List roll_bdfm_mniw(Eigen::MatrixXd y, int lag, int num_data, int num_chains, int num_iter, int num_burn, int thin,
+													Rcpp::List fit_record, bool run_mcmc,
+													Rcpp::List param_coef_sig, Rcpp::List coef_sig_init,
+													Rcpp::List row_prior, Rcpp::List row_init, int row_prior_type,
+													Rcpp::List col_prior, Rcpp::List col_init, int col_prior_type,
+													int factor_rows, int factor_cols, int factor_lag,
+													int step, Eigen::MatrixXd y_test,
+													Eigen::MatrixXi seed_chain, Eigen::VectorXi seed_forecast,
+													bool display_progress, int nthreads) {
+	auto forecaster = baymar::initialize_matdfmoutforecaster<baymar::MatDfmRollForecastRun>(
+		y, num_data, num_chains, num_iter, num_burn, thin, fit_record, run_mcmc,
+		param_coef_sig, coef_sig_init, row_prior, row_init, row_prior_type, col_prior, col_init, col_prior_type,
+		factor_rows, factor_cols, factor_lag,
+		step, y_test, seed_chain, seed_forecast, display_progress, nthreads
+	);
+	return forecaster->returnForecast();
+}
+
+//' @noRd
+// [[Rcpp::export]]
+Rcpp::List expand_bdfm_mniw(Eigen::MatrixXd y, int lag, int num_data, int num_chains, int num_iter, int num_burn, int thin,
+													  Rcpp::List fit_record, bool run_mcmc,
+													  Rcpp::List param_coef_sig, Rcpp::List coef_sig_init,
+													  Rcpp::List row_prior, Rcpp::List row_init, int row_prior_type,
+													  Rcpp::List col_prior, Rcpp::List col_init, int col_prior_type,
+													  int factor_rows, int factor_cols, int factor_lag,
+													  int step, Eigen::MatrixXd y_test,
+													  Eigen::MatrixXi seed_chain, Eigen::VectorXi seed_forecast,
+													  bool display_progress, int nthreads) {
+	auto forecaster = baymar::initialize_matdfmoutforecaster<baymar::MatDfmExpandForecastRun>(
+		y, num_data, num_chains, num_iter, num_burn, thin, fit_record, run_mcmc,
+		param_coef_sig, coef_sig_init, row_prior, row_init, row_prior_type, col_prior, col_init, col_prior_type,
+		factor_rows, factor_cols, factor_lag,
+		step, y_test, seed_chain, seed_forecast, display_progress, nthreads
+	);
+	return forecaster->returnForecast();
+}

@@ -296,9 +296,10 @@ protected:
 	void updateForecaster(int window, int chain) override {
 		BVHAR_DEBUG_LOG(debug_logger, "updateForecaster(window={}, chain={}) called", window, chain);
 		auto* mcmc_mdfm = dynamic_cast<McmcMatDfm*>(model[window][chain].get());
+		MatMniwRecords mniw_record = mcmc_mdfm->returnMniwRecords(0, thin);
 		MatDfmVarRecords mdfm_var_record = mcmc_mdfm->returnStructRecords<MatDfmVarRecords>(0, thin);
 		auto factor_updater = std::make_unique<MatFactorVarForecaster>(mdfm_var_record, step, factor_lag, num_row, num_col, nrow_factor, ncol_factor);
-		forecaster[window][chain] = std::make_unique<MatDfmVarForecaster>(mdfm_var_record, factor_updater, step, static_cast<unsigned int>(seed_forecast[chain]));
+		forecaster[window][chain] = std::make_unique<MatDfmVarForecaster>(mniw_record, factor_updater, step, static_cast<unsigned int>(seed_forecast[chain]));
 	}
 };
 
