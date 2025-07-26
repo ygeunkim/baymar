@@ -12,13 +12,13 @@ forecast_bdfm_mniw <- function(num_chains, step, nrow_factor, ncol_factor, facto
 }
 
 #' @noRd
-roll_bdfm_mniw <- function(y, lag, num_data, num_chains, num_iter, num_burn, thin, fit_record, run_mcmc, param_coef_sig, coef_sig_init, row_prior, row_init, row_prior_type, col_prior, col_init, col_prior_type, factor_rows, factor_cols, factor_lag, step, y_test, seed_chain, seed_forecast, display_progress, nthreads) {
-    .Call(`_baymar_roll_bdfm_mniw`, y, lag, num_data, num_chains, num_iter, num_burn, thin, fit_record, run_mcmc, param_coef_sig, coef_sig_init, row_prior, row_init, row_prior_type, col_prior, col_init, col_prior_type, factor_rows, factor_cols, factor_lag, step, y_test, seed_chain, seed_forecast, display_progress, nthreads)
+roll_bdfm_mniw <- function(y, num_data, num_chains, num_iter, num_burn, thin, fit_record, run_mcmc, param_coef_sig, coef_sig_init, row_prior, row_init, row_prior_type, col_prior, col_init, col_prior_type, factor_rows, factor_cols, factor_lag, step, y_test, seed_chain, seed_forecast, display_progress, nthreads) {
+    .Call(`_baymar_roll_bdfm_mniw`, y, num_data, num_chains, num_iter, num_burn, thin, fit_record, run_mcmc, param_coef_sig, coef_sig_init, row_prior, row_init, row_prior_type, col_prior, col_init, col_prior_type, factor_rows, factor_cols, factor_lag, step, y_test, seed_chain, seed_forecast, display_progress, nthreads)
 }
 
 #' @noRd
-expand_bdfm_mniw <- function(y, lag, num_data, num_chains, num_iter, num_burn, thin, fit_record, run_mcmc, param_coef_sig, coef_sig_init, row_prior, row_init, row_prior_type, col_prior, col_init, col_prior_type, factor_rows, factor_cols, factor_lag, step, y_test, seed_chain, seed_forecast, display_progress, nthreads) {
-    .Call(`_baymar_expand_bdfm_mniw`, y, lag, num_data, num_chains, num_iter, num_burn, thin, fit_record, run_mcmc, param_coef_sig, coef_sig_init, row_prior, row_init, row_prior_type, col_prior, col_init, col_prior_type, factor_rows, factor_cols, factor_lag, step, y_test, seed_chain, seed_forecast, display_progress, nthreads)
+expand_bdfm_mniw <- function(y, num_data, num_chains, num_iter, num_burn, thin, fit_record, run_mcmc, param_coef_sig, coef_sig_init, row_prior, row_init, row_prior_type, col_prior, col_init, col_prior_type, factor_rows, factor_cols, factor_lag, step, y_test, seed_chain, seed_forecast, display_progress, nthreads) {
+    .Call(`_baymar_expand_bdfm_mniw`, y, num_data, num_chains, num_iter, num_burn, thin, fit_record, run_mcmc, param_coef_sig, coef_sig_init, row_prior, row_init, row_prior_type, col_prior, col_init, col_prior_type, factor_rows, factor_cols, factor_lag, step, y_test, seed_chain, seed_forecast, display_progress, nthreads)
 }
 
 #' @noRd

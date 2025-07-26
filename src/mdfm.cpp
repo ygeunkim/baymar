@@ -41,7 +41,7 @@ Rcpp::List forecast_bdfm_mniw(int num_chains, int step,
 
 //' @noRd
 // [[Rcpp::export]]
-Rcpp::List roll_bdfm_mniw(Eigen::MatrixXd y, int lag, int num_data, int num_chains, int num_iter, int num_burn, int thin,
+Rcpp::List roll_bdfm_mniw(Eigen::MatrixXd y, int num_data, int num_chains, int num_iter, int num_burn, int thin,
 													Rcpp::List fit_record, bool run_mcmc,
 													Rcpp::List param_coef_sig, Rcpp::List coef_sig_init,
 													Rcpp::List row_prior, Rcpp::List row_init, int row_prior_type,
@@ -61,7 +61,7 @@ Rcpp::List roll_bdfm_mniw(Eigen::MatrixXd y, int lag, int num_data, int num_chai
 
 //' @noRd
 // [[Rcpp::export]]
-Rcpp::List expand_bdfm_mniw(Eigen::MatrixXd y, int lag, int num_data, int num_chains, int num_iter, int num_burn, int thin,
+Rcpp::List expand_bdfm_mniw(Eigen::MatrixXd y, int num_data, int num_chains, int num_iter, int num_burn, int thin,
 													  Rcpp::List fit_record, bool run_mcmc,
 													  Rcpp::List param_coef_sig, Rcpp::List coef_sig_init,
 													  Rcpp::List row_prior, Rcpp::List row_init, int row_prior_type,
