@@ -26,3 +26,15 @@ Rcpp::List estimate_bmdfm(int num_chains, int num_iter, int num_burn, int thin,
 	);
 	return mcmc_run->returnRecords();
 }
+
+//' @noRd
+// [[Rcpp::export]]
+Rcpp::List forecast_bdfm_mniw(int num_chains, int step,
+															int nrow_factor, int ncol_factor, int factor_lag,
+													 	 	Rcpp::List fit_record, Eigen::VectorXi seed_chain, int nthreads) {
+	auto forecaster = std::make_unique<baymar::MatDfmForecastRun>(
+		num_chains, step, nrow_factor, ncol_factor, factor_lag,
+		fit_record, seed_chain, nthreads
+	);
+	return Rcpp::wrap(forecaster->returnForecast());
+}

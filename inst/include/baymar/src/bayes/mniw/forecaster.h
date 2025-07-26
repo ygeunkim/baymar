@@ -4,7 +4,7 @@
 #include "./mniw.h"
 #include "../../math/design.h"
 #include "../../core/forecaster.h"
-#include <bvhar/ols>
+// #include <bvhar/ols>
 
 namespace baymar {
 
@@ -43,6 +43,14 @@ public:
 	: MatMniwExogenForecaster(0, Eigen::MatrixXd::Zero((factor_lag + step) * nrow_factor, ncol_factor), factor_lag + step, num_row, num_col),
 		step(step), factor_lag(factor_lag) {}
 	virtual ~MatFactorForecaster() = default;
+
+	int get_nrow_factor() {
+		return nrow_exogen;
+	}
+
+	int get_ncol_factor() {
+		return ncol_exogen;
+	}
 	
 	virtual void updateVarCoef(const int id, BVHAR_BHRNG& rng) = 0;
 
