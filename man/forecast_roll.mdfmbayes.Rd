@@ -9,6 +9,7 @@
   n_ahead,
   y_test,
   level = 0.05,
+  newxreg = NULL,
   num_thread = 1,
   med = FALSE,
   mcmc = TRUE,
@@ -24,6 +25,8 @@
 \item{y_test}{Test data to be compared.}
 
 \item{level}{Specify alpha of confidence interval level 100(1 - alpha) percentage. By default, .05.}
+
+\item{newxreg}{Not used.}
 
 \item{num_thread}{\ifelse{html}{\href{https://lifecycle.r-lib.org/articles/stages.html#experimental}{\figure{lifecycle-experimental.svg}{options: alt='[Experimental]'}}}{\strong{[Experimental]}} Number of threads}
 

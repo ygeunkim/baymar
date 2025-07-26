@@ -407,6 +407,7 @@ forecast_roll.marbayes <- function(object, n_ahead, y_test,
 #' @param n_ahead Step to forecast in rolling window scheme
 #' @param y_test Test data to be compared.
 #' @param level Specify alpha of confidence interval level 100(1 - alpha) percentage. By default, .05.
+#' @param newxreg Not used.
 #' @param num_thread `r lifecycle::badge("experimental")` Number of threads
 #' @param med `r lifecycle::badge("experimental")` If `TRUE`, use median of forecast draws instead of mean (default).
 #' @param mcmc `r lifecycle::badge("experimental")` If `TRUE`, run new MCMC in new windows. By default, `TRUE`.
@@ -415,6 +416,7 @@ forecast_roll.marbayes <- function(object, n_ahead, y_test,
 #' @exportS3Method bvhar::forecast_roll
 forecast_roll.mdfmbayes <- function(object, n_ahead, y_test,
                                     level = .05,
+                                    newxreg = NULL,
                                     num_thread = 1,
                                     med = FALSE,
                                     mcmc = TRUE,
@@ -743,6 +745,7 @@ forecast_expand.marbayes <- function(object, n_ahead, y_test,
 #' @param n_ahead Step to forecast in rolling window scheme
 #' @param y_test Test data to be compared.
 #' @param level Specify alpha of confidence interval level 100(1 - alpha) percentage. By default, .05.
+#' @param newxreg Not used.
 #' @param num_thread `r lifecycle::badge("experimental")` Number of threads
 #' @param med `r lifecycle::badge("experimental")` If `TRUE`, use median of forecast draws instead of mean (default).
 #' @param mcmc `r lifecycle::badge("experimental")` If `TRUE`, run new MCMC in new windows. By default, `TRUE`.
@@ -751,6 +754,7 @@ forecast_expand.marbayes <- function(object, n_ahead, y_test,
 #' @exportS3Method bvhar::forecast_expand
 forecast_expand.mdfmbayes <- function(object, n_ahead, y_test,
                                       level = .05,
+                                      newxreg = NULL,
                                       num_thread = 1,
                                       med = FALSE,
                                       mcmc = TRUE,
