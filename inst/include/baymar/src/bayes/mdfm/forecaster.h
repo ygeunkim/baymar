@@ -101,8 +101,7 @@ protected:
 		factor_updater->updateCoefmat(
 			mat_record->row_coef_record.row(i).transpose(),
 			mat_record->col_coef_record.row(i).transpose(),
-			nrow_factor,
-			ncol_factor
+			0, 0
 		);
 		factor_updater->updateVarCoef(i, rng);
 		fill_lower(row_sig_lower, mat_record->row_sigma_record.row(i).transpose());
@@ -143,8 +142,6 @@ inline std::vector<std::unique_ptr<MatDfmForecaster>> initialize_matdfmforecaste
 	BVHAR_STRING sigr_name = "SigmaR_record";
 	BVHAR_STRING b_name = "B_record";
 	BVHAR_STRING sigc_name = "SigmaC_record";
-	BVHAR_STRING g_name = "G_record";
-	BVHAR_STRING h_name = "H_record";
 	BVHAR_STRING f_name = "F_record";
 	BVHAR_STRING rho_name = "Rho_record";
 	BVHAR_STRING prec_name = "Lambda_record";
@@ -153,10 +150,17 @@ inline std::vector<std::unique_ptr<MatDfmForecaster>> initialize_matdfmforecaste
 		std::unique_ptr<MatMniwRecords> mat_record;
 		std::unique_ptr<MatDfmRecords> mdfm_record;
 		std::unique_ptr<MatFactorVarForecaster> factor_updater;
+		initialize_matmniw_record(mat_record, i, fit_record, a_name, sigr_name, b_name, sigc_name);
 		initialize_matdfm_record(mdfm_record, i, fit_record, f_name, rho_name, prec_name);
 		auto* mdfm_var_record = dynamic_cast<MatDfmVarRecords*>(mdfm_record.get());
-		factor_updater = std::make_unique<MatFactorVarForecaster>(*mdfm_var_record, step, factor_lag, 0, 0, nrow_factor, ncol_factor);
-		initialize_matmniw_record(mat_record, i, fit_record, a_name, sigr_name, b_name, sigc_name, g_name, h_name);
+		// int num_row = mat_record->row_coef_record.cols() / nrow_factor;
+		// int num_col = mat_record->col_coef_record.cols() / ncol_factor;
+		factor_updater = std::make_unique<MatFactorVarForecaster>(
+			*mdfm_var_record, step, factor_lag,
+			mat_record->row_coef_record.cols() / nrow_factor,
+			mat_record->col_coef_record.cols() / ncol_factor,
+			nrow_factor, ncol_factor
+		);
 		forecaster[i] = std::make_unique<MatDfmVarForecaster>(*mat_record, factor_updater, step, static_cast<unsigned int>(seed_chain[i]));
 	}
 	return forecaster;
@@ -172,7 +176,7 @@ public:
 		BVHAR_DEBUG_LOG(
 			debug_logger,
 			"MatDfmForecastRun Constructor: num_chains={}, step={}, nrow_factor={}, ncol_factor={} factor_lag={}, nthreads={}",
-			num_chains, lag, step, nrow_factor, ncol_factor, factor_lag, nthreads
+			num_chains, step, nrow_factor, ncol_factor, factor_lag, nthreads
 		);
 		auto temp_forecaster = initialize_matdfmforecaster(
 			num_chains, step,
