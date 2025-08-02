@@ -67,7 +67,7 @@ public:
 	virtual ~MatHsUpdater() = default;
 	
 	void initPrec(Eigen::Ref<Eigen::VectorXd> prior_prec) override {
-		prior_prec.array() /= (global_lev * local_lev.array()).square();
+		prior_prec.array() /= (global_lev * local_lev.array());
 	}
 
 	void updatePrec(
@@ -76,10 +76,9 @@ public:
 		Eigen::Ref<Eigen::MatrixXd> prior_mean,
 		BVHAR_BHRNG& rng
 	) override {
-		bvhar::horseshoe_latent(latent_local, local_lev, rng);
-		bvhar::horseshoe_latent(latent_global, global_lev, rng);
+		// bvhar::horseshoe_latent(latent_local, local_lev, rng);
+		// bvhar::horseshoe_latent(latent_global, global_lev, rng);
 		horseshoe_sparsity(local_lev, global_lev, prior_prec, coef, sig_lower, latent_local, latent_global, rng);
-		prior_prec = 1 / (global_lev * local_lev.array()).square();
 	}
 
 private:
