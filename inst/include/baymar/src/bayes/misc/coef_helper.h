@@ -50,6 +50,18 @@ inline void draw_coef_sig(
 		post_iw_scl += inv_sig_y.transpose() * inv_sig_y;
 	}
 	Eigen::LLT<Eigen::MatrixXd> llt_of_prec(post_cov.selfadjointView<Eigen::Lower>());
+	double temp_penalty = .0001;
+	do {
+		llt_of_prec.compute((
+			post_cov + temp_penalty * Eigen::MatrixXd::Identity(post_cov.rows(), post_cov.cols())
+		).selfadjointView<Eigen::Lower>());
+		// post_cov.diagonal().array() += temp_penalty;
+		// llt_of_prec.compute(post_cov.selfadjointView<Eigen::Lower>());
+		temp_penalty *= 2;
+	} while (llt_of_prec.info() != Eigen::Success && temp_penalty < .1);
+	if (llt_of_prec.info() != Eigen::Success) {
+		eigen_assert("LLT failed in precision sampler.");
+	}
 	Eigen::MatrixXd post_mean = llt_of_prec.solve(post_solve);
 	post_iw_scl -= post_mean.transpose() * post_cov * post_mean;
 	double post_df = iw_df + num_mat * other_dim;

@@ -52,6 +52,16 @@ inline void draw_dfm_factor(std::vector<Eigen::MatrixXd>& factor_mat, int factor
 	// 1) t = p + 1, ..., p + s with Lambda = diag(lambda^2 / (1 - sum_i^s rho_i^2))
 	prec_t = (1 - fac_coef_diag.rowwise().squaredNorm().array()) / fac_lambda.array();
 	llt_of_prec.compute((post_cov + prec_t.asDiagonal().toDenseMatrix()).selfadjointView<Eigen::Lower>());
+	double temp_penalty = .0001;
+	do {
+		llt_of_prec.compute((
+			post_cov + prec_t.asDiagonal().toDenseMatrix() + temp_penalty * Eigen::MatrixXd::Identity(len_factor, len_factor)
+		).selfadjointView<Eigen::Lower>());
+		temp_penalty *= 2;
+	} while (llt_of_prec.info() != Eigen::Success && temp_penalty < .1);
+	if (llt_of_prec.info() != Eigen::Success) {
+		eigen_assert("LLT failed in precision sampler.");
+	}
 	for (int i = 0; i < factor_lag; ++i) {
 		post_mean = llt_of_prec.solve(post_solve * y[i].reshaped());
 		for (int j = 0; j < len_factor; ++j) {
@@ -63,6 +73,16 @@ inline void draw_dfm_factor(std::vector<Eigen::MatrixXd>& factor_mat, int factor
 	Eigen::VectorXd fac_ar(len_factor); // sum_{i = 1}^s H_i f_{t - i}
 	prec_t = 1 / fac_lambda.array();
 	llt_of_prec.compute((post_cov + prec_t.asDiagonal().toDenseMatrix()).selfadjointView<Eigen::Lower>());
+	temp_penalty = .0001;
+	do {
+		llt_of_prec.compute((
+			post_cov + prec_t.asDiagonal().toDenseMatrix() + temp_penalty * Eigen::MatrixXd::Identity(len_factor, len_factor)
+		).selfadjointView<Eigen::Lower>());
+		temp_penalty *= 2;
+	} while (llt_of_prec.info() != Eigen::Success && temp_penalty < .1);
+	if (llt_of_prec.info() != Eigen::Success) {
+		eigen_assert("LLT failed in precision sampler.");
+	}
 	for (int i = factor_lag; i < y.size(); ++i) {
 		fac_ar.setZero();
 		for (int j = 0; j < factor_lag; ++j) {
@@ -195,6 +215,16 @@ inline void draw_dfm_coef(Eigen::Ref<Eigen::MatrixXd> fac_coef_diag, Eigen::Ref<
 		int col_id = i / rows_factor;
 		build_factor_lin(factor_response, factor_design, row_id, col_id, factor_mat, factor_lag, num_design);
 		llt_of_prec.compute((prior_prec.asDiagonal().toDenseMatrix() + factor_design.transpose() * factor_design / fac_lambda[i]).selfadjointView<Eigen::Lower>());
+		double temp_penalty = .0001;
+		do {
+			llt_of_prec.compute((
+				prior_prec.asDiagonal().toDenseMatrix() + factor_design.transpose() * factor_design / fac_lambda[i] + temp_penalty * Eigen::MatrixXd::Identity(factor_lag, factor_lag)
+			).selfadjointView<Eigen::Lower>());
+			temp_penalty *= 2;
+		} while (llt_of_prec.info() != Eigen::Success && temp_penalty < .1);
+		if (llt_of_prec.info() != Eigen::Success) {
+			eigen_assert("LLT failed in precision sampler.");
+		}
 		post_mean = llt_of_prec.solve(prior_prec.cwiseProduct(prior_mean) + factor_design.transpose() * factor_response / fac_lambda[i]);
 		for (int j = 0; j < factor_lag; ++j) {
 			normal_vector[j] = bvhar::normal_rand(rng);
