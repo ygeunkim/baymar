@@ -107,10 +107,10 @@ inline void draw_dfm_factor(std::vector<Eigen::MatrixXd>& factor_mat, int factor
  * @param fac_coef_diag Each column is the j-th lag coefficient diagonal: p1*p2 x s dimension matrix from H_i = diag(rho_{1, i}, ..., rho_{p1 * p2, i})
  * @param rng boost rng
  */
-inline void draw_dfm_prec(Eigen::Ref<Eigen::VectorXd> fac_lambda, int factor_lag,
-													Eigen::Ref<Eigen::VectorXd> ig_shp, Eigen::Ref<Eigen::VectorXd> ig_scl,
-													std::vector<Eigen::MatrixXd>& factor_mat, Eigen::Ref<Eigen::MatrixXd> fac_coef_diag,
-													BVHAR_BHRNG& rng) {
+inline void draw_dfm_sig(Eigen::Ref<Eigen::VectorXd> fac_lambda, int factor_lag,
+												 Eigen::Ref<Eigen::VectorXd> ig_shp, Eigen::Ref<Eigen::VectorXd> ig_scl,
+												 std::vector<Eigen::MatrixXd>& factor_mat, Eigen::Ref<Eigen::MatrixXd> fac_coef_diag,
+												 BVHAR_BHRNG& rng) {
 	int num_factor = factor_mat.size();
 	int rows_factor = factor_mat[0].rows();
 	double post_scl, coef_square, resid;
