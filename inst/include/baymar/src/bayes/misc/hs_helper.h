@@ -26,23 +26,20 @@ inline void horseshoe_sparsity(
 	int col_coef = coef.cols();
 	Eigen::MatrixXd inv_sig_coef = sig_lower.triangularView<Eigen::Lower>().solve(coef.transpose());
 	Eigen::VectorXd prod = (inv_sig_coef.transpose() * inv_sig_coef).diagonal();
-	prec.array() *= global_sparsity;
 	global_sparsity = 1 / bvhar::gamma_rand(
 		(col_coef + 1) / 2,
-		1 / (1 / global_latent + (prod.array() * prec.array()).sum()),
+		1 / (1 / global_latent + (prod.array() / local_sparsity.array()).sum() / 2),
 		rng
 	);
-	prec.array() /= global_sparsity;
-	prec.array() *= local_sparsity.array();
 	for (int i = 0; i < local_sparsity.size(); ++i) {
 		local_latent[i] = 1 / bvhar::gamma_rand(1.0, 1 / (1 + 1 / local_sparsity[i]), rng);
 		local_sparsity[i] = 1 / bvhar::gamma_rand(
-			(col_coef + 1) / 2,
+			1.0,
 			1 / (1 / local_latent[i] + prod[i] / (2 * global_sparsity)),
 			rng
 		);
 	}
-	prec.array() /= local_sparsity.array();
+	prec = 1 / (global_sparsity * local_sparsity.array());
 	// group
 }
 
