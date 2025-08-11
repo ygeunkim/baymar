@@ -176,11 +176,11 @@ public:
 	: McmcMatDfm(mniw_params, mniw_inits, params, row_updater, col_updater, seed),
 		ig_shp(params._sig_shp), ig_scl(params._sig_scl),
 		prior_mean(params._mean), prior_prec(params._prec),
-		factor_coef(inits._init_factor_coef), factor_prec(inits._init_factor_prec) {
+		factor_coef(inits._init_factor_coef), factor_sig(inits._init_factor_prec) {
 		BVHAR_DEBUG_LOG(
 			debug_logger,
-			"McmcMatDfmVar Constructor: factor_coef: {} x {}, factor_prec: {}, ig_shp: {}, ig_scl: {}, prior_mean: {}, prior_prec: {}",
-			factor_coef.rows(), factor_coef.cols(), factor_prec.size(),
+			"McmcMatDfmVar Constructor: factor_coef: {} x {}, factor_sig: {}, ig_shp: {}, ig_scl: {}, prior_mean: {}, prior_prec: {}",
+			factor_coef.rows(), factor_coef.cols(), factor_sig.size(),
 			ig_shp.size(), ig_scl.size(),
 			prior_mean.size(), prior_prec.size()
 		);
@@ -192,20 +192,20 @@ protected:
 	void updateFactor() override {
 		BVHAR_DEBUG_LOG(debug_logger, "updateFactor() called");
 		draw_dfm_factor(
-			factor_mat, lag, nrow_factor, ncol_factor, factor_coef, factor_prec,
+			factor_mat, lag, nrow_factor, ncol_factor, factor_coef, factor_sig,
 			row_coef.transpose(), row_sig_lower,
 			col_coef.transpose(), col_sig_lower,
 			y, rng
 		);
-		draw_dfm_prec(factor_prec, lag, ig_shp, ig_scl, factor_mat, factor_coef, rng);
-		draw_dfm_coef(factor_coef, factor_prec, prior_mean, prior_prec, factor_mat, lag, rng);
+		draw_dfm_sig(factor_sig, lag, ig_shp, ig_scl, factor_mat, factor_coef, rng);
+		draw_dfm_coef(factor_coef, factor_sig, prior_mean, prior_prec, factor_mat, lag, rng);
 	}
 
 	void updateDfmRecords() override {
 		BVHAR_DEBUG_LOG(debug_logger, "updateDfmRecords() called");
 		mdfm_record->assignRecords(
 			mcmc_step,
-			factor_mat, factor_coef, factor_prec,
+			factor_mat, factor_coef, factor_sig,
 			num_design, size_factor
 		);
 	}
@@ -214,7 +214,7 @@ private:
 	Eigen::VectorXd ig_shp, ig_scl;
 	Eigen::VectorXd prior_mean, prior_prec;
 	Eigen::MatrixXd factor_coef; // p1*p2 x s
-	Eigen::VectorXd factor_prec; // lambda_{1, 1}, ..., lambda_{p1, p2}
+	Eigen::VectorXd factor_sig; // lambda_{1, 1}, ..., lambda_{p1, p2}
 };
 
 template <typename BaseDfm = McmcMatDfmVar>

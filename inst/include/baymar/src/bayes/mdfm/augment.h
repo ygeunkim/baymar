@@ -65,7 +65,7 @@ public:
 	// 		factor_record.row(id).segment(i * size_factor, size_factor) = factor_mat[i].reshaped();
 	// 	}
 	// 	coef_record.row(id) = dfm_coef.reshaped();
-	// 	prec_record.row(id) = dfm_prec;
+	// 	prec_record.row(id) = dfm_sig;
 	// }
 
 	void appendRecords(BVHAR_LIST& list) override {
@@ -91,7 +91,7 @@ class MatFactorVarAugmenter : public MatFactorAugmenter {
 public:
 	MatFactorVarAugmenter(int num_iter, int num_design, const MatDfmVarParams& params, const MatDfmVarInits& inits)
 	: MatFactorAugmenter(num_iter, num_design, params),
-		dfm_coef(inits._init_factor_coef), dfm_prec(inits._init_factor_prec),
+		dfm_coef(inits._init_factor_coef), dfm_sig(inits._init_factor_prec),
 		ig_shp(params._sig_shp), ig_scl(params._sig_scl), prior_mean(params._mean), prior_prec(params._prec) {
 		mdfm_record = std::make_unique<MatDfmVarRecords>(num_iter, num_design, size_factor, lag);
 		// use ShrinkageUpdater for prior_prec later!
@@ -104,26 +104,26 @@ public:
 		BVHAR_BHRNG& rng
 	) override {
 		draw_dfm_factor(
-			factor_mat, lag, nrow_factor, ncol_factor, dfm_coef, dfm_prec,
+			factor_mat, lag, nrow_factor, ncol_factor, dfm_coef, dfm_sig,
 			row_coef, row_sig_lower,
 			col_coef, col_sig_lower,
 			resid, rng
 		);
-		draw_dfm_prec(dfm_prec, lag, ig_shp, ig_scl, factor_mat, dfm_coef, rng);
-		draw_dfm_coef(dfm_coef, dfm_prec, prior_mean, prior_prec, factor_mat, lag, rng);
+		draw_dfm_sig(dfm_sig, lag, ig_shp, ig_scl, factor_mat, dfm_coef, rng);
+		draw_dfm_coef(dfm_coef, dfm_sig, prior_mean, prior_prec, factor_mat, lag, rng);
 	}
 
 	void updateRecords(int id) override {
 		mdfm_record->assignRecords(
 			id,
-			factor_mat, dfm_coef, dfm_prec,
+			factor_mat, dfm_coef, dfm_sig,
 			num_design, size_factor
 		);
 	}
 
 private:
 	Eigen::MatrixXd dfm_coef; // p1*p2 x s
-	Eigen::VectorXd dfm_prec; // lambda_{1, 1}, ..., lambda_{p1, p2}
+	Eigen::VectorXd dfm_sig; // lambda_{1, 1}, ..., lambda_{p1, p2}
 	Eigen::VectorXd ig_shp, ig_scl;
 	Eigen::VectorXd prior_mean, prior_prec;
 };

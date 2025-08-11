@@ -67,7 +67,7 @@ public:
 	virtual ~MatHsUpdater() = default;
 	
 	void initPrec(Eigen::Ref<Eigen::VectorXd> prior_prec) override {
-		prior_prec.array() /= (global_lev * local_lev.array());
+		prior_prec = 1 / (global_lev * local_lev.array());
 	}
 
 	void updatePrec(
