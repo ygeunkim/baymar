@@ -204,7 +204,7 @@ public:
 		const Eigen::MatrixXi& seed_chain, const Eigen::VectorXi& seed_forecast, bool display_progress, int nthreads
 	)
 	: bvhar::McmcOutForecastRun<Eigen::MatrixXd, Eigen::MatrixXd, isUpdate>(
-			num_data, 1, num_chains, num_iter, num_burn, thin, step, y_test, false,
+			num_data, 1, num_chains, num_iter, num_burn, thin, step, y_test, y_test.rows(), false,
 			seed_chain, seed_forecast, display_progress, nthreads
 		),
 		num_row(y.rows() / num_data), num_col(y.cols()),

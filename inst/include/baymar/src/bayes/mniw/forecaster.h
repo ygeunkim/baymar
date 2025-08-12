@@ -338,7 +338,7 @@ public:
 		BVHAR_OPTIONAL<int> factor_lag = BVHAR_NULLOPT
 	)
 	: bvhar::McmcOutForecastRun<Eigen::MatrixXd, Eigen::MatrixXd, isUpdate>(
-			num_data, lag, num_chains, num_iter, num_burn, thin, step, y_test, false,
+			num_data, lag, num_chains, num_iter, num_burn, thin, step, y_test, y_test.rows(), false,
 			seed_chain, seed_forecast, display_progress, nthreads,
 			exogen_lag
 		),
