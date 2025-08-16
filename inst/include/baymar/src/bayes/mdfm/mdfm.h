@@ -2,7 +2,8 @@
 #define BAYMAR_BAYES_MDFM_MDFM_H
 
 #include "../mniw/config.h"
-#include "./config.h"
+// #include "./config.h"
+#include "./augment.h"
 // #include "../shrinkage/shrinkage.h"
 
 namespace baymar {
@@ -95,6 +96,9 @@ public:
 
 	template <typename RecordType>
 	RecordType returnStructRecords(int num_burn, int thin) const {
+		if (factor_updater) {
+			return factor_updater->returnStructRecords<RecordType>(num_burn, thin);
+		}
 		return mdfm_record->returnRecords<RecordType>(num_iter, num_burn, thin);
 	}
 
@@ -103,6 +107,7 @@ protected:
 	int num_row, num_col, nrow_row_coef, nrow_col_coef;
 	std::vector<Eigen::MatrixXd> y;
 	// std::vector<Eigen::SparseMatrix<double>> x;
+	std::unique_ptr<MatFactorAugmenter> factor_updater;
 	std::vector<Eigen::MatrixXd> factor_mat;
 	std::unique_ptr<MatShrinkageUpdater> row_updater;
 	std::unique_ptr<MatShrinkageUpdater> col_updater;
@@ -114,7 +119,15 @@ protected:
 	Eigen::VectorXd row_prior_prec, col_prior_prec;
 	double row_iw_df, col_iw_df;
 
-	virtual void updateFactor() = 0;
+	virtual void updateFactor() {
+		if (factor_updater) {
+			factor_updater->updateFactor(
+				row_coef, row_sig_lower,
+				col_coef, col_sig_lower,
+				y, rng
+			);
+		}
+	}
 	
 	void updatePrec() {
 		BVHAR_DEBUG_LOG(debug_logger, "updatePrec() called");
@@ -159,6 +172,9 @@ protected:
 			nrow_row_coef, num_row, 0, 0,
 			nrow_col_coef, num_col, 0, 0
 		);
+		if (factor_updater) {
+			factor_updater->updateRecords(mcmc_step);
+		}
 		updateDfmRecords();
 	}
 

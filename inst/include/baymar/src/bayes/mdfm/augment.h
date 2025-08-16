@@ -29,6 +29,13 @@ public:
 		BVHAR_BHRNG& rng
 	) {}
 
+	virtual void updateFactor(
+		Eigen::Ref<const Eigen::MatrixXd> row_coef, Eigen::Ref<const Eigen::MatrixXd> row_sig_lower,
+		Eigen::Ref<const Eigen::MatrixXd> col_coef, Eigen::Ref<const Eigen::MatrixXd> col_sig_lower,
+		std::vector<Eigen::MatrixXd>& y,
+		BVHAR_BHRNG& rng
+	) {}
+
 	virtual void updateRecords(int id) {}
 
 	virtual void appendRecords(BVHAR_LIST& list) {}
@@ -105,9 +112,25 @@ public:
 	) override {
 		draw_dfm_factor(
 			factor_mat, lag, nrow_factor, ncol_factor, dfm_coef, dfm_sig,
-			row_coef, row_sig_lower,
-			col_coef, col_sig_lower,
+			row_coef.transpose(), row_sig_lower,
+			col_coef.transpose(), col_sig_lower,
 			resid, rng
+		);
+		draw_dfm_sig(dfm_sig, lag, ig_shp, ig_scl, factor_mat, dfm_coef, rng);
+		draw_dfm_coef(dfm_coef, dfm_sig, prior_mean, prior_prec, factor_mat, lag, rng);
+	}
+
+	void updateFactor(
+		Eigen::Ref<const Eigen::MatrixXd> row_coef, Eigen::Ref<const Eigen::MatrixXd> row_sig_lower,
+		Eigen::Ref<const Eigen::MatrixXd> col_coef, Eigen::Ref<const Eigen::MatrixXd> col_sig_lower,
+		std::vector<Eigen::MatrixXd>& y,
+		BVHAR_BHRNG& rng
+	) override {
+		draw_dfm_factor(
+			factor_mat, lag, nrow_factor, ncol_factor, dfm_coef, dfm_sig,
+			row_coef.transpose(), row_sig_lower,
+			col_coef.transpose(), col_sig_lower,
+			y, rng
 		);
 		draw_dfm_sig(dfm_sig, lag, ig_shp, ig_scl, factor_mat, dfm_coef, rng);
 		draw_dfm_coef(dfm_coef, dfm_sig, prior_mean, prior_prec, factor_mat, lag, rng);
