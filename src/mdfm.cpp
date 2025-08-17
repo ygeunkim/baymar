@@ -17,7 +17,7 @@ Rcpp::List estimate_bmdfm(int num_chains, int num_iter, int num_burn, int thin,
 	// 		seed_chain, display_progress, nthreads
 	// 	);
 	// }();
-	auto mcmc_run = std::make_unique<baymar::MatDfmRun<baymar::McmcMatDfmVar>>(
+	auto mcmc_run = std::make_unique<baymar::MatDfmRun>(
 		num_chains, num_iter, num_burn, thin,
 		y, factor_lag, param_dfm, dfm_init,
 		row_prior, row_init, row_prior_type,

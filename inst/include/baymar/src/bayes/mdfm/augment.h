@@ -86,6 +86,10 @@ public:
 	RecordType returnStructRecords(int num_burn, int thin) const {
 		return mdfm_record->returnRecords<RecordType>(num_iter, num_burn, thin);
 	}
+
+	const std::vector<Eigen::MatrixXd>& getFactor() const {
+		return factor_mat;
+	}
 	
 protected:
 	int num_iter, nrow_factor, ncol_factor, size_factor, lag, num_design;
