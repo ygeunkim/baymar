@@ -197,8 +197,8 @@ protected:
 				row_coef.topRows(nrow_row_coef + nrow_row_exogen), col_coef.topRows(nrow_col_coef + nrow_col_exogen)
 			);
 			famar_updater->updateFactor(
-				row_coef.bottomRows(nrow_factor).transpose(), row_sig_lower,
-				col_coef.bottomRows(ncol_factor).transpose(), col_sig_lower,
+				row_coef.bottomRows(nrow_factor), row_sig_lower,
+				col_coef.bottomRows(ncol_factor), col_sig_lower,
 				rng
 			);
 			famar_updater->appendDesign(x);
