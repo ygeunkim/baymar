@@ -71,3 +71,8 @@ sim_mdfm_vec_process <- function(num_sim, num_burn, lag, row_coef, col_coef, row
     .Call(`_baymar_sim_mdfm_vec_process`, num_sim, num_burn, lag, row_coef, col_coef, row_sig, col_sig, factor_init, factor_coef, factor_sig, seed)
 }
 
+#' @noRd
+sim_famar_vec_process <- function(num_sim, num_burn, lag, init, row_coef, col_coef, row_sig, col_sig, factor_lag, factor_init, factor_row_coef, factor_col_coef, factor_coef, factor_sig, seed) {
+    .Call(`_baymar_sim_famar_vec_process`, num_sim, num_burn, lag, init, row_coef, col_coef, row_sig, col_sig, factor_lag, factor_init, factor_row_coef, factor_col_coef, factor_coef, factor_sig, seed)
+}
+
