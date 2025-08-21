@@ -61,7 +61,10 @@ public:
 		int num_iter, int num_burn,
 		const Eigen::MatrixXd& row_coef, const Eigen::MatrixXd& col_coef,
 		const Eigen::MatrixXd& row_sig, const Eigen::MatrixXd& col_sig,
-		unsigned int seed
+		unsigned int seed,
+		BVHAR_OPTIONAL<int> lag = BVHAR_NULLOPT, BVHAR_OPTIONAL<Eigen::MatrixXd> init = BVHAR_NULLOPT,
+		BVHAR_OPTIONAL<Eigen::MatrixXd> mar_row_coef = BVHAR_NULLOPT,
+		BVHAR_OPTIONAL<Eigen::MatrixXd> mar_col_coef = BVHAR_NULLOPT
 	)
 	: num_iter(num_iter), num_burn(num_burn),
 		num_row(row_coef.cols()), num_col(col_coef.cols()),
@@ -74,29 +77,32 @@ public:
 		// generator = std::make_unique<MarForecaster>(num_iter + num_burn, init, lag, row_coef, col_coef, BVHAR_NULLOPT, std::move(dgp_updater));
 		// int num_init = init.rows() / nrow_factor;
 		// generator = std::make_unique<MatExogenForecaster>(0, init, num_init, num_row, num_col);
+		if (lag && init && mar_row_coef && mar_col_coef) {
+			ar_updater = std::make_unique<MarSimulator<false>>(num_iter, num_burn, *lag, *init, *mar_row_coef, *mar_col_coef, row_sig, col_sig, seed);
+		}
 	}
 
-	MatFactorSimulator(
-		int num_iter, int num_burn,
-		int lag, const Eigen::MatrixXd& init,
-		const Eigen::MatrixXd& row_coef, const Eigen::MatrixXd& col_coef,
-		const Eigen::MatrixXd& row_sig, const Eigen::MatrixXd& col_sig,
-		const Eigen::MatrixXd& factor_row_coef, const Eigen::MatrixXd& factor_col_coef,
-		unsigned int seed
-	)
-	: num_iter(num_iter), num_burn(num_burn),
-		num_row(row_coef.cols()), num_col(col_coef.cols()),
-		nrow_factor(factor_row_coef.rows()), ncol_factor(factor_col_coef.rows()),
-		row_coef(factor_row_coef), col_coef(factor_col_coef),
-		pred(Eigen::MatrixXd::Zero(num_row, num_col)),
-		factor_mat(num_iter), res(num_iter) {
-		Eigen::MatrixXd error_mean = Eigen::MatrixXd::Zero(num_row, num_col);
-		dgp_updater = std::make_unique<MatGaussianErrorGenerator>(error_mean, row_sig, col_sig, seed);
-		ar_updater = std::make_unique<MarSimulator<false>>(num_iter, num_burn, lag, init, row_coef, col_coef, row_sig, col_sig, seed);
-		// generator = std::make_unique<MarForecaster>(num_iter + num_burn, init, lag, row_coef, col_coef, BVHAR_NULLOPT, std::move(dgp_updater));
-		// int num_init = init.rows() / nrow_factor;
-		// generator = std::make_unique<MatExogenForecaster>(0, init, num_init, num_row, num_col);
-	}
+	// MatFactorSimulator(
+	// 	int num_iter, int num_burn,
+	// 	int lag, const Eigen::MatrixXd& init,
+	// 	const Eigen::MatrixXd& row_coef, const Eigen::MatrixXd& col_coef,
+	// 	const Eigen::MatrixXd& row_sig, const Eigen::MatrixXd& col_sig,
+	// 	const Eigen::MatrixXd& factor_row_coef, const Eigen::MatrixXd& factor_col_coef,
+	// 	unsigned int seed
+	// )
+	// : num_iter(num_iter), num_burn(num_burn),
+	// 	num_row(row_coef.cols()), num_col(col_coef.cols()),
+	// 	nrow_factor(factor_row_coef.rows()), ncol_factor(factor_col_coef.rows()),
+	// 	row_coef(factor_row_coef), col_coef(factor_col_coef),
+	// 	pred(Eigen::MatrixXd::Zero(num_row, num_col)),
+	// 	factor_mat(num_iter), res(num_iter) {
+	// 	Eigen::MatrixXd error_mean = Eigen::MatrixXd::Zero(num_row, num_col);
+	// 	dgp_updater = std::make_unique<MatGaussianErrorGenerator>(error_mean, row_sig, col_sig, seed);
+	// 	ar_updater = std::make_unique<MarSimulator<false>>(num_iter, num_burn, lag, init, row_coef, col_coef, row_sig, col_sig, seed);
+	// 	// generator = std::make_unique<MarForecaster>(num_iter + num_burn, init, lag, row_coef, col_coef, BVHAR_NULLOPT, std::move(dgp_updater));
+	// 	// int num_init = init.rows() / nrow_factor;
+	// 	// generator = std::make_unique<MatExogenForecaster>(0, init, num_init, num_row, num_col);
+	// }
 
 	virtual ~MatFactorSimulator() = default;
 
@@ -148,17 +154,20 @@ class FactorVecSimulator : public MatFactorSimulator {
 public:
 	FactorVecSimulator(
 		int num_iter, int num_burn,
-		int lag,
+		int factor_lag,
 		const Eigen::MatrixXd& row_coef, const Eigen::MatrixXd& col_coef, const Eigen::MatrixXd& row_sig, const Eigen::MatrixXd& col_sig,
 		const Eigen::MatrixXd& factor_init,
 		const Eigen::MatrixXd& factor_coef, const Eigen::MatrixXd& factor_sig,
-		unsigned int seed
+		unsigned int seed,
+		BVHAR_OPTIONAL<int> lag = BVHAR_NULLOPT, BVHAR_OPTIONAL<Eigen::MatrixXd> init = BVHAR_NULLOPT,
+		BVHAR_OPTIONAL<Eigen::MatrixXd> mar_row_coef = BVHAR_NULLOPT,
+		BVHAR_OPTIONAL<Eigen::MatrixXd> mar_col_coef = BVHAR_NULLOPT
 	)
-	: MatFactorSimulator(num_iter, num_burn, row_coef, col_coef, row_sig, col_sig, seed),
-		factor_draw(Eigen::MatrixXd::Zero(num_iter, factor_coef.cols())),
-		ncol_factor(col_coef.rows()) {
+	: MatFactorSimulator(num_iter, num_burn, row_coef, col_coef, row_sig, col_sig, seed, lag, init, mar_row_coef, mar_col_coef),
+		factor_draw(Eigen::MatrixXd::Zero(num_iter, factor_coef.cols())) {
+		// ncol_factor(col_coef.rows()) {
 		factor_generator = std::make_unique<bvhar::OlsSimulator>(
-			num_iter, num_burn, lag,
+			num_iter, num_burn, factor_lag,
 			factor_init, factor_coef, factor_sig, 2, seed
 		);
 	}
@@ -175,23 +184,26 @@ protected:
 private:
 	std::unique_ptr<bvhar::OlsSimulator> factor_generator;
 	Eigen::MatrixXd factor_draw;
-	int ncol_factor;
+	// int ncol_factor;
 };
 
 class FactorMarSimulator : public MatFactorSimulator {
 public:
 	FactorMarSimulator(
 		int num_iter, int num_burn,
-		int lag,
+		int factor_lag,
 		const Eigen::MatrixXd& row_coef, const Eigen::MatrixXd& col_coef, const Eigen::MatrixXd& row_sig, const Eigen::MatrixXd& col_sig,
 		const Eigen::MatrixXd& factor_init,
 		const Eigen::MatrixXd& fac_row_coef, const Eigen::MatrixXd& fac_col_coef, const Eigen::MatrixXd& fac_row_sig, const Eigen::MatrixXd& fac_col_sig,
-		unsigned int seed
+		unsigned int seed,
+		BVHAR_OPTIONAL<int> lag = BVHAR_NULLOPT, BVHAR_OPTIONAL<Eigen::MatrixXd> init = BVHAR_NULLOPT,
+		BVHAR_OPTIONAL<Eigen::MatrixXd> mar_row_coef = BVHAR_NULLOPT,
+		BVHAR_OPTIONAL<Eigen::MatrixXd> mar_col_coef = BVHAR_NULLOPT
 	)
-	: MatFactorSimulator(num_iter, num_burn, row_coef, col_coef, row_sig, col_sig, seed) {
+	: MatFactorSimulator(num_iter, num_burn, row_coef, col_coef, row_sig, col_sig, seed, lag, init, mar_row_coef, mar_col_coef) {
 		Eigen::MatrixXd error_mean = Eigen::MatrixXd::Zero(nrow_factor, ncol_factor);
 		factor_generator = std::make_unique<MarSimulator<true>>(
-			num_iter, num_burn, lag,
+			num_iter, num_burn, factor_lag,
 			factor_init, fac_row_coef, fac_col_coef,
 			fac_row_sig, fac_col_sig, seed
 		);
