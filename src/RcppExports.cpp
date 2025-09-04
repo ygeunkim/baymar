@@ -418,6 +418,26 @@ BEGIN_RCPP
     return rcpp_result_gen;
 END_RCPP
 }
+// sim_mar_t_process
+std::vector<Eigen::MatrixXd> sim_mar_t_process(int num_sim, int num_burn, int lag, Eigen::MatrixXd init, Eigen::MatrixXd row_coef, Eigen::MatrixXd col_coef, Eigen::MatrixXd sigma, Eigen::MatrixXd omega, double nu, unsigned int seed);
+RcppExport SEXP _baymar_sim_mar_t_process(SEXP num_simSEXP, SEXP num_burnSEXP, SEXP lagSEXP, SEXP initSEXP, SEXP row_coefSEXP, SEXP col_coefSEXP, SEXP sigmaSEXP, SEXP omegaSEXP, SEXP nuSEXP, SEXP seedSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< int >::type num_sim(num_simSEXP);
+    Rcpp::traits::input_parameter< int >::type num_burn(num_burnSEXP);
+    Rcpp::traits::input_parameter< int >::type lag(lagSEXP);
+    Rcpp::traits::input_parameter< Eigen::MatrixXd >::type init(initSEXP);
+    Rcpp::traits::input_parameter< Eigen::MatrixXd >::type row_coef(row_coefSEXP);
+    Rcpp::traits::input_parameter< Eigen::MatrixXd >::type col_coef(col_coefSEXP);
+    Rcpp::traits::input_parameter< Eigen::MatrixXd >::type sigma(sigmaSEXP);
+    Rcpp::traits::input_parameter< Eigen::MatrixXd >::type omega(omegaSEXP);
+    Rcpp::traits::input_parameter< double >::type nu(nuSEXP);
+    Rcpp::traits::input_parameter< unsigned int >::type seed(seedSEXP);
+    rcpp_result_gen = Rcpp::wrap(sim_mar_t_process(num_sim, num_burn, lag, init, row_coef, col_coef, sigma, omega, nu, seed));
+    return rcpp_result_gen;
+END_RCPP
+}
 // sim_mdfm_process
 Rcpp::List sim_mdfm_process(int num_sim, int num_burn, int lag, Eigen::MatrixXd row_coef, Eigen::MatrixXd col_coef, Eigen::MatrixXd row_sig, Eigen::MatrixXd col_sig, Eigen::MatrixXd factor_init, Eigen::MatrixXd factor_row_coef, Eigen::MatrixXd factor_col_coef, Eigen::MatrixXd factor_row_sig, Eigen::MatrixXd factor_col_sig, unsigned int seed);
 RcppExport SEXP _baymar_sim_mdfm_process(SEXP num_simSEXP, SEXP num_burnSEXP, SEXP lagSEXP, SEXP row_coefSEXP, SEXP col_coefSEXP, SEXP row_sigSEXP, SEXP col_sigSEXP, SEXP factor_initSEXP, SEXP factor_row_coefSEXP, SEXP factor_col_coefSEXP, SEXP factor_row_sigSEXP, SEXP factor_col_sigSEXP, SEXP seedSEXP) {
@@ -462,6 +482,28 @@ BEGIN_RCPP
     return rcpp_result_gen;
 END_RCPP
 }
+// sim_mdfm_vec_t_process
+Rcpp::List sim_mdfm_vec_t_process(int num_sim, int num_burn, int lag, Eigen::MatrixXd row_coef, Eigen::MatrixXd col_coef, Eigen::MatrixXd sigma, Eigen::MatrixXd omega, double nu, Eigen::MatrixXd factor_init, Eigen::MatrixXd factor_coef, Eigen::MatrixXd factor_sig, unsigned int seed);
+RcppExport SEXP _baymar_sim_mdfm_vec_t_process(SEXP num_simSEXP, SEXP num_burnSEXP, SEXP lagSEXP, SEXP row_coefSEXP, SEXP col_coefSEXP, SEXP sigmaSEXP, SEXP omegaSEXP, SEXP nuSEXP, SEXP factor_initSEXP, SEXP factor_coefSEXP, SEXP factor_sigSEXP, SEXP seedSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< int >::type num_sim(num_simSEXP);
+    Rcpp::traits::input_parameter< int >::type num_burn(num_burnSEXP);
+    Rcpp::traits::input_parameter< int >::type lag(lagSEXP);
+    Rcpp::traits::input_parameter< Eigen::MatrixXd >::type row_coef(row_coefSEXP);
+    Rcpp::traits::input_parameter< Eigen::MatrixXd >::type col_coef(col_coefSEXP);
+    Rcpp::traits::input_parameter< Eigen::MatrixXd >::type sigma(sigmaSEXP);
+    Rcpp::traits::input_parameter< Eigen::MatrixXd >::type omega(omegaSEXP);
+    Rcpp::traits::input_parameter< double >::type nu(nuSEXP);
+    Rcpp::traits::input_parameter< Eigen::MatrixXd >::type factor_init(factor_initSEXP);
+    Rcpp::traits::input_parameter< Eigen::MatrixXd >::type factor_coef(factor_coefSEXP);
+    Rcpp::traits::input_parameter< Eigen::MatrixXd >::type factor_sig(factor_sigSEXP);
+    Rcpp::traits::input_parameter< unsigned int >::type seed(seedSEXP);
+    rcpp_result_gen = Rcpp::wrap(sim_mdfm_vec_t_process(num_sim, num_burn, lag, row_coef, col_coef, sigma, omega, nu, factor_init, factor_coef, factor_sig, seed));
+    return rcpp_result_gen;
+END_RCPP
+}
 // sim_famar_vec_process
 Rcpp::List sim_famar_vec_process(int num_sim, int num_burn, int lag, Eigen::MatrixXd init, Eigen::MatrixXd row_coef, Eigen::MatrixXd col_coef, Eigen::MatrixXd row_sig, Eigen::MatrixXd col_sig, int factor_lag, Eigen::MatrixXd factor_init, Eigen::MatrixXd factor_row_coef, Eigen::MatrixXd factor_col_coef, Eigen::MatrixXd factor_coef, Eigen::MatrixXd factor_sig, unsigned int seed);
 RcppExport SEXP _baymar_sim_famar_vec_process(SEXP num_simSEXP, SEXP num_burnSEXP, SEXP lagSEXP, SEXP initSEXP, SEXP row_coefSEXP, SEXP col_coefSEXP, SEXP row_sigSEXP, SEXP col_sigSEXP, SEXP factor_lagSEXP, SEXP factor_initSEXP, SEXP factor_row_coefSEXP, SEXP factor_col_coefSEXP, SEXP factor_coefSEXP, SEXP factor_sigSEXP, SEXP seedSEXP) {
@@ -487,6 +529,32 @@ BEGIN_RCPP
     return rcpp_result_gen;
 END_RCPP
 }
+// sim_famar_vec_t_process
+Rcpp::List sim_famar_vec_t_process(int num_sim, int num_burn, int lag, Eigen::MatrixXd init, Eigen::MatrixXd row_coef, Eigen::MatrixXd col_coef, Eigen::MatrixXd sigma, Eigen::MatrixXd omega, double nu, int factor_lag, Eigen::MatrixXd factor_init, Eigen::MatrixXd factor_row_coef, Eigen::MatrixXd factor_col_coef, Eigen::MatrixXd factor_coef, Eigen::MatrixXd factor_sig, unsigned int seed);
+RcppExport SEXP _baymar_sim_famar_vec_t_process(SEXP num_simSEXP, SEXP num_burnSEXP, SEXP lagSEXP, SEXP initSEXP, SEXP row_coefSEXP, SEXP col_coefSEXP, SEXP sigmaSEXP, SEXP omegaSEXP, SEXP nuSEXP, SEXP factor_lagSEXP, SEXP factor_initSEXP, SEXP factor_row_coefSEXP, SEXP factor_col_coefSEXP, SEXP factor_coefSEXP, SEXP factor_sigSEXP, SEXP seedSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< int >::type num_sim(num_simSEXP);
+    Rcpp::traits::input_parameter< int >::type num_burn(num_burnSEXP);
+    Rcpp::traits::input_parameter< int >::type lag(lagSEXP);
+    Rcpp::traits::input_parameter< Eigen::MatrixXd >::type init(initSEXP);
+    Rcpp::traits::input_parameter< Eigen::MatrixXd >::type row_coef(row_coefSEXP);
+    Rcpp::traits::input_parameter< Eigen::MatrixXd >::type col_coef(col_coefSEXP);
+    Rcpp::traits::input_parameter< Eigen::MatrixXd >::type sigma(sigmaSEXP);
+    Rcpp::traits::input_parameter< Eigen::MatrixXd >::type omega(omegaSEXP);
+    Rcpp::traits::input_parameter< double >::type nu(nuSEXP);
+    Rcpp::traits::input_parameter< int >::type factor_lag(factor_lagSEXP);
+    Rcpp::traits::input_parameter< Eigen::MatrixXd >::type factor_init(factor_initSEXP);
+    Rcpp::traits::input_parameter< Eigen::MatrixXd >::type factor_row_coef(factor_row_coefSEXP);
+    Rcpp::traits::input_parameter< Eigen::MatrixXd >::type factor_col_coef(factor_col_coefSEXP);
+    Rcpp::traits::input_parameter< Eigen::MatrixXd >::type factor_coef(factor_coefSEXP);
+    Rcpp::traits::input_parameter< Eigen::MatrixXd >::type factor_sig(factor_sigSEXP);
+    Rcpp::traits::input_parameter< unsigned int >::type seed(seedSEXP);
+    rcpp_result_gen = Rcpp::wrap(sim_famar_vec_t_process(num_sim, num_burn, lag, init, row_coef, col_coef, sigma, omega, nu, factor_lag, factor_init, factor_row_coef, factor_col_coef, factor_coef, factor_sig, seed));
+    return rcpp_result_gen;
+END_RCPP
+}
 
 static const R_CallMethodDef CallEntries[] = {
     {"_baymar_estimate_bmdfm", (DL_FUNC) &_baymar_estimate_bmdfm, 17},
@@ -501,9 +569,12 @@ static const R_CallMethodDef CallEntries[] = {
     {"_baymar_expand_bmar_mniw", (DL_FUNC) &_baymar_expand_bmar_mniw, 32},
     {"_baymar_expand_bmarx_mniw", (DL_FUNC) &_baymar_expand_bmarx_mniw, 40},
     {"_baymar_sim_mar_process", (DL_FUNC) &_baymar_sim_mar_process, 9},
+    {"_baymar_sim_mar_t_process", (DL_FUNC) &_baymar_sim_mar_t_process, 10},
     {"_baymar_sim_mdfm_process", (DL_FUNC) &_baymar_sim_mdfm_process, 13},
     {"_baymar_sim_mdfm_vec_process", (DL_FUNC) &_baymar_sim_mdfm_vec_process, 11},
+    {"_baymar_sim_mdfm_vec_t_process", (DL_FUNC) &_baymar_sim_mdfm_vec_t_process, 12},
     {"_baymar_sim_famar_vec_process", (DL_FUNC) &_baymar_sim_famar_vec_process, 15},
+    {"_baymar_sim_famar_vec_t_process", (DL_FUNC) &_baymar_sim_famar_vec_t_process, 16},
     {NULL, NULL, 0}
 };
 
