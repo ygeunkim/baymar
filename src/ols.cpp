@@ -13,6 +13,17 @@ std::vector<Eigen::MatrixXd> sim_mar_process(int num_sim, int num_burn, int lag,
 
 //' @noRd
 // [[Rcpp::export]]
+std::vector<Eigen::MatrixXd> sim_mar_t_process(int num_sim, int num_burn, int lag,
+																		 				   Eigen::MatrixXd init,
+																		 				   Eigen::MatrixXd row_coef, Eigen::MatrixXd col_coef,
+																		 				   Eigen::MatrixXd sigma, Eigen::MatrixXd omega, double nu,
+																						   unsigned int seed) {
+	auto dgp_run = std::make_unique<baymar::MarSimulator>(num_sim, num_burn, lag, init, row_coef, col_coef, sigma, omega, nu, seed);
+	return dgp_run->returnDgp();
+}
+
+//' @noRd
+// [[Rcpp::export]]
 Rcpp::List sim_mdfm_process(int num_sim, int num_burn, int lag,
 													  Eigen::MatrixXd row_coef, Eigen::MatrixXd col_coef,
 													  Eigen::MatrixXd row_sig, Eigen::MatrixXd col_sig,
@@ -49,6 +60,24 @@ Rcpp::List sim_mdfm_vec_process(int num_sim, int num_burn, int lag,
 
 //' @noRd
 // [[Rcpp::export]]
+Rcpp::List sim_mdfm_vec_t_process(int num_sim, int num_burn, int lag,
+													        Eigen::MatrixXd row_coef, Eigen::MatrixXd col_coef,
+													        Eigen::MatrixXd sigma, Eigen::MatrixXd omega, double nu,
+														      Eigen::MatrixXd factor_init,
+													        Eigen::MatrixXd factor_coef, Eigen::MatrixXd factor_sig,
+													        unsigned int seed) {
+	auto dgp_run = std::make_unique<baymar::FactorVecSimulator>(
+		num_sim, num_burn, lag,
+		row_coef, col_coef, sigma, omega, nu,
+		factor_init,
+		factor_coef, factor_sig,
+		seed
+	);
+	return dgp_run->returnDgp();
+}
+
+//' @noRd
+// [[Rcpp::export]]
 Rcpp::List sim_famar_vec_process(int num_sim, int num_burn, int lag, Eigen::MatrixXd init,
 														 		 Eigen::MatrixXd row_coef, Eigen::MatrixXd col_coef,
 														 		 Eigen::MatrixXd row_sig, Eigen::MatrixXd col_sig,
@@ -59,6 +88,25 @@ Rcpp::List sim_famar_vec_process(int num_sim, int num_burn, int lag, Eigen::Matr
 	auto dgp_run = std::make_unique<baymar::FactorVecSimulator>(
 		num_sim, num_burn, factor_lag,
 		factor_row_coef, factor_col_coef, row_sig, col_sig,
+		factor_init, factor_coef, factor_sig,
+		seed,
+		lag, init, row_coef, col_coef
+	);
+	return dgp_run->returnDgp();
+}
+
+//' @noRd
+// [[Rcpp::export]]
+Rcpp::List sim_famar_vec_t_process(int num_sim, int num_burn, int lag, Eigen::MatrixXd init,
+														 		   Eigen::MatrixXd row_coef, Eigen::MatrixXd col_coef,
+														 		   Eigen::MatrixXd sigma, Eigen::MatrixXd omega, double nu,
+														 		   int factor_lag, Eigen::MatrixXd factor_init,
+														 		   Eigen::MatrixXd factor_row_coef, Eigen::MatrixXd factor_col_coef,
+																   Eigen::MatrixXd factor_coef, Eigen::MatrixXd factor_sig,
+														 		   unsigned int seed) {
+	auto dgp_run = std::make_unique<baymar::FactorVecSimulator>(
+		num_sim, num_burn, factor_lag,
+		factor_row_coef, factor_col_coef, sigma, omega, nu,
 		factor_init, factor_coef, factor_sig,
 		seed,
 		lag, init, row_coef, col_coef

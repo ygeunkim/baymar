@@ -62,6 +62,11 @@ sim_mar_process <- function(num_sim, num_burn, lag, init, row_coef, col_coef, ro
 }
 
 #' @noRd
+sim_mar_t_process <- function(num_sim, num_burn, lag, init, row_coef, col_coef, sigma, omega, nu, seed) {
+    .Call(`_baymar_sim_mar_t_process`, num_sim, num_burn, lag, init, row_coef, col_coef, sigma, omega, nu, seed)
+}
+
+#' @noRd
 sim_mdfm_process <- function(num_sim, num_burn, lag, row_coef, col_coef, row_sig, col_sig, factor_init, factor_row_coef, factor_col_coef, factor_row_sig, factor_col_sig, seed) {
     .Call(`_baymar_sim_mdfm_process`, num_sim, num_burn, lag, row_coef, col_coef, row_sig, col_sig, factor_init, factor_row_coef, factor_col_coef, factor_row_sig, factor_col_sig, seed)
 }
@@ -72,7 +77,17 @@ sim_mdfm_vec_process <- function(num_sim, num_burn, lag, row_coef, col_coef, row
 }
 
 #' @noRd
+sim_mdfm_vec_t_process <- function(num_sim, num_burn, lag, row_coef, col_coef, sigma, omega, nu, factor_init, factor_coef, factor_sig, seed) {
+    .Call(`_baymar_sim_mdfm_vec_t_process`, num_sim, num_burn, lag, row_coef, col_coef, sigma, omega, nu, factor_init, factor_coef, factor_sig, seed)
+}
+
+#' @noRd
 sim_famar_vec_process <- function(num_sim, num_burn, lag, init, row_coef, col_coef, row_sig, col_sig, factor_lag, factor_init, factor_row_coef, factor_col_coef, factor_coef, factor_sig, seed) {
     .Call(`_baymar_sim_famar_vec_process`, num_sim, num_burn, lag, init, row_coef, col_coef, row_sig, col_sig, factor_lag, factor_init, factor_row_coef, factor_col_coef, factor_coef, factor_sig, seed)
+}
+
+#' @noRd
+sim_famar_vec_t_process <- function(num_sim, num_burn, lag, init, row_coef, col_coef, sigma, omega, nu, factor_lag, factor_init, factor_row_coef, factor_col_coef, factor_coef, factor_sig, seed) {
+    .Call(`_baymar_sim_famar_vec_t_process`, num_sim, num_burn, lag, init, row_coef, col_coef, sigma, omega, nu, factor_lag, factor_init, factor_row_coef, factor_col_coef, factor_coef, factor_sig, seed)
 }
 

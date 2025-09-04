@@ -9,6 +9,7 @@ namespace baymar {
 class MatExogenForecaster;
 class MatErrorGenerator;
 class MatGaussianErrorGenerator;
+class MatStudentErrorGenerator;
 
 class MatExogenForecaster : public bvhar::ExogenForecaster<Eigen::MatrixXd, Eigen::MatrixXd> {
 public:
@@ -80,6 +81,33 @@ public:
 
 private:
 	Eigen::MatrixXd error_mean, error_sig_row, error_sig_col;
+};
+
+class MatStudentErrorGenerator : public MatErrorGenerator {
+public:
+	MatStudentErrorGenerator(
+		const Eigen::MatrixXd& error_mean, const Eigen::MatrixXd& sigma,
+		const Eigen::MatrixXd& omega, const double& nu,
+		unsigned int seed
+	)
+	: MatErrorGenerator(sigma.cols(), omega.cols(), seed),
+		error_mean(error_mean), sigma(sigma), omega(omega), nu(nu) {}
+	virtual ~MatStudentErrorGenerator() = default;
+
+	void appendError(Eigen::MatrixXd& point_forecast) override {
+		Eigen::MatrixXd chol_iw = bvhar::sim_iw_tri(omega, nu, rng);
+		for (int i = 0; i < error_mean.rows(); ++i) {
+			for (int j = 0; j < error_mean.cols(); ++j) {
+				error_term(i, j) = bvhar::normal_rand(rng);
+			}
+		}
+		error_term = sigma.llt().matrixL() * error_term * chol_iw.transpose();
+		point_forecast += error_term + error_mean;
+	}
+
+private:
+	Eigen::MatrixXd error_mean, sigma, omega;
+	double nu;
 };
 
 } // namespace baymar
