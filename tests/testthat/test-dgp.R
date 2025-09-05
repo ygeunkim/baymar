@@ -147,7 +147,7 @@ test_that("MDFM-vec process generation", {
       factor_coef = factor_coef, factor_sig = factor_sig,
       seed = sample.int(.Machine$integer.max, size = 1)
     ) |>
-      simplify2array()
+      lapply(simplify2array)
   })
 })
 
