@@ -3,7 +3,7 @@
 #' This function fits Bayesian Matrix Dynamic Factor Model (MDFM) with various priors.
 #' 
 #' @param y Matrix-valued time series data
-#' @param dfm_spec Factor matrix specification.
+#' @param factor_spec Factor matrix specification.
 #' @param num_chains Number of MCMC chains
 #' @param num_iter MCMC iteration number
 #' @param num_burn Number of burn-in (warm-up). Half of the iteration is the default choice.
@@ -16,7 +16,7 @@
 #' @order 1
 #' @export
 mdfm_bayes <- function(y,
-                       dfm_spec = set_dfm(),
+                       factor_spec = set_dfm(),
                        num_chains = 1,
                        num_iter = 1000,
                        num_burn = floor(num_iter / 2),
@@ -58,15 +58,15 @@ mdfm_bayes <- function(y,
   #   function(lag) paste(var_names[[2]], lag, sep = "_")
   # ) |>
   #   unlist()
-  dfm_spec <- validate_bmdfm_spec(dfm_spec)
-  nrow_factor <- dfm_spec$nrow_factor
-  ncol_factor <- dfm_spec$ncol_factor
+  factor_spec <- validate_factor_spec(factor_spec)
+  nrow_factor <- factor_spec$nrow_factor
+  ncol_factor <- factor_spec$ncol_factor
   size_factor <- nrow_factor * ncol_factor
-  lag_factor <- dfm_spec$lag
+  lag_factor <- factor_spec$lag
   name_row_lag <- paste("factor_row", seq_len(nrow_factor), sep = "_")
   name_col_lag <- paste("factor_col", seq_len(ncol_factor), sep = "_")
-  if (dfm_spec$nrow_factor == 0 || dfm_spec$ncol_factor == 0) {
-    stop("Wrong 'dfm_spec'")
+  if (factor_spec$nrow_factor == 0 || factor_spec$ncol_factor == 0) {
+    stop("Wrong 'factor_spec'")
   }
   nrow_row_coef <- nrow_factor
   nrow_col_coef <- ncol_factor
@@ -96,8 +96,8 @@ mdfm_bayes <- function(y,
       ncol_factor = ncol_factor,
       size_factor = size_factor,
       lag = lag_factor,
-      shape = dfm_spec$shape,
-      scale = dfm_spec$scale
+      shape = factor_spec$shape,
+      scale = factor_spec$scale
     )
   )
   param_prior$row_prior_prec <- rep(1, nrow_factor)
@@ -191,7 +191,7 @@ mdfm_bayes <- function(y,
   res$spec <- list(
     row = row_spec,
     col = col_spec,
-    factor = dfm_spec
+    factor = factor_spec
   )
   res$init <- list(
     param = param_init,

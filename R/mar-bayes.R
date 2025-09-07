@@ -6,7 +6,7 @@
 #' @param p VAR lag (Default: 1)
 #' @param exogen Unmodeled matrices
 #' @param s Lag of exogeneous matrices in MARX(p, s). By default, `s = 0`.
-#' @param famar_spec Augmented factor matrix specification.
+#' @param factor_spec Augmented factor matrix specification.
 #' @param num_chains Number of MCMC chains
 #' @param num_iter MCMC iteration number
 #' @param num_burn Number of burn-in (warm-up). Half of the iteration is the default choice.
@@ -33,7 +33,7 @@ mar_bayes <- function(y,
                       p = 1,
                       exogen = NULL,
                       s = 0,
-                      famar_spec = set_famar(),
+                      factor_spec = set_famar(),
                       num_chains = 1,
                       num_iter = 1000,
                       num_burn = floor(num_iter / 2),
@@ -102,13 +102,13 @@ mar_bayes <- function(y,
   row_factor_init <- list()
   col_factor_init <- list()
   is_famar <- FALSE
-  if (!is.famarspec(famar_spec)) {
-    stop("Wrong 'famar_spec'")
+  if (!is.famarspec(factor_spec)) {
+    stop("Wrong 'factor_spec'")
   }
-  if (famar_spec$nrow_factor > 0 && famar_spec$ncol_factor > 0) {
-    nrow_factor <- famar_spec$nrow_factor
-    ncol_factor <- famar_spec$ncol_factor
-    lag_factor <- famar_spec$lag
+  if (factor_spec$nrow_factor > 0 && factor_spec$ncol_factor > 0) {
+    nrow_factor <- factor_spec$nrow_factor
+    ncol_factor <- factor_spec$ncol_factor
+    lag_factor <- factor_spec$lag
     is_famar <- TRUE
   }
   if (!is.null(exogen)) {
@@ -372,7 +372,7 @@ mar_bayes <- function(y,
   if (is_famar) {
     res$spec <- append(
       res$spec,
-      list(factor_row = factor_row_spec, factor_col = factor_col_spec, factor = famar_spec)
+      list(factor_row = factor_row_spec, factor_col = factor_col_spec, factor = factor_spec)
     )
     res$init <- append(
       res$init,

@@ -9,7 +9,7 @@ mar_bayes(
   p = 1,
   exogen = NULL,
   s = 0,
-  famar_spec = set_famar(),
+  factor_spec = set_famar(),
   num_chains = 1,
   num_iter = 1000,
   num_burn = floor(num_iter/2),
@@ -33,7 +33,7 @@ mar_bayes(
 
 \item{s}{Lag of exogeneous matrices in MARX(p, s). By default, \code{s = 0}.}
 
-\item{famar_spec}{Augmented factor matrix specification.}
+\item{factor_spec}{Augmented factor matrix specification.}
 
 \item{num_chains}{Number of MCMC chains}
 
