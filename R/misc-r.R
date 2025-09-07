@@ -105,19 +105,19 @@ validate_bmarx_colspec <- function(param_prior, x, s, bayes_spec, nrow_exogen, n
 }
 
 #' @noRd
-validate_bmdfm_spec <- function(bayes_spec) {
-  if (!is.dfmspec(bayes_spec)) {
-    stop("Wrong 'row_spec'")
+validate_factor_spec <- function(bayes_spec) {
+  if (!is.factorspec(bayes_spec)) {
+    stop("Wrong 'bayes_spec'")
   }
-  if (bayes_spec$nrow_factor == 0 || bayes_spec$ncol_factor == 0) {
-    stop("Wrong 'dfm_spec'")
-  }
+  # if (bayes_spec$nrow_factor == 0 || bayes_spec$ncol_factor == 0) {
+  #   stop("Wrong 'factor_spec'")
+  # }
   size_factor <- bayes_spec$nrow_factor * bayes_spec$ncol_factor
-  if (length(bayes_spec$shape) == 1) {
-    bayes_spec$shape <- rep(bayes_spec$shape, size_factor)
+  if (length(bayes_spec$arsig$shape) == 1) {
+    bayes_spec$arsig$shape <- rep(bayes_spec$arsig$shape, size_factor)
   }
-  if (length(bayes_spec$scale) == 1) {
-    bayes_spec$scale <- rep(bayes_spec$scale, size_factor)
+  if (length(bayes_spec$arsig$scale) == 1) {
+    bayes_spec$arsig$scale <- rep(bayes_spec$arsig$scale, size_factor)
   }
   bayes_spec
 }

@@ -6,7 +6,7 @@
 \usage{
 mdfm_bayes(
   y,
-  dfm_spec = set_dfm(),
+  factor_spec = set_factor(),
   num_chains = 1,
   num_iter = 1000,
   num_burn = floor(num_iter/2),
@@ -20,7 +20,7 @@ mdfm_bayes(
 \arguments{
 \item{y}{Matrix-valued time series data}
 
-\item{dfm_spec}{Factor matrix specification.}
+\item{factor_spec}{Factor matrix specification.}
 
 \item{num_chains}{Number of MCMC chains}
 
