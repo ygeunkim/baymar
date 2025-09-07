@@ -13,7 +13,7 @@ Authors@R:
              role = "ctb"))
 Description: Tools to model and forecast matrix-valued time series
     including Bayesian Matrix autoregressive (BMAR) model.
-License: GPL (>= 3)
+License: MIT + file LICENSE
 Imports: 
     Rcpp,
     bvhar,
