@@ -106,8 +106,8 @@ validate_bmarx_colspec <- function(param_prior, x, s, bayes_spec, nrow_exogen, n
 
 #' @noRd
 validate_factor_spec <- function(bayes_spec) {
-  if (!is.dfmspec(bayes_spec)) {
-    stop("Wrong 'row_spec'")
+  if (!is.factorspec(bayes_spec)) {
+    stop("Wrong 'bayes_spec'")
   }
   if (bayes_spec$nrow_factor == 0 || bayes_spec$ncol_factor == 0) {
     stop("Wrong 'factor_spec'")

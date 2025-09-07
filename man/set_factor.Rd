@@ -5,7 +5,12 @@
 \alias{is.factorspec}
 \title{Factor prior specification}
 \usage{
-set_factor(nrow_factor = 0, ncol_factor = 0, factor_lag = 1)
+set_factor(
+  nrow_factor = 0,
+  ncol_factor = 0,
+  factor_lag = 1,
+  factor_arsig = set_ldlt()
+)
 
 is.factorspec(x)
 }
@@ -17,6 +22,8 @@ By default, \code{0} which will does not use factor term.}
 By default, \code{0} which will does not use factor term.}
 
 \item{factor_lag}{Lag of factor autoregressions.}
+
+\item{factor_arsig}{Inverse-Gamma prior for factor AR covariance}
 
 \item{x}{Any object}
 }

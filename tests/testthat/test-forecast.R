@@ -36,7 +36,7 @@ help_bmdfm_pred <- function(row_spec, col_spec) {
   set.seed(1)
   fit_test <- mdfm_bayes(
     toy_data,
-    factor_spec = set_dfm(),
+    factor_spec = set_factor(nrow_factor = 2, ncol_factor = 2, factor_lag = 2, factor_arsig = set_ldlt()),
     num_chains = 2,
     num_iter = 5,
     num_burn = 2,
@@ -134,7 +134,7 @@ help_bmdfm_roll <- function(row_spec, col_spec) {
   set.seed(1)
   fit_test <- mdfm_bayes(
     toy_data,
-    factor_spec = set_dfm(),
+    factor_spec = set_factor(nrow_factor = 2, ncol_factor = 2, factor_lag = 2, factor_arsig = set_ldlt()),
     num_chains = 2,
     num_iter = 5,
     num_burn = 2,
@@ -232,7 +232,7 @@ help_bmdfm_expand <- function(row_spec, col_spec) {
   set.seed(1)
   fit_test <- mdfm_bayes(
     toy_data,
-    factor_spec = set_dfm(),
+    factor_spec = set_factor(nrow_factor = 2, ncol_factor = 2, factor_lag = 2, factor_arsig = set_ldlt()),
     num_chains = 2,
     num_iter = 5,
     num_burn = 2,
