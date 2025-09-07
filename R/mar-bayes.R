@@ -33,7 +33,7 @@ mar_bayes <- function(y,
                       p = 1,
                       exogen = NULL,
                       s = 0,
-                      factor_spec = set_famar(),
+                      factor_spec = set_factor(),
                       num_chains = 1,
                       num_iter = 1000,
                       num_burn = floor(num_iter / 2),
@@ -102,7 +102,7 @@ mar_bayes <- function(y,
   row_factor_init <- list()
   col_factor_init <- list()
   is_famar <- FALSE
-  if (!is.famarspec(factor_spec)) {
+  if (!is.factorspec(factor_spec)) {
     stop("Wrong 'factor_spec'")
   }
   if (factor_spec$nrow_factor > 0 && factor_spec$ncol_factor > 0) {

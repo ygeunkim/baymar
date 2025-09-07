@@ -89,7 +89,7 @@ is.mathsspec <- function(x) {
 #'
 #' @order 1
 #' @export
-set_famar <- function(nrow_factor = 0, ncol_factor = 0, factor_lag = 1) {
+set_factor <- function(nrow_factor = 0, ncol_factor = 0, factor_lag = 1) {
   if (factor_lag <= 0 || factor_lag %% 1 != 0) {
     stop("'factor_lag' positive integer.")
   }
@@ -98,15 +98,15 @@ set_famar <- function(nrow_factor = 0, ncol_factor = 0, factor_lag = 1) {
     ncol_factor = ncol_factor,
     lag = factor_lag
   )
-  class(res) <- "famarspec"
+  class(res) <- "factorspec"
   res
 }
 
-#' @rdname set_famar
+#' @rdname set_factor
 #' @param x Any object
 #' @export
-is.famarspec <- function(x) {
-  inherits(x, "famarspec")
+is.factorspec <- function(x) {
+  inherits(x, "factorspec")
 }
 
 #' Vectorzied factor prior specification
