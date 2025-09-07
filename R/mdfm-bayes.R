@@ -96,8 +96,8 @@ mdfm_bayes <- function(y,
       ncol_factor = ncol_factor,
       size_factor = size_factor,
       lag = lag_factor,
-      shape = factor_spec$shape,
-      scale = factor_spec$scale
+      shape = factor_spec$arsig$shape,
+      scale = factor_spec$arsig$scale
     )
   )
   param_prior$row_prior_prec <- rep(1, nrow_factor)

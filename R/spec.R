@@ -86,7 +86,8 @@ is.mathsspec <- function(x) {
 #' @param ncol_factor Number of columns of factor matrix.
 #' By default, `0` which will does not use factor term.
 #' @param factor_lag Lag of factor autoregressions.
-#' @param factor_arsig Inverse-Gamma prior for factor AR covariance
+#' @param factor_arsig Inverse-Gamma prior for factor AR covariance.
+#' [bvhar::set_ldlt()] can specify the IG shape and scale.
 #'
 #' @order 1
 #' @export
@@ -94,12 +95,16 @@ set_factor <- function(nrow_factor = 0, ncol_factor = 0, factor_lag = 1, factor_
   if (factor_lag <= 0 || factor_lag %% 1 != 0) {
     stop("'factor_lag' positive integer.")
   }
+  if (!inherits(factor_arsig, "ldltspec")) {
+    stop("Use 'set_ldlt()' for 'factor_arsig'.")
+  }
   res <- list(
     nrow_factor = nrow_factor,
     ncol_factor = ncol_factor,
     lag = factor_lag,
-    shape = factor_arsig$shape,
-    scale = factor_arsig$scale
+    arsig = factor_arsig
+    # shape = factor_arsig$shape,
+    # scale = factor_arsig$scale
   )
   class(res) <- "factorspec"
   res

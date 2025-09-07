@@ -461,8 +461,8 @@ forecast_roll.mdfmbayes <- function(object, n_ahead, y_test,
       ncol_factor = ncol_factor,
       size_factor = nrow_factor * ncol_factor,
       lag = factor_lag,
-      shape = object$spec$factor$shape,
-      scale = object$spec$factor$scale
+      shape = object$spec$factor$arsig$shape,
+      scale = object$spec$factor$arsig$scale
     )
   )
   param_prior$row_prior_prec <- rep(1, nrow_factor)
@@ -799,8 +799,8 @@ forecast_expand.mdfmbayes <- function(object, n_ahead, y_test,
       ncol_factor = ncol_factor,
       size_factor = nrow_factor * ncol_factor,
       lag = factor_lag,
-      shape = object$spec$factor$shape,
-      scale = object$spec$factor$scale
+      shape = object$spec$factor$arsig$shape,
+      scale = object$spec$factor$arsig$scale
     )
   )
   param_prior$row_prior_prec <- rep(1, nrow_factor)

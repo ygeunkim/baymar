@@ -23,7 +23,8 @@ By default, \code{0} which will does not use factor term.}
 
 \item{factor_lag}{Lag of factor autoregressions.}
 
-\item{factor_arsig}{Inverse-Gamma prior for factor AR covariance}
+\item{factor_arsig}{Inverse-Gamma prior for factor AR covariance.
+\code{\link[bvhar:set_ldlt]{bvhar::set_ldlt()}} can specify the IG shape and scale.}
 
 \item{x}{Any object}
 }

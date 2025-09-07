@@ -8,7 +8,7 @@ help_bmar_pred <- function(row_spec, col_spec, exogen_row_spec = NULL, exogen_co
   }
   factor_spec <- set_factor(nrow_factor = 0, ncol_factor = 0, factor_lag = 1)
   if (!is.null(factor_row_spec)) {
-    factor_spec <- set_factor(nrow_factor = 2, ncol_factor = 2, factor_lag = 2)
+    factor_spec <- set_factor(nrow_factor = 2, ncol_factor = 2, factor_lag = 2, factor_arsig = set_ldlt())
   }
   set.seed(1)
   fit_test <- mar_bayes(
@@ -105,7 +105,7 @@ help_bmar_roll <- function(row_spec, col_spec, exogen_row_spec = NULL, exogen_co
   }
   factor_spec <- set_factor(nrow_factor = 0, ncol_factor = 0, factor_lag = 1)
   if (!is.null(factor_row_spec)) {
-    factor_spec <- set_factor(nrow_factor = 2, ncol_factor = 2, factor_lag = 2)
+    factor_spec <- set_factor(nrow_factor = 2, ncol_factor = 2, factor_lag = 2, factor_arsig = set_ldlt())
   }
   set.seed(1)
   fit_test <- mar_bayes(
@@ -203,7 +203,7 @@ help_bmar_expand <- function(row_spec, col_spec, exogen_row_spec = NULL, exogen_
   }
   factor_spec <- set_factor(nrow_factor = 0, ncol_factor = 0, factor_lag = 1)
   if (!is.null(factor_row_spec)) {
-    factor_spec <- set_factor(nrow_factor = 2, ncol_factor = 2, factor_lag = 2)
+    factor_spec <- set_factor(nrow_factor = 2, ncol_factor = 2, factor_lag = 2, factor_arsig = set_ldlt())
   }
   set.seed(1)
   fit_test <- mar_bayes(
