@@ -6,6 +6,8 @@
 \alias{baymar-package}
 \title{baymar: Bayesian Matrix Autoregressions}
 \description{
+\if{html}{\figure{logo.png}{options: style='float: right' alt='logo' width='120'}}
+
 Tools to model and forecast matrix-valued time series including Bayesian Matrix autoregressive (BMAR) model.
 }
 \author{

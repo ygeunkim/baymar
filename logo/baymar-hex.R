@@ -1,0 +1,78 @@
+library(tidyverse)
+library(hexSticker)
+# Subplot--------------------------------------
+img_plt <-
+  tibble(
+    x = 1:5,
+    y1 = c(0, 1, .5, 2, 1.5),
+    y2 = c(2, 1, 1.5, 2, 1),
+    y3 = c(1, 2, .5, 1.5, 2),
+    y4 = c(1.5, 1, 2, .5, 2)
+  ) |>
+  pivot_longer(-x, names_to = "series", values_to = "value") |>
+  mutate(
+    ymin = case_when(
+      x == 3 ~ value,
+      x > 3 ~ value - .5,
+      .default = NA
+    ),
+    ymax = case_when(
+      x == 3 ~ value,
+      x > 3 ~ value + .5,
+      .default = NA
+    )
+  ) |>
+  ggplot(aes(x = x, y = value)) +
+  geom_ribbon(aes(ymin = ymin, ymax = ymax, fill = series), alpha = .9, col = NA, na.rm = TRUE) +
+  scale_fill_manual(values = c("#F5ECD5", "#D0DDD0", "#EBD9D1", "#F7F4EA")) +
+  geom_path(aes(color = series)) +
+  scale_color_manual(values = c("#D8C4B6", "#3E5879", "#D6A99D", "#F3E2D4")) +
+  facet_wrap(~series, ncol = 2) +
+  guides(color = "none", fill = "none") +
+  theme_void() +
+  theme_transparent(strip.text = element_blank())
+# Save sticker---------------------------------
+sysfonts::font_add_google("Noto Sans")
+sticker(
+  # Subplot
+  subplot = img_plt,
+  s_x = 1,
+  s_y = .9,
+  s_width = 1.6,
+  s_height = 1.6 * .618,
+  # Package name
+  package = c("bay", "mar"),
+  p_family = "Noto Sans",
+  p_fontface = "plain",
+  p_size = 30,
+  p_x = c(.65, 1.35),
+  p_y = 1.35,
+  p_color = c("#748DAE", "#9ECAD6"),
+  # Hexagon
+  h_size = 1.2,
+  h_fill = "#F0ECE9",
+  h_color = "#131010",
+  # Spotlight
+  spotlight = FALSE,
+  l_x = 1,
+  l_y = 0.5,
+  l_width = 3,
+  l_height = 3,
+  l_alpha = 0.4,
+  # URL
+  url = "ygeunkim.github.io/package/baymar",
+  u_x = 1,
+  u_y = 0.08,
+  u_color = "black",
+  u_family = "Noto Sans",
+  u_size = 2.5,
+  u_angle = 30,
+  # Save
+  white_around_sticker = FALSE,
+  filename = "./logo/baymar-logo.png",
+  asp = 1,
+  dpi = 300
+)
+# usethis--------------------------------------
+usethis::use_logo("./logo/baymar-logo.png")
+pkgdown::build_favicons(pkg = ".", overwrite = FALSE)
