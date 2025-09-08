@@ -118,7 +118,12 @@ protected:
 		error_mat = row_sig_lower * error_mat * col_sig_lower.transpose();
 	}
 
-	void updateLpl(int h, const Eigen::MatrixXd& valid_vec) override {}
+	void updateLpl(int h, const Eigen::MatrixXd& valid_vec) override {
+		BVHAR_DEBUG_LOG(debug_logger, "updateLpl(h={}, valid_vec) called", h);
+		lpl[h] -= col_sig_lower.transpose().triangularView<Eigen::Upper>().solve<Eigen::OnTheRight>(
+			row_sig_lower.triangularView<Eigen::Lower>().solve(valid_vec - point_forecast)
+		).squaredNorm() / 2 + num_row * num_col * log(2 * M_PI) / 2 + 4 * row_sig_lower.diagonal().array().log().sum() + 4 * col_sig_lower.diagonal().array().log().sum();
+	}
 };
 
 class MatDfmVarForecaster : public MatDfmForecaster {
@@ -200,11 +205,11 @@ public:
 		BVHAR_LIST& row_prior, BVHAR_LIST_OF_LIST& row_init, const int row_prior_type,
 		BVHAR_LIST& col_prior, BVHAR_LIST_OF_LIST& col_init, const int col_prior_type,
 		int nrow_factor, int ncol_factor, int factor_lag,
-		int step, const Eigen::MatrixXd& y_test,
+		int step, const Eigen::MatrixXd& y_test, bool get_lpl,
 		const Eigen::MatrixXi& seed_chain, const Eigen::VectorXi& seed_forecast, bool display_progress, int nthreads
 	)
 	: bvhar::McmcOutForecastRun<Eigen::MatrixXd, Eigen::MatrixXd, isUpdate>(
-			num_data, 1, num_chains, num_iter, num_burn, thin, step, y_test, y_test.rows(), false,
+			num_data, 1, num_chains, num_iter, num_burn, thin, step, y_test, y_test.rows(), get_lpl,
 			seed_chain, seed_forecast, display_progress, nthreads
 		),
 		num_row(y.rows() / num_data), num_col(y.cols()),
@@ -313,14 +318,14 @@ public:
 		BVHAR_LIST& row_prior, BVHAR_LIST_OF_LIST& row_init, const int row_prior_type,
 		BVHAR_LIST& col_prior, BVHAR_LIST_OF_LIST& col_init, const int col_prior_type,
 		int nrow_factor, int ncol_factor, int factor_lag,
-		int step, const Eigen::MatrixXd& y_test,
+		int step, const Eigen::MatrixXd& y_test, bool get_lpl,
 		const Eigen::MatrixXi& seed_chain, const Eigen::VectorXi& seed_forecast, bool display_progress, int nthreads
 	)
 	: MatDfmOutForecastRun<isUpdate>(
 			y, num_data, num_chains, num_iter, num_burn, thin, fit_record,
 			param_coef_sig, coef_sig_init, row_prior, row_init, row_prior_type, col_prior, col_init, col_prior_type,
 			nrow_factor, ncol_factor, factor_lag,
-			step, y_test,
+			step, y_test, get_lpl,
 			seed_chain, seed_forecast, display_progress, nthreads
 		) {
 		BVHAR_DEBUG_LOG(debug_logger, "MatDfmOutForecastRun constructor");
@@ -371,14 +376,14 @@ public:
 		BVHAR_LIST& row_prior, BVHAR_LIST_OF_LIST& row_init, const int row_prior_type,
 		BVHAR_LIST& col_prior, BVHAR_LIST_OF_LIST& col_init, const int col_prior_type,
 		int nrow_factor, int ncol_factor, int factor_lag,
-		int step, const Eigen::MatrixXd& y_test,
+		int step, const Eigen::MatrixXd& y_test, bool get_lpl,
 		const Eigen::MatrixXi& seed_chain, const Eigen::VectorXi& seed_forecast, bool display_progress, int nthreads
 	)
 	: MatDfmOutForecastRun<isUpdate>(
 			y, num_data, num_chains, num_iter, num_burn, thin, fit_record,
 			param_coef_sig, coef_sig_init, row_prior, row_init, row_prior_type, col_prior, col_init, col_prior_type,
 			nrow_factor, ncol_factor, factor_lag,
-			step, y_test,
+			step, y_test, get_lpl,
 			seed_chain, seed_forecast, display_progress, nthreads
 		) {
 		BVHAR_DEBUG_LOG(debug_logger, "MatDfmOutForecastRun constructor");
@@ -427,7 +432,7 @@ inline std::unique_ptr<bvhar::McmcOutforecastInterface> initialize_matdfmoutfore
 	BVHAR_LIST& row_prior, BVHAR_LIST_OF_LIST& row_init, const int row_prior_type,
 	BVHAR_LIST& col_prior, BVHAR_LIST_OF_LIST& col_init, const int col_prior_type,
 	int nrow_factor, int ncol_factor, int factor_lag,
-	int step, const Eigen::MatrixXd& y_test,
+	int step, const Eigen::MatrixXd& y_test, bool get_lpl,
 	const Eigen::MatrixXi& seed_chain, const Eigen::VectorXi& seed_forecast, bool display_progress, int nthreads
 ) {
 	if (run_mcmc) {
@@ -435,7 +440,7 @@ inline std::unique_ptr<bvhar::McmcOutforecastInterface> initialize_matdfmoutfore
 			y, num_data, num_chains, num_iter, num_burn, thin, fit_record,
 			param_coef_sig, coef_sig_init, row_prior, row_init, row_prior_type, col_prior, col_init, col_prior_type,
 			nrow_factor, ncol_factor, factor_lag,
-			step, y_test,
+			step, y_test, get_lpl,
 			seed_chain, seed_forecast, display_progress, nthreads
 		);
 	}
@@ -443,7 +448,7 @@ inline std::unique_ptr<bvhar::McmcOutforecastInterface> initialize_matdfmoutfore
 		y, num_data, num_chains, num_iter, num_burn, thin, fit_record,
 		param_coef_sig, coef_sig_init, row_prior, row_init, row_prior_type, col_prior, col_init, col_prior_type,
 		nrow_factor, ncol_factor, factor_lag,
-		step, y_test,
+		step, y_test, get_lpl,
 		seed_chain, seed_forecast, display_progress, nthreads
 	);
 }
