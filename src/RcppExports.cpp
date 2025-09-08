@@ -58,8 +58,8 @@ BEGIN_RCPP
 END_RCPP
 }
 // roll_bdfm_mniw
-Rcpp::List roll_bdfm_mniw(Eigen::MatrixXd y, int num_data, int num_chains, int num_iter, int num_burn, int thin, Rcpp::List fit_record, bool run_mcmc, Rcpp::List param_coef_sig, Rcpp::List coef_sig_init, Rcpp::List row_prior, Rcpp::List row_init, int row_prior_type, Rcpp::List col_prior, Rcpp::List col_init, int col_prior_type, int factor_rows, int factor_cols, int factor_lag, int step, Eigen::MatrixXd y_test, Eigen::MatrixXi seed_chain, Eigen::VectorXi seed_forecast, bool display_progress, int nthreads);
-RcppExport SEXP _baymar_roll_bdfm_mniw(SEXP ySEXP, SEXP num_dataSEXP, SEXP num_chainsSEXP, SEXP num_iterSEXP, SEXP num_burnSEXP, SEXP thinSEXP, SEXP fit_recordSEXP, SEXP run_mcmcSEXP, SEXP param_coef_sigSEXP, SEXP coef_sig_initSEXP, SEXP row_priorSEXP, SEXP row_initSEXP, SEXP row_prior_typeSEXP, SEXP col_priorSEXP, SEXP col_initSEXP, SEXP col_prior_typeSEXP, SEXP factor_rowsSEXP, SEXP factor_colsSEXP, SEXP factor_lagSEXP, SEXP stepSEXP, SEXP y_testSEXP, SEXP seed_chainSEXP, SEXP seed_forecastSEXP, SEXP display_progressSEXP, SEXP nthreadsSEXP) {
+Rcpp::List roll_bdfm_mniw(Eigen::MatrixXd y, int num_data, int num_chains, int num_iter, int num_burn, int thin, Rcpp::List fit_record, bool run_mcmc, Rcpp::List param_coef_sig, Rcpp::List coef_sig_init, Rcpp::List row_prior, Rcpp::List row_init, int row_prior_type, Rcpp::List col_prior, Rcpp::List col_init, int col_prior_type, int factor_rows, int factor_cols, int factor_lag, int step, Eigen::MatrixXd y_test, bool get_lpl, Eigen::MatrixXi seed_chain, Eigen::VectorXi seed_forecast, bool display_progress, int nthreads);
+RcppExport SEXP _baymar_roll_bdfm_mniw(SEXP ySEXP, SEXP num_dataSEXP, SEXP num_chainsSEXP, SEXP num_iterSEXP, SEXP num_burnSEXP, SEXP thinSEXP, SEXP fit_recordSEXP, SEXP run_mcmcSEXP, SEXP param_coef_sigSEXP, SEXP coef_sig_initSEXP, SEXP row_priorSEXP, SEXP row_initSEXP, SEXP row_prior_typeSEXP, SEXP col_priorSEXP, SEXP col_initSEXP, SEXP col_prior_typeSEXP, SEXP factor_rowsSEXP, SEXP factor_colsSEXP, SEXP factor_lagSEXP, SEXP stepSEXP, SEXP y_testSEXP, SEXP get_lplSEXP, SEXP seed_chainSEXP, SEXP seed_forecastSEXP, SEXP display_progressSEXP, SEXP nthreadsSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
@@ -84,17 +84,18 @@ BEGIN_RCPP
     Rcpp::traits::input_parameter< int >::type factor_lag(factor_lagSEXP);
     Rcpp::traits::input_parameter< int >::type step(stepSEXP);
     Rcpp::traits::input_parameter< Eigen::MatrixXd >::type y_test(y_testSEXP);
+    Rcpp::traits::input_parameter< bool >::type get_lpl(get_lplSEXP);
     Rcpp::traits::input_parameter< Eigen::MatrixXi >::type seed_chain(seed_chainSEXP);
     Rcpp::traits::input_parameter< Eigen::VectorXi >::type seed_forecast(seed_forecastSEXP);
     Rcpp::traits::input_parameter< bool >::type display_progress(display_progressSEXP);
     Rcpp::traits::input_parameter< int >::type nthreads(nthreadsSEXP);
-    rcpp_result_gen = Rcpp::wrap(roll_bdfm_mniw(y, num_data, num_chains, num_iter, num_burn, thin, fit_record, run_mcmc, param_coef_sig, coef_sig_init, row_prior, row_init, row_prior_type, col_prior, col_init, col_prior_type, factor_rows, factor_cols, factor_lag, step, y_test, seed_chain, seed_forecast, display_progress, nthreads));
+    rcpp_result_gen = Rcpp::wrap(roll_bdfm_mniw(y, num_data, num_chains, num_iter, num_burn, thin, fit_record, run_mcmc, param_coef_sig, coef_sig_init, row_prior, row_init, row_prior_type, col_prior, col_init, col_prior_type, factor_rows, factor_cols, factor_lag, step, y_test, get_lpl, seed_chain, seed_forecast, display_progress, nthreads));
     return rcpp_result_gen;
 END_RCPP
 }
 // expand_bdfm_mniw
-Rcpp::List expand_bdfm_mniw(Eigen::MatrixXd y, int num_data, int num_chains, int num_iter, int num_burn, int thin, Rcpp::List fit_record, bool run_mcmc, Rcpp::List param_coef_sig, Rcpp::List coef_sig_init, Rcpp::List row_prior, Rcpp::List row_init, int row_prior_type, Rcpp::List col_prior, Rcpp::List col_init, int col_prior_type, int factor_rows, int factor_cols, int factor_lag, int step, Eigen::MatrixXd y_test, Eigen::MatrixXi seed_chain, Eigen::VectorXi seed_forecast, bool display_progress, int nthreads);
-RcppExport SEXP _baymar_expand_bdfm_mniw(SEXP ySEXP, SEXP num_dataSEXP, SEXP num_chainsSEXP, SEXP num_iterSEXP, SEXP num_burnSEXP, SEXP thinSEXP, SEXP fit_recordSEXP, SEXP run_mcmcSEXP, SEXP param_coef_sigSEXP, SEXP coef_sig_initSEXP, SEXP row_priorSEXP, SEXP row_initSEXP, SEXP row_prior_typeSEXP, SEXP col_priorSEXP, SEXP col_initSEXP, SEXP col_prior_typeSEXP, SEXP factor_rowsSEXP, SEXP factor_colsSEXP, SEXP factor_lagSEXP, SEXP stepSEXP, SEXP y_testSEXP, SEXP seed_chainSEXP, SEXP seed_forecastSEXP, SEXP display_progressSEXP, SEXP nthreadsSEXP) {
+Rcpp::List expand_bdfm_mniw(Eigen::MatrixXd y, int num_data, int num_chains, int num_iter, int num_burn, int thin, Rcpp::List fit_record, bool run_mcmc, Rcpp::List param_coef_sig, Rcpp::List coef_sig_init, Rcpp::List row_prior, Rcpp::List row_init, int row_prior_type, Rcpp::List col_prior, Rcpp::List col_init, int col_prior_type, int factor_rows, int factor_cols, int factor_lag, int step, Eigen::MatrixXd y_test, bool get_lpl, Eigen::MatrixXi seed_chain, Eigen::VectorXi seed_forecast, bool display_progress, int nthreads);
+RcppExport SEXP _baymar_expand_bdfm_mniw(SEXP ySEXP, SEXP num_dataSEXP, SEXP num_chainsSEXP, SEXP num_iterSEXP, SEXP num_burnSEXP, SEXP thinSEXP, SEXP fit_recordSEXP, SEXP run_mcmcSEXP, SEXP param_coef_sigSEXP, SEXP coef_sig_initSEXP, SEXP row_priorSEXP, SEXP row_initSEXP, SEXP row_prior_typeSEXP, SEXP col_priorSEXP, SEXP col_initSEXP, SEXP col_prior_typeSEXP, SEXP factor_rowsSEXP, SEXP factor_colsSEXP, SEXP factor_lagSEXP, SEXP stepSEXP, SEXP y_testSEXP, SEXP get_lplSEXP, SEXP seed_chainSEXP, SEXP seed_forecastSEXP, SEXP display_progressSEXP, SEXP nthreadsSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
@@ -119,11 +120,12 @@ BEGIN_RCPP
     Rcpp::traits::input_parameter< int >::type factor_lag(factor_lagSEXP);
     Rcpp::traits::input_parameter< int >::type step(stepSEXP);
     Rcpp::traits::input_parameter< Eigen::MatrixXd >::type y_test(y_testSEXP);
+    Rcpp::traits::input_parameter< bool >::type get_lpl(get_lplSEXP);
     Rcpp::traits::input_parameter< Eigen::MatrixXi >::type seed_chain(seed_chainSEXP);
     Rcpp::traits::input_parameter< Eigen::VectorXi >::type seed_forecast(seed_forecastSEXP);
     Rcpp::traits::input_parameter< bool >::type display_progress(display_progressSEXP);
     Rcpp::traits::input_parameter< int >::type nthreads(nthreadsSEXP);
-    rcpp_result_gen = Rcpp::wrap(expand_bdfm_mniw(y, num_data, num_chains, num_iter, num_burn, thin, fit_record, run_mcmc, param_coef_sig, coef_sig_init, row_prior, row_init, row_prior_type, col_prior, col_init, col_prior_type, factor_rows, factor_cols, factor_lag, step, y_test, seed_chain, seed_forecast, display_progress, nthreads));
+    rcpp_result_gen = Rcpp::wrap(expand_bdfm_mniw(y, num_data, num_chains, num_iter, num_burn, thin, fit_record, run_mcmc, param_coef_sig, coef_sig_init, row_prior, row_init, row_prior_type, col_prior, col_init, col_prior_type, factor_rows, factor_cols, factor_lag, step, y_test, get_lpl, seed_chain, seed_forecast, display_progress, nthreads));
     return rcpp_result_gen;
 END_RCPP
 }
@@ -216,8 +218,8 @@ BEGIN_RCPP
 END_RCPP
 }
 // roll_bmar_mniw
-Rcpp::List roll_bmar_mniw(Eigen::MatrixXd y, int lag, int num_data, int num_chains, int num_iter, int num_burn, int thin, Rcpp::List fit_record, bool run_mcmc, Rcpp::List param_coef_sig, Rcpp::List coef_sig_init, Rcpp::List row_prior, Rcpp::List row_init, int row_prior_type, Rcpp::List col_prior, Rcpp::List col_init, int col_prior_type, Rcpp::List factor_row_prior, Rcpp::List factor_row_init, int factor_row_prior_type, int factor_rows, Rcpp::List factor_col_prior, Rcpp::List factor_col_init, int factor_col_prior_type, int factor_cols, int factor_lag, int step, Eigen::MatrixXd y_test, Eigen::MatrixXi seed_chain, Eigen::VectorXi seed_forecast, bool display_progress, int nthreads);
-RcppExport SEXP _baymar_roll_bmar_mniw(SEXP ySEXP, SEXP lagSEXP, SEXP num_dataSEXP, SEXP num_chainsSEXP, SEXP num_iterSEXP, SEXP num_burnSEXP, SEXP thinSEXP, SEXP fit_recordSEXP, SEXP run_mcmcSEXP, SEXP param_coef_sigSEXP, SEXP coef_sig_initSEXP, SEXP row_priorSEXP, SEXP row_initSEXP, SEXP row_prior_typeSEXP, SEXP col_priorSEXP, SEXP col_initSEXP, SEXP col_prior_typeSEXP, SEXP factor_row_priorSEXP, SEXP factor_row_initSEXP, SEXP factor_row_prior_typeSEXP, SEXP factor_rowsSEXP, SEXP factor_col_priorSEXP, SEXP factor_col_initSEXP, SEXP factor_col_prior_typeSEXP, SEXP factor_colsSEXP, SEXP factor_lagSEXP, SEXP stepSEXP, SEXP y_testSEXP, SEXP seed_chainSEXP, SEXP seed_forecastSEXP, SEXP display_progressSEXP, SEXP nthreadsSEXP) {
+Rcpp::List roll_bmar_mniw(Eigen::MatrixXd y, int lag, int num_data, int num_chains, int num_iter, int num_burn, int thin, Rcpp::List fit_record, bool run_mcmc, Rcpp::List param_coef_sig, Rcpp::List coef_sig_init, Rcpp::List row_prior, Rcpp::List row_init, int row_prior_type, Rcpp::List col_prior, Rcpp::List col_init, int col_prior_type, Rcpp::List factor_row_prior, Rcpp::List factor_row_init, int factor_row_prior_type, int factor_rows, Rcpp::List factor_col_prior, Rcpp::List factor_col_init, int factor_col_prior_type, int factor_cols, int factor_lag, int step, Eigen::MatrixXd y_test, bool get_lpl, Eigen::MatrixXi seed_chain, Eigen::VectorXi seed_forecast, bool display_progress, int nthreads);
+RcppExport SEXP _baymar_roll_bmar_mniw(SEXP ySEXP, SEXP lagSEXP, SEXP num_dataSEXP, SEXP num_chainsSEXP, SEXP num_iterSEXP, SEXP num_burnSEXP, SEXP thinSEXP, SEXP fit_recordSEXP, SEXP run_mcmcSEXP, SEXP param_coef_sigSEXP, SEXP coef_sig_initSEXP, SEXP row_priorSEXP, SEXP row_initSEXP, SEXP row_prior_typeSEXP, SEXP col_priorSEXP, SEXP col_initSEXP, SEXP col_prior_typeSEXP, SEXP factor_row_priorSEXP, SEXP factor_row_initSEXP, SEXP factor_row_prior_typeSEXP, SEXP factor_rowsSEXP, SEXP factor_col_priorSEXP, SEXP factor_col_initSEXP, SEXP factor_col_prior_typeSEXP, SEXP factor_colsSEXP, SEXP factor_lagSEXP, SEXP stepSEXP, SEXP y_testSEXP, SEXP get_lplSEXP, SEXP seed_chainSEXP, SEXP seed_forecastSEXP, SEXP display_progressSEXP, SEXP nthreadsSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
@@ -249,17 +251,18 @@ BEGIN_RCPP
     Rcpp::traits::input_parameter< int >::type factor_lag(factor_lagSEXP);
     Rcpp::traits::input_parameter< int >::type step(stepSEXP);
     Rcpp::traits::input_parameter< Eigen::MatrixXd >::type y_test(y_testSEXP);
+    Rcpp::traits::input_parameter< bool >::type get_lpl(get_lplSEXP);
     Rcpp::traits::input_parameter< Eigen::MatrixXi >::type seed_chain(seed_chainSEXP);
     Rcpp::traits::input_parameter< Eigen::VectorXi >::type seed_forecast(seed_forecastSEXP);
     Rcpp::traits::input_parameter< bool >::type display_progress(display_progressSEXP);
     Rcpp::traits::input_parameter< int >::type nthreads(nthreadsSEXP);
-    rcpp_result_gen = Rcpp::wrap(roll_bmar_mniw(y, lag, num_data, num_chains, num_iter, num_burn, thin, fit_record, run_mcmc, param_coef_sig, coef_sig_init, row_prior, row_init, row_prior_type, col_prior, col_init, col_prior_type, factor_row_prior, factor_row_init, factor_row_prior_type, factor_rows, factor_col_prior, factor_col_init, factor_col_prior_type, factor_cols, factor_lag, step, y_test, seed_chain, seed_forecast, display_progress, nthreads));
+    rcpp_result_gen = Rcpp::wrap(roll_bmar_mniw(y, lag, num_data, num_chains, num_iter, num_burn, thin, fit_record, run_mcmc, param_coef_sig, coef_sig_init, row_prior, row_init, row_prior_type, col_prior, col_init, col_prior_type, factor_row_prior, factor_row_init, factor_row_prior_type, factor_rows, factor_col_prior, factor_col_init, factor_col_prior_type, factor_cols, factor_lag, step, y_test, get_lpl, seed_chain, seed_forecast, display_progress, nthreads));
     return rcpp_result_gen;
 END_RCPP
 }
 // roll_bmarx_mniw
-Rcpp::List roll_bmarx_mniw(Eigen::MatrixXd y, int lag, int num_data, int num_chains, int num_iter, int num_burn, int thin, Rcpp::List fit_record, bool run_mcmc, Rcpp::List param_coef_sig, Rcpp::List coef_sig_init, Rcpp::List row_prior, Rcpp::List row_init, int row_prior_type, Rcpp::List col_prior, Rcpp::List col_init, int col_prior_type, Rcpp::List factor_row_prior, Rcpp::List factor_row_init, int factor_row_prior_type, int factor_rows, Rcpp::List factor_col_prior, Rcpp::List factor_col_init, int factor_col_prior_type, int factor_cols, int factor_lag, int step, Eigen::MatrixXd y_test, Eigen::MatrixXi seed_chain, Eigen::VectorXi seed_forecast, bool display_progress, int nthreads, Eigen::MatrixXd exogen, int exogen_lag, Rcpp::List exogen_row_prior, Rcpp::List exogen_row_init, int exogen_row_prior_type, Rcpp::List exogen_col_prior, Rcpp::List exogen_col_init, int exogen_col_prior_type);
-RcppExport SEXP _baymar_roll_bmarx_mniw(SEXP ySEXP, SEXP lagSEXP, SEXP num_dataSEXP, SEXP num_chainsSEXP, SEXP num_iterSEXP, SEXP num_burnSEXP, SEXP thinSEXP, SEXP fit_recordSEXP, SEXP run_mcmcSEXP, SEXP param_coef_sigSEXP, SEXP coef_sig_initSEXP, SEXP row_priorSEXP, SEXP row_initSEXP, SEXP row_prior_typeSEXP, SEXP col_priorSEXP, SEXP col_initSEXP, SEXP col_prior_typeSEXP, SEXP factor_row_priorSEXP, SEXP factor_row_initSEXP, SEXP factor_row_prior_typeSEXP, SEXP factor_rowsSEXP, SEXP factor_col_priorSEXP, SEXP factor_col_initSEXP, SEXP factor_col_prior_typeSEXP, SEXP factor_colsSEXP, SEXP factor_lagSEXP, SEXP stepSEXP, SEXP y_testSEXP, SEXP seed_chainSEXP, SEXP seed_forecastSEXP, SEXP display_progressSEXP, SEXP nthreadsSEXP, SEXP exogenSEXP, SEXP exogen_lagSEXP, SEXP exogen_row_priorSEXP, SEXP exogen_row_initSEXP, SEXP exogen_row_prior_typeSEXP, SEXP exogen_col_priorSEXP, SEXP exogen_col_initSEXP, SEXP exogen_col_prior_typeSEXP) {
+Rcpp::List roll_bmarx_mniw(Eigen::MatrixXd y, int lag, int num_data, int num_chains, int num_iter, int num_burn, int thin, Rcpp::List fit_record, bool run_mcmc, Rcpp::List param_coef_sig, Rcpp::List coef_sig_init, Rcpp::List row_prior, Rcpp::List row_init, int row_prior_type, Rcpp::List col_prior, Rcpp::List col_init, int col_prior_type, Rcpp::List factor_row_prior, Rcpp::List factor_row_init, int factor_row_prior_type, int factor_rows, Rcpp::List factor_col_prior, Rcpp::List factor_col_init, int factor_col_prior_type, int factor_cols, int factor_lag, int step, Eigen::MatrixXd y_test, bool get_lpl, Eigen::MatrixXi seed_chain, Eigen::VectorXi seed_forecast, bool display_progress, int nthreads, Eigen::MatrixXd exogen, int exogen_lag, Rcpp::List exogen_row_prior, Rcpp::List exogen_row_init, int exogen_row_prior_type, Rcpp::List exogen_col_prior, Rcpp::List exogen_col_init, int exogen_col_prior_type);
+RcppExport SEXP _baymar_roll_bmarx_mniw(SEXP ySEXP, SEXP lagSEXP, SEXP num_dataSEXP, SEXP num_chainsSEXP, SEXP num_iterSEXP, SEXP num_burnSEXP, SEXP thinSEXP, SEXP fit_recordSEXP, SEXP run_mcmcSEXP, SEXP param_coef_sigSEXP, SEXP coef_sig_initSEXP, SEXP row_priorSEXP, SEXP row_initSEXP, SEXP row_prior_typeSEXP, SEXP col_priorSEXP, SEXP col_initSEXP, SEXP col_prior_typeSEXP, SEXP factor_row_priorSEXP, SEXP factor_row_initSEXP, SEXP factor_row_prior_typeSEXP, SEXP factor_rowsSEXP, SEXP factor_col_priorSEXP, SEXP factor_col_initSEXP, SEXP factor_col_prior_typeSEXP, SEXP factor_colsSEXP, SEXP factor_lagSEXP, SEXP stepSEXP, SEXP y_testSEXP, SEXP get_lplSEXP, SEXP seed_chainSEXP, SEXP seed_forecastSEXP, SEXP display_progressSEXP, SEXP nthreadsSEXP, SEXP exogenSEXP, SEXP exogen_lagSEXP, SEXP exogen_row_priorSEXP, SEXP exogen_row_initSEXP, SEXP exogen_row_prior_typeSEXP, SEXP exogen_col_priorSEXP, SEXP exogen_col_initSEXP, SEXP exogen_col_prior_typeSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
@@ -291,6 +294,7 @@ BEGIN_RCPP
     Rcpp::traits::input_parameter< int >::type factor_lag(factor_lagSEXP);
     Rcpp::traits::input_parameter< int >::type step(stepSEXP);
     Rcpp::traits::input_parameter< Eigen::MatrixXd >::type y_test(y_testSEXP);
+    Rcpp::traits::input_parameter< bool >::type get_lpl(get_lplSEXP);
     Rcpp::traits::input_parameter< Eigen::MatrixXi >::type seed_chain(seed_chainSEXP);
     Rcpp::traits::input_parameter< Eigen::VectorXi >::type seed_forecast(seed_forecastSEXP);
     Rcpp::traits::input_parameter< bool >::type display_progress(display_progressSEXP);
@@ -303,13 +307,13 @@ BEGIN_RCPP
     Rcpp::traits::input_parameter< Rcpp::List >::type exogen_col_prior(exogen_col_priorSEXP);
     Rcpp::traits::input_parameter< Rcpp::List >::type exogen_col_init(exogen_col_initSEXP);
     Rcpp::traits::input_parameter< int >::type exogen_col_prior_type(exogen_col_prior_typeSEXP);
-    rcpp_result_gen = Rcpp::wrap(roll_bmarx_mniw(y, lag, num_data, num_chains, num_iter, num_burn, thin, fit_record, run_mcmc, param_coef_sig, coef_sig_init, row_prior, row_init, row_prior_type, col_prior, col_init, col_prior_type, factor_row_prior, factor_row_init, factor_row_prior_type, factor_rows, factor_col_prior, factor_col_init, factor_col_prior_type, factor_cols, factor_lag, step, y_test, seed_chain, seed_forecast, display_progress, nthreads, exogen, exogen_lag, exogen_row_prior, exogen_row_init, exogen_row_prior_type, exogen_col_prior, exogen_col_init, exogen_col_prior_type));
+    rcpp_result_gen = Rcpp::wrap(roll_bmarx_mniw(y, lag, num_data, num_chains, num_iter, num_burn, thin, fit_record, run_mcmc, param_coef_sig, coef_sig_init, row_prior, row_init, row_prior_type, col_prior, col_init, col_prior_type, factor_row_prior, factor_row_init, factor_row_prior_type, factor_rows, factor_col_prior, factor_col_init, factor_col_prior_type, factor_cols, factor_lag, step, y_test, get_lpl, seed_chain, seed_forecast, display_progress, nthreads, exogen, exogen_lag, exogen_row_prior, exogen_row_init, exogen_row_prior_type, exogen_col_prior, exogen_col_init, exogen_col_prior_type));
     return rcpp_result_gen;
 END_RCPP
 }
 // expand_bmar_mniw
-Rcpp::List expand_bmar_mniw(Eigen::MatrixXd y, int lag, int num_data, int num_chains, int num_iter, int num_burn, int thin, Rcpp::List fit_record, bool run_mcmc, Rcpp::List param_coef_sig, Rcpp::List coef_sig_init, Rcpp::List row_prior, Rcpp::List row_init, int row_prior_type, Rcpp::List col_prior, Rcpp::List col_init, int col_prior_type, Rcpp::List factor_row_prior, Rcpp::List factor_row_init, int factor_row_prior_type, int factor_rows, Rcpp::List factor_col_prior, Rcpp::List factor_col_init, int factor_col_prior_type, int factor_cols, int factor_lag, int step, Eigen::MatrixXd y_test, Eigen::MatrixXi seed_chain, Eigen::VectorXi seed_forecast, bool display_progress, int nthreads);
-RcppExport SEXP _baymar_expand_bmar_mniw(SEXP ySEXP, SEXP lagSEXP, SEXP num_dataSEXP, SEXP num_chainsSEXP, SEXP num_iterSEXP, SEXP num_burnSEXP, SEXP thinSEXP, SEXP fit_recordSEXP, SEXP run_mcmcSEXP, SEXP param_coef_sigSEXP, SEXP coef_sig_initSEXP, SEXP row_priorSEXP, SEXP row_initSEXP, SEXP row_prior_typeSEXP, SEXP col_priorSEXP, SEXP col_initSEXP, SEXP col_prior_typeSEXP, SEXP factor_row_priorSEXP, SEXP factor_row_initSEXP, SEXP factor_row_prior_typeSEXP, SEXP factor_rowsSEXP, SEXP factor_col_priorSEXP, SEXP factor_col_initSEXP, SEXP factor_col_prior_typeSEXP, SEXP factor_colsSEXP, SEXP factor_lagSEXP, SEXP stepSEXP, SEXP y_testSEXP, SEXP seed_chainSEXP, SEXP seed_forecastSEXP, SEXP display_progressSEXP, SEXP nthreadsSEXP) {
+Rcpp::List expand_bmar_mniw(Eigen::MatrixXd y, int lag, int num_data, int num_chains, int num_iter, int num_burn, int thin, Rcpp::List fit_record, bool run_mcmc, Rcpp::List param_coef_sig, Rcpp::List coef_sig_init, Rcpp::List row_prior, Rcpp::List row_init, int row_prior_type, Rcpp::List col_prior, Rcpp::List col_init, int col_prior_type, Rcpp::List factor_row_prior, Rcpp::List factor_row_init, int factor_row_prior_type, int factor_rows, Rcpp::List factor_col_prior, Rcpp::List factor_col_init, int factor_col_prior_type, int factor_cols, int factor_lag, int step, Eigen::MatrixXd y_test, bool get_lpl, Eigen::MatrixXi seed_chain, Eigen::VectorXi seed_forecast, bool display_progress, int nthreads);
+RcppExport SEXP _baymar_expand_bmar_mniw(SEXP ySEXP, SEXP lagSEXP, SEXP num_dataSEXP, SEXP num_chainsSEXP, SEXP num_iterSEXP, SEXP num_burnSEXP, SEXP thinSEXP, SEXP fit_recordSEXP, SEXP run_mcmcSEXP, SEXP param_coef_sigSEXP, SEXP coef_sig_initSEXP, SEXP row_priorSEXP, SEXP row_initSEXP, SEXP row_prior_typeSEXP, SEXP col_priorSEXP, SEXP col_initSEXP, SEXP col_prior_typeSEXP, SEXP factor_row_priorSEXP, SEXP factor_row_initSEXP, SEXP factor_row_prior_typeSEXP, SEXP factor_rowsSEXP, SEXP factor_col_priorSEXP, SEXP factor_col_initSEXP, SEXP factor_col_prior_typeSEXP, SEXP factor_colsSEXP, SEXP factor_lagSEXP, SEXP stepSEXP, SEXP y_testSEXP, SEXP get_lplSEXP, SEXP seed_chainSEXP, SEXP seed_forecastSEXP, SEXP display_progressSEXP, SEXP nthreadsSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
@@ -341,17 +345,18 @@ BEGIN_RCPP
     Rcpp::traits::input_parameter< int >::type factor_lag(factor_lagSEXP);
     Rcpp::traits::input_parameter< int >::type step(stepSEXP);
     Rcpp::traits::input_parameter< Eigen::MatrixXd >::type y_test(y_testSEXP);
+    Rcpp::traits::input_parameter< bool >::type get_lpl(get_lplSEXP);
     Rcpp::traits::input_parameter< Eigen::MatrixXi >::type seed_chain(seed_chainSEXP);
     Rcpp::traits::input_parameter< Eigen::VectorXi >::type seed_forecast(seed_forecastSEXP);
     Rcpp::traits::input_parameter< bool >::type display_progress(display_progressSEXP);
     Rcpp::traits::input_parameter< int >::type nthreads(nthreadsSEXP);
-    rcpp_result_gen = Rcpp::wrap(expand_bmar_mniw(y, lag, num_data, num_chains, num_iter, num_burn, thin, fit_record, run_mcmc, param_coef_sig, coef_sig_init, row_prior, row_init, row_prior_type, col_prior, col_init, col_prior_type, factor_row_prior, factor_row_init, factor_row_prior_type, factor_rows, factor_col_prior, factor_col_init, factor_col_prior_type, factor_cols, factor_lag, step, y_test, seed_chain, seed_forecast, display_progress, nthreads));
+    rcpp_result_gen = Rcpp::wrap(expand_bmar_mniw(y, lag, num_data, num_chains, num_iter, num_burn, thin, fit_record, run_mcmc, param_coef_sig, coef_sig_init, row_prior, row_init, row_prior_type, col_prior, col_init, col_prior_type, factor_row_prior, factor_row_init, factor_row_prior_type, factor_rows, factor_col_prior, factor_col_init, factor_col_prior_type, factor_cols, factor_lag, step, y_test, get_lpl, seed_chain, seed_forecast, display_progress, nthreads));
     return rcpp_result_gen;
 END_RCPP
 }
 // expand_bmarx_mniw
-Rcpp::List expand_bmarx_mniw(Eigen::MatrixXd y, int lag, int num_data, int num_chains, int num_iter, int num_burn, int thin, Rcpp::List fit_record, bool run_mcmc, Rcpp::List param_coef_sig, Rcpp::List coef_sig_init, Rcpp::List row_prior, Rcpp::List row_init, int row_prior_type, Rcpp::List col_prior, Rcpp::List col_init, int col_prior_type, Rcpp::List factor_row_prior, Rcpp::List factor_row_init, int factor_row_prior_type, int factor_rows, Rcpp::List factor_col_prior, Rcpp::List factor_col_init, int factor_col_prior_type, int factor_cols, int factor_lag, int step, Eigen::MatrixXd y_test, Eigen::MatrixXi seed_chain, Eigen::VectorXi seed_forecast, bool display_progress, int nthreads, Eigen::MatrixXd exogen, int exogen_lag, Rcpp::List exogen_row_prior, Rcpp::List exogen_row_init, int exogen_row_prior_type, Rcpp::List exogen_col_prior, Rcpp::List exogen_col_init, int exogen_col_prior_type);
-RcppExport SEXP _baymar_expand_bmarx_mniw(SEXP ySEXP, SEXP lagSEXP, SEXP num_dataSEXP, SEXP num_chainsSEXP, SEXP num_iterSEXP, SEXP num_burnSEXP, SEXP thinSEXP, SEXP fit_recordSEXP, SEXP run_mcmcSEXP, SEXP param_coef_sigSEXP, SEXP coef_sig_initSEXP, SEXP row_priorSEXP, SEXP row_initSEXP, SEXP row_prior_typeSEXP, SEXP col_priorSEXP, SEXP col_initSEXP, SEXP col_prior_typeSEXP, SEXP factor_row_priorSEXP, SEXP factor_row_initSEXP, SEXP factor_row_prior_typeSEXP, SEXP factor_rowsSEXP, SEXP factor_col_priorSEXP, SEXP factor_col_initSEXP, SEXP factor_col_prior_typeSEXP, SEXP factor_colsSEXP, SEXP factor_lagSEXP, SEXP stepSEXP, SEXP y_testSEXP, SEXP seed_chainSEXP, SEXP seed_forecastSEXP, SEXP display_progressSEXP, SEXP nthreadsSEXP, SEXP exogenSEXP, SEXP exogen_lagSEXP, SEXP exogen_row_priorSEXP, SEXP exogen_row_initSEXP, SEXP exogen_row_prior_typeSEXP, SEXP exogen_col_priorSEXP, SEXP exogen_col_initSEXP, SEXP exogen_col_prior_typeSEXP) {
+Rcpp::List expand_bmarx_mniw(Eigen::MatrixXd y, int lag, int num_data, int num_chains, int num_iter, int num_burn, int thin, Rcpp::List fit_record, bool run_mcmc, Rcpp::List param_coef_sig, Rcpp::List coef_sig_init, Rcpp::List row_prior, Rcpp::List row_init, int row_prior_type, Rcpp::List col_prior, Rcpp::List col_init, int col_prior_type, Rcpp::List factor_row_prior, Rcpp::List factor_row_init, int factor_row_prior_type, int factor_rows, Rcpp::List factor_col_prior, Rcpp::List factor_col_init, int factor_col_prior_type, int factor_cols, int factor_lag, int step, Eigen::MatrixXd y_test, bool get_lpl, Eigen::MatrixXi seed_chain, Eigen::VectorXi seed_forecast, bool display_progress, int nthreads, Eigen::MatrixXd exogen, int exogen_lag, Rcpp::List exogen_row_prior, Rcpp::List exogen_row_init, int exogen_row_prior_type, Rcpp::List exogen_col_prior, Rcpp::List exogen_col_init, int exogen_col_prior_type);
+RcppExport SEXP _baymar_expand_bmarx_mniw(SEXP ySEXP, SEXP lagSEXP, SEXP num_dataSEXP, SEXP num_chainsSEXP, SEXP num_iterSEXP, SEXP num_burnSEXP, SEXP thinSEXP, SEXP fit_recordSEXP, SEXP run_mcmcSEXP, SEXP param_coef_sigSEXP, SEXP coef_sig_initSEXP, SEXP row_priorSEXP, SEXP row_initSEXP, SEXP row_prior_typeSEXP, SEXP col_priorSEXP, SEXP col_initSEXP, SEXP col_prior_typeSEXP, SEXP factor_row_priorSEXP, SEXP factor_row_initSEXP, SEXP factor_row_prior_typeSEXP, SEXP factor_rowsSEXP, SEXP factor_col_priorSEXP, SEXP factor_col_initSEXP, SEXP factor_col_prior_typeSEXP, SEXP factor_colsSEXP, SEXP factor_lagSEXP, SEXP stepSEXP, SEXP y_testSEXP, SEXP get_lplSEXP, SEXP seed_chainSEXP, SEXP seed_forecastSEXP, SEXP display_progressSEXP, SEXP nthreadsSEXP, SEXP exogenSEXP, SEXP exogen_lagSEXP, SEXP exogen_row_priorSEXP, SEXP exogen_row_initSEXP, SEXP exogen_row_prior_typeSEXP, SEXP exogen_col_priorSEXP, SEXP exogen_col_initSEXP, SEXP exogen_col_prior_typeSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
@@ -383,6 +388,7 @@ BEGIN_RCPP
     Rcpp::traits::input_parameter< int >::type factor_lag(factor_lagSEXP);
     Rcpp::traits::input_parameter< int >::type step(stepSEXP);
     Rcpp::traits::input_parameter< Eigen::MatrixXd >::type y_test(y_testSEXP);
+    Rcpp::traits::input_parameter< bool >::type get_lpl(get_lplSEXP);
     Rcpp::traits::input_parameter< Eigen::MatrixXi >::type seed_chain(seed_chainSEXP);
     Rcpp::traits::input_parameter< Eigen::VectorXi >::type seed_forecast(seed_forecastSEXP);
     Rcpp::traits::input_parameter< bool >::type display_progress(display_progressSEXP);
@@ -395,7 +401,7 @@ BEGIN_RCPP
     Rcpp::traits::input_parameter< Rcpp::List >::type exogen_col_prior(exogen_col_priorSEXP);
     Rcpp::traits::input_parameter< Rcpp::List >::type exogen_col_init(exogen_col_initSEXP);
     Rcpp::traits::input_parameter< int >::type exogen_col_prior_type(exogen_col_prior_typeSEXP);
-    rcpp_result_gen = Rcpp::wrap(expand_bmarx_mniw(y, lag, num_data, num_chains, num_iter, num_burn, thin, fit_record, run_mcmc, param_coef_sig, coef_sig_init, row_prior, row_init, row_prior_type, col_prior, col_init, col_prior_type, factor_row_prior, factor_row_init, factor_row_prior_type, factor_rows, factor_col_prior, factor_col_init, factor_col_prior_type, factor_cols, factor_lag, step, y_test, seed_chain, seed_forecast, display_progress, nthreads, exogen, exogen_lag, exogen_row_prior, exogen_row_init, exogen_row_prior_type, exogen_col_prior, exogen_col_init, exogen_col_prior_type));
+    rcpp_result_gen = Rcpp::wrap(expand_bmarx_mniw(y, lag, num_data, num_chains, num_iter, num_burn, thin, fit_record, run_mcmc, param_coef_sig, coef_sig_init, row_prior, row_init, row_prior_type, col_prior, col_init, col_prior_type, factor_row_prior, factor_row_init, factor_row_prior_type, factor_rows, factor_col_prior, factor_col_init, factor_col_prior_type, factor_cols, factor_lag, step, y_test, get_lpl, seed_chain, seed_forecast, display_progress, nthreads, exogen, exogen_lag, exogen_row_prior, exogen_row_init, exogen_row_prior_type, exogen_col_prior, exogen_col_init, exogen_col_prior_type));
     return rcpp_result_gen;
 END_RCPP
 }
@@ -559,15 +565,15 @@ END_RCPP
 static const R_CallMethodDef CallEntries[] = {
     {"_baymar_estimate_bmdfm", (DL_FUNC) &_baymar_estimate_bmdfm, 17},
     {"_baymar_forecast_bdfm_mniw", (DL_FUNC) &_baymar_forecast_bdfm_mniw, 8},
-    {"_baymar_roll_bdfm_mniw", (DL_FUNC) &_baymar_roll_bdfm_mniw, 25},
-    {"_baymar_expand_bdfm_mniw", (DL_FUNC) &_baymar_expand_bdfm_mniw, 25},
+    {"_baymar_roll_bdfm_mniw", (DL_FUNC) &_baymar_roll_bdfm_mniw, 26},
+    {"_baymar_expand_bdfm_mniw", (DL_FUNC) &_baymar_expand_bdfm_mniw, 26},
     {"_baymar_estimate_bmar_mniw", (DL_FUNC) &_baymar_estimate_bmar_mniw, 34},
     {"_baymar_forecast_bmar_mniw", (DL_FUNC) &_baymar_forecast_bmar_mniw, 11},
     {"_baymar_forecast_bmarx_mniw", (DL_FUNC) &_baymar_forecast_bmarx_mniw, 13},
-    {"_baymar_roll_bmar_mniw", (DL_FUNC) &_baymar_roll_bmar_mniw, 32},
-    {"_baymar_roll_bmarx_mniw", (DL_FUNC) &_baymar_roll_bmarx_mniw, 40},
-    {"_baymar_expand_bmar_mniw", (DL_FUNC) &_baymar_expand_bmar_mniw, 32},
-    {"_baymar_expand_bmarx_mniw", (DL_FUNC) &_baymar_expand_bmarx_mniw, 40},
+    {"_baymar_roll_bmar_mniw", (DL_FUNC) &_baymar_roll_bmar_mniw, 33},
+    {"_baymar_roll_bmarx_mniw", (DL_FUNC) &_baymar_roll_bmarx_mniw, 41},
+    {"_baymar_expand_bmar_mniw", (DL_FUNC) &_baymar_expand_bmar_mniw, 33},
+    {"_baymar_expand_bmarx_mniw", (DL_FUNC) &_baymar_expand_bmarx_mniw, 41},
     {"_baymar_sim_mar_process", (DL_FUNC) &_baymar_sim_mar_process, 9},
     {"_baymar_sim_mar_t_process", (DL_FUNC) &_baymar_sim_mar_t_process, 10},
     {"_baymar_sim_mdfm_process", (DL_FUNC) &_baymar_sim_mdfm_process, 13},

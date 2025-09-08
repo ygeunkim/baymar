@@ -125,7 +125,7 @@ help_bmar_roll <- function(row_spec, col_spec, exogen_row_spec = NULL, exogen_co
     num_thread = 1
   )
   set.seed(1)
-  forecast_roll(fit_test, 1, y_test = eval_data, newxreg = newxreg)
+  forecast_roll(fit_test, 1, y_test = eval_data, newxreg = newxreg, lpl = TRUE)
 }
 
 help_bmdfm_roll <- function(row_spec, col_spec) {
@@ -144,7 +144,7 @@ help_bmdfm_roll <- function(row_spec, col_spec) {
     num_thread = 1
   )
   set.seed(1)
-  forecast_roll(fit_test, 1, y_test = eval_data)
+  forecast_roll(fit_test, 1, y_test = eval_data, lpl = TRUE)
 }
 
 test_that("Minnesota Prior - Rolling", {
@@ -223,7 +223,7 @@ help_bmar_expand <- function(row_spec, col_spec, exogen_row_spec = NULL, exogen_
     num_thread = 1
   )
   set.seed(1)
-  forecast_expand(fit_test, 1, y_test = eval_data, newxreg = newxreg)
+  forecast_expand(fit_test, 1, y_test = eval_data, newxreg = newxreg, lpl = TRUE)
 }
 
 help_bmdfm_expand <- function(row_spec, col_spec) {
@@ -242,7 +242,7 @@ help_bmdfm_expand <- function(row_spec, col_spec) {
     num_thread = 1
   )
   set.seed(1)
-  forecast_expand(fit_test, 1, y_test = eval_data)
+  forecast_expand(fit_test, 1, y_test = eval_data, lpl = TRUE)
 }
 
 test_that("Minnesota Prior - Expanding", {

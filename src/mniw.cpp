@@ -167,7 +167,7 @@ Rcpp::List roll_bmar_mniw(Eigen::MatrixXd y, int lag, int num_data, int num_chai
 													Rcpp::List factor_row_prior, Rcpp::List factor_row_init, int factor_row_prior_type, int factor_rows,
 													Rcpp::List factor_col_prior, Rcpp::List factor_col_init, int factor_col_prior_type, int factor_cols,
 													int factor_lag,
-													int step, Eigen::MatrixXd y_test,
+													int step, Eigen::MatrixXd y_test, bool get_lpl,
 													Eigen::MatrixXi seed_chain, Eigen::VectorXi seed_forecast,
 													bool display_progress, int nthreads) {
 	// auto forecaster = baymar::initialize_matmniwoutforecaster<baymar::MatMniwRollForecastRun>(
@@ -180,7 +180,7 @@ Rcpp::List roll_bmar_mniw(Eigen::MatrixXd y, int lag, int num_data, int num_chai
 			return baymar::initialize_matmniwoutforecaster<baymar::MatMniwRollForecastRun>(
 				y, num_data, lag, num_chains, num_iter, num_burn, thin, fit_record, run_mcmc,
 				param_coef_sig, coef_sig_init, row_prior, row_init, row_prior_type, col_prior, col_init, col_prior_type,
-				step, y_test, seed_chain, seed_forecast, display_progress, nthreads,
+				step, y_test, get_lpl, seed_chain, seed_forecast, display_progress, nthreads,
 				BVHAR_NULLOPT, BVHAR_NULLOPT, BVHAR_NULLOPT,
 				BVHAR_NULLOPT, BVHAR_NULLOPT, BVHAR_NULLOPT,
 				BVHAR_NULLOPT, BVHAR_NULLOPT,
@@ -192,7 +192,7 @@ Rcpp::List roll_bmar_mniw(Eigen::MatrixXd y, int lag, int num_data, int num_chai
 		return baymar::initialize_matmniwoutforecaster<baymar::MatMniwRollForecastRun>(
 			y, num_data, lag, num_chains, num_iter, num_burn, thin, fit_record, run_mcmc,
 			param_coef_sig, coef_sig_init, row_prior, row_init, row_prior_type, col_prior, col_init, col_prior_type,
-			step, y_test, seed_chain, seed_forecast, display_progress, nthreads
+			step, y_test, get_lpl, seed_chain, seed_forecast, display_progress, nthreads
 		);
 	}();
 	return forecaster->returnForecast();
@@ -208,7 +208,7 @@ Rcpp::List roll_bmarx_mniw(Eigen::MatrixXd y, int lag, int num_data, int num_cha
 													 Rcpp::List factor_row_prior, Rcpp::List factor_row_init, int factor_row_prior_type, int factor_rows,
 													 Rcpp::List factor_col_prior, Rcpp::List factor_col_init, int factor_col_prior_type, int factor_cols,
 													 int factor_lag,
-													 int step, Eigen::MatrixXd y_test,
+													 int step, Eigen::MatrixXd y_test, bool get_lpl,
 													 Eigen::MatrixXi seed_chain, Eigen::VectorXi seed_forecast,
 													 bool display_progress, int nthreads,
 													 Eigen::MatrixXd exogen, int exogen_lag,
@@ -227,7 +227,7 @@ Rcpp::List roll_bmarx_mniw(Eigen::MatrixXd y, int lag, int num_data, int num_cha
 			return baymar::initialize_matmniwoutforecaster<baymar::MatMniwRollForecastRun>(
 				y, num_data, lag, num_chains, num_iter, num_burn, thin, fit_record, run_mcmc,
 				param_coef_sig, coef_sig_init, row_prior, row_init, row_prior_type, col_prior, col_init, col_prior_type,
-				step, y_test, seed_chain, seed_forecast, display_progress, nthreads,
+				step, y_test, get_lpl, seed_chain, seed_forecast, display_progress, nthreads,
 				exogen_row_prior, exogen_row_init, exogen_row_prior_type,
 				exogen_col_prior, exogen_col_init, exogen_col_prior_type,
 				exogen, exogen_lag,
@@ -239,7 +239,7 @@ Rcpp::List roll_bmarx_mniw(Eigen::MatrixXd y, int lag, int num_data, int num_cha
 		return baymar::initialize_matmniwoutforecaster<baymar::MatMniwRollForecastRun>(
 			y, num_data, lag, num_chains, num_iter, num_burn, thin, fit_record, run_mcmc,
 			param_coef_sig, coef_sig_init, row_prior, row_init, row_prior_type, col_prior, col_init, col_prior_type,
-			step, y_test, seed_chain, seed_forecast, display_progress, nthreads,
+			step, y_test, get_lpl, seed_chain, seed_forecast, display_progress, nthreads,
 			exogen_row_prior, exogen_row_init, exogen_row_prior_type,
 			exogen_col_prior, exogen_col_init, exogen_col_prior_type,
 			exogen, exogen_lag
@@ -258,7 +258,7 @@ Rcpp::List expand_bmar_mniw(Eigen::MatrixXd y, int lag, int num_data, int num_ch
 														Rcpp::List factor_row_prior, Rcpp::List factor_row_init, int factor_row_prior_type, int factor_rows,
 														Rcpp::List factor_col_prior, Rcpp::List factor_col_init, int factor_col_prior_type, int factor_cols,
 														int factor_lag,
-													  int step, Eigen::MatrixXd y_test,
+													  int step, Eigen::MatrixXd y_test, bool get_lpl,
 													  Eigen::MatrixXi seed_chain, Eigen::VectorXi seed_forecast,
 													  bool display_progress, int nthreads) {
 	// auto forecaster = baymar::initialize_matmniwoutforecaster<baymar::MatMniwExpandForecastRun>(
@@ -271,7 +271,7 @@ Rcpp::List expand_bmar_mniw(Eigen::MatrixXd y, int lag, int num_data, int num_ch
 			return baymar::initialize_matmniwoutforecaster<baymar::MatMniwExpandForecastRun>(
 				y, num_data, lag, num_chains, num_iter, num_burn, thin, fit_record, run_mcmc,
 				param_coef_sig, coef_sig_init, row_prior, row_init, row_prior_type, col_prior, col_init, col_prior_type,
-				step, y_test, seed_chain, seed_forecast, display_progress, nthreads,
+				step, y_test, get_lpl, seed_chain, seed_forecast, display_progress, nthreads,
 				BVHAR_NULLOPT, BVHAR_NULLOPT, BVHAR_NULLOPT,
 				BVHAR_NULLOPT, BVHAR_NULLOPT, BVHAR_NULLOPT,
 				BVHAR_NULLOPT, BVHAR_NULLOPT,
@@ -283,7 +283,7 @@ Rcpp::List expand_bmar_mniw(Eigen::MatrixXd y, int lag, int num_data, int num_ch
 		return baymar::initialize_matmniwoutforecaster<baymar::MatMniwExpandForecastRun>(
 			y, num_data, lag, num_chains, num_iter, num_burn, thin, fit_record, run_mcmc,
 			param_coef_sig, coef_sig_init, row_prior, row_init, row_prior_type, col_prior, col_init, col_prior_type,
-			step, y_test, seed_chain, seed_forecast, display_progress, nthreads
+			step, y_test, get_lpl, seed_chain, seed_forecast, display_progress, nthreads
 		);
 	}();
 	return forecaster->returnForecast();
@@ -299,7 +299,7 @@ Rcpp::List expand_bmarx_mniw(Eigen::MatrixXd y, int lag, int num_data, int num_c
 														 Rcpp::List factor_row_prior, Rcpp::List factor_row_init, int factor_row_prior_type, int factor_rows,
 														 Rcpp::List factor_col_prior, Rcpp::List factor_col_init, int factor_col_prior_type, int factor_cols,
 														 int factor_lag,
-													   int step, Eigen::MatrixXd y_test,
+													   int step, Eigen::MatrixXd y_test, bool get_lpl,
 													   Eigen::MatrixXi seed_chain, Eigen::VectorXi seed_forecast,
 													   bool display_progress, int nthreads,
 														 Eigen::MatrixXd exogen, int exogen_lag,
@@ -318,7 +318,7 @@ Rcpp::List expand_bmarx_mniw(Eigen::MatrixXd y, int lag, int num_data, int num_c
 			return baymar::initialize_matmniwoutforecaster<baymar::MatMniwExpandForecastRun>(
 				y, num_data, lag, num_chains, num_iter, num_burn, thin, fit_record, run_mcmc,
 				param_coef_sig, coef_sig_init, row_prior, row_init, row_prior_type, col_prior, col_init, col_prior_type,
-				step, y_test, seed_chain, seed_forecast, display_progress, nthreads,
+				step, y_test, get_lpl, seed_chain, seed_forecast, display_progress, nthreads,
 				exogen_row_prior, exogen_row_init, exogen_row_prior_type,
 				exogen_col_prior, exogen_col_init, exogen_col_prior_type,
 				exogen, exogen_lag,
@@ -330,7 +330,7 @@ Rcpp::List expand_bmarx_mniw(Eigen::MatrixXd y, int lag, int num_data, int num_c
 		return baymar::initialize_matmniwoutforecaster<baymar::MatMniwExpandForecastRun>(
 			y, num_data, lag, num_chains, num_iter, num_burn, thin, fit_record, run_mcmc,
 			param_coef_sig, coef_sig_init, row_prior, row_init, row_prior_type, col_prior, col_init, col_prior_type,
-			step, y_test, seed_chain, seed_forecast, display_progress, nthreads,
+			step, y_test, get_lpl, seed_chain, seed_forecast, display_progress, nthreads,
 			exogen_row_prior, exogen_row_init, exogen_row_prior_type,
 			exogen_col_prior, exogen_col_init, exogen_col_prior_type,
 			exogen, exogen_lag
