@@ -205,6 +205,7 @@ predict.mdfmbayes <- function(object, n_ahead, level = .05, num_thread = 1, med 
 #' @param newxreg New values for exogenous variables.
 #' @param num_thread `r lifecycle::badge("experimental")` Number of threads
 #' @param med `r lifecycle::badge("experimental")` If `TRUE`, use median of forecast draws instead of mean (default).
+#' @param lpl `r lifecycle::badge("experimental")` Compute log-predictive likelihood (LPL). By default, `FALSE`.
 #' @param mcmc `r lifecycle::badge("experimental")` If `TRUE`, run new MCMC in new windows. By default, `TRUE`.
 #' @param verbose Print the progress bar in the console. By default, `FALSE`.
 #' @param ... Additional arguments
@@ -214,6 +215,7 @@ forecast_roll.marbayes <- function(object, n_ahead, y_test,
                                    newxreg,
                                    num_thread = 1,
                                    med = FALSE,
+                                   lpl = FALSE,
                                    mcmc = TRUE,
                                    verbose = FALSE, ...) {
   fit_record <- get_bmar_records(object, TRUE)
@@ -319,7 +321,7 @@ forecast_roll.marbayes <- function(object, n_ahead, y_test,
       factor_row_prior = row_factor_prior, factor_row_init = row_factor_init, factor_row_prior_type = row_factor_prior_type, factor_rows = nrow_factor,
       factor_col_prior = col_factor_prior, factor_col_init = col_factor_init, factor_col_prior_type = col_factor_prior_type, factor_cols = ncol_factor,
       factor_lag = factor_lag,
-      step = n_ahead, y_test = do.call(rbind, y_test_list),
+      step = n_ahead, y_test = do.call(rbind, y_test_list), get_lpl = lpl,
       seed_chain = sample.int(.Machine$integer.max, size = object$chain * num_horizon) |> matrix(ncol = object$chain),
       seed_forecast = sample.int(.Machine$integer.max, size = object$chain),
       display_progress = verbose,
@@ -349,7 +351,7 @@ forecast_roll.marbayes <- function(object, n_ahead, y_test,
       factor_row_prior = row_factor_prior, factor_row_init = row_factor_init, factor_row_prior_type = row_factor_prior_type, factor_rows = nrow_factor,
       factor_col_prior = col_factor_prior, factor_col_init = col_factor_init, factor_col_prior_type = col_factor_prior_type, factor_cols = ncol_factor,
       factor_lag = factor_lag,
-      step = n_ahead, y_test = do.call(rbind, y_test_list),
+      step = n_ahead, y_test = do.call(rbind, y_test_list), get_lpl = lpl,
       seed_chain = sample.int(.Machine$integer.max, size = object$chain * num_horizon) |> matrix(ncol = object$chain),
       seed_forecast = sample.int(.Machine$integer.max, size = object$chain),
       display_progress = verbose,
@@ -357,6 +359,14 @@ forecast_roll.marbayes <- function(object, n_ahead, y_test,
     )
   }
   num_draw <- nrow(object$param)
+  if (lpl) {
+    if (med) {
+      lpl_val <- apply(pred_res$lpl, 1, median)
+    } else {
+      lpl_val <- rowMeans(pred_res$lpl)
+    }
+    pred_res$lpl <- NULL
+  }
   y_distn <-
     lapply(
       pred_res$forecast,
@@ -397,6 +407,9 @@ forecast_roll.marbayes <- function(object, n_ahead, y_test,
     eval_id = n_ahead:length(y_test_list),
     y = object$y
   )
+  if (lpl) {
+    res$lpl <- lpl_val
+  }
   class(res) <- c("predmarbayes_roll", "predmarcv")
   res
 }
@@ -410,6 +423,7 @@ forecast_roll.marbayes <- function(object, n_ahead, y_test,
 #' @param newxreg Not used.
 #' @param num_thread `r lifecycle::badge("experimental")` Number of threads
 #' @param med `r lifecycle::badge("experimental")` If `TRUE`, use median of forecast draws instead of mean (default).
+#' @param lpl `r lifecycle::badge("experimental")` Compute log-predictive likelihood (LPL). By default, `FALSE`.
 #' @param mcmc `r lifecycle::badge("experimental")` If `TRUE`, run new MCMC in new windows. By default, `TRUE`.
 #' @param verbose Print the progress bar in the console. By default, `FALSE`.
 #' @param ... Additional arguments
@@ -419,6 +433,7 @@ forecast_roll.mdfmbayes <- function(object, n_ahead, y_test,
                                     newxreg = NULL,
                                     num_thread = 1,
                                     med = FALSE,
+                                    lpl = FALSE,
                                     mcmc = TRUE,
                                     verbose = FALSE, ...) {
   fit_record <- get_bmar_records(object, TRUE)
@@ -490,6 +505,14 @@ forecast_roll.mdfmbayes <- function(object, n_ahead, y_test,
     nthreads = num_thread
   )
   num_draw <- nrow(object$param)
+  if (lpl) {
+    if (med) {
+      lpl_val <- apply(pred_res$lpl, 1, median)
+    } else {
+      lpl_val <- rowMeans(pred_res$lpl)
+    }
+    pred_res$lpl <- NULL
+  }
   y_distn <-
     lapply(
       pred_res$forecast,
@@ -530,6 +553,9 @@ forecast_roll.mdfmbayes <- function(object, n_ahead, y_test,
     eval_id = n_ahead:length(y_test_list),
     y = object$y
   )
+  if (lpl) {
+    res$lpl <- lpl_val
+  }
   class(res) <- c("predmarbayes_roll", "predmarcv")
   res
 }
@@ -543,6 +569,7 @@ forecast_roll.mdfmbayes <- function(object, n_ahead, y_test,
 #' @param newxreg New values for exogenous variables.
 #' @param num_thread `r lifecycle::badge("experimental")` Number of threads
 #' @param med `r lifecycle::badge("experimental")` If `TRUE`, use median of forecast draws instead of mean (default).
+#' @param lpl `r lifecycle::badge("experimental")` Compute log-predictive likelihood (LPL). By default, `FALSE`.
 #' @param mcmc `r lifecycle::badge("experimental")` If `TRUE`, run new MCMC in new windows. By default, `TRUE`.
 #' @param verbose Print the progress bar in the console. By default, `FALSE`.
 #' @param ... Additional arguments
@@ -552,6 +579,7 @@ forecast_expand.marbayes <- function(object, n_ahead, y_test,
                                      newxreg,
                                      num_thread = 1,
                                      med = FALSE,
+                                     lpl = FALSE,
                                      mcmc = TRUE,
                                      verbose = FALSE, ...) {
   fit_record <- get_bmar_records(object, TRUE)
@@ -657,7 +685,7 @@ forecast_expand.marbayes <- function(object, n_ahead, y_test,
       factor_row_prior = row_factor_prior, factor_row_init = row_factor_init, factor_row_prior_type = row_factor_prior_type, factor_rows = nrow_factor,
       factor_col_prior = col_factor_prior, factor_col_init = col_factor_init, factor_col_prior_type = col_factor_prior_type, factor_cols = ncol_factor,
       factor_lag = factor_lag,
-      step = n_ahead, y_test = do.call(rbind, y_test_list),
+      step = n_ahead, y_test = do.call(rbind, y_test_list), get_lpl = lpl,
       seed_chain = sample.int(.Machine$integer.max, size = object$chain * num_horizon) |> matrix(ncol = object$chain),
       seed_forecast = sample.int(.Machine$integer.max, size = object$chain),
       display_progress = verbose,
@@ -687,7 +715,7 @@ forecast_expand.marbayes <- function(object, n_ahead, y_test,
       factor_row_prior = row_factor_prior, factor_row_init = row_factor_init, factor_row_prior_type = row_factor_prior_type, factor_rows = nrow_factor,
       factor_col_prior = col_factor_prior, factor_col_init = col_factor_init, factor_col_prior_type = col_factor_prior_type, factor_cols = ncol_factor,
       factor_lag = factor_lag,
-      step = n_ahead, y_test = do.call(rbind, y_test_list),
+      step = n_ahead, y_test = do.call(rbind, y_test_list), get_lpl = lpl,
       seed_chain = sample.int(.Machine$integer.max, size = object$chain * num_horizon) |> matrix(ncol = object$chain),
       seed_forecast = sample.int(.Machine$integer.max, size = object$chain),
       display_progress = verbose,
@@ -695,6 +723,14 @@ forecast_expand.marbayes <- function(object, n_ahead, y_test,
     )
   }
   num_draw <- nrow(object$param)
+  if (lpl) {
+    if (med) {
+      lpl_val <- apply(pred_res$lpl, 1, median)
+    } else {
+      lpl_val <- rowMeans(pred_res$lpl)
+    }
+    pred_res$lpl <- NULL
+  }
   y_distn <-
     lapply(
       pred_res$forecast,
@@ -735,6 +771,9 @@ forecast_expand.marbayes <- function(object, n_ahead, y_test,
     eval_id = n_ahead:length(y_test_list),
     y = object$y
   )
+  if (lpl) {
+    res$lpl <- lpl_val
+  }
   class(res) <- c("predmarbayes_expand", "predmarcv")
   res
 }
@@ -748,6 +787,7 @@ forecast_expand.marbayes <- function(object, n_ahead, y_test,
 #' @param newxreg Not used.
 #' @param num_thread `r lifecycle::badge("experimental")` Number of threads
 #' @param med `r lifecycle::badge("experimental")` If `TRUE`, use median of forecast draws instead of mean (default).
+#' @param lpl `r lifecycle::badge("experimental")` Compute log-predictive likelihood (LPL). By default, `FALSE`.
 #' @param mcmc `r lifecycle::badge("experimental")` If `TRUE`, run new MCMC in new windows. By default, `TRUE`.
 #' @param verbose Print the progress bar in the console. By default, `FALSE`.
 #' @param ... Additional arguments
@@ -757,6 +797,7 @@ forecast_expand.mdfmbayes <- function(object, n_ahead, y_test,
                                       newxreg = NULL,
                                       num_thread = 1,
                                       med = FALSE,
+                                      lpl = FALSE,
                                       mcmc = TRUE,
                                       verbose = FALSE, ...) {
   fit_record <- get_bmar_records(object, TRUE)
@@ -828,6 +869,14 @@ forecast_expand.mdfmbayes <- function(object, n_ahead, y_test,
     nthreads = num_thread
   )
   num_draw <- nrow(object$param)
+  if (lpl) {
+    if (med) {
+      lpl_val <- apply(pred_res$lpl, 1, median)
+    } else {
+      lpl_val <- rowMeans(pred_res$lpl)
+    }
+    pred_res$lpl <- NULL
+  }
   y_distn <-
     lapply(
       pred_res$forecast,
@@ -868,6 +917,9 @@ forecast_expand.mdfmbayes <- function(object, n_ahead, y_test,
     eval_id = n_ahead:length(y_test_list),
     y = object$y
   )
+  if (lpl) {
+    res$lpl <- lpl_val
+  }
   class(res) <- c("predmarbayes_expand", "predmarcv")
   res
 }

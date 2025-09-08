@@ -240,7 +240,12 @@ protected:
 		error_mat = row_sig_lower * error_mat * col_sig_lower.transpose();
 	}
 
-	void updateLpl(int h, const Eigen::MatrixXd& valid_vec) override {}
+	void updateLpl(int h, const Eigen::MatrixXd& valid_vec) override {
+		BVHAR_DEBUG_LOG(debug_logger, "updateLpl(h={}, valid_vec) called", h);
+		lpl[h] -= col_sig_lower.transpose().triangularView<Eigen::Upper>().solve<Eigen::OnTheRight>(
+			row_sig_lower.triangularView<Eigen::Lower>().solve(valid_vec - point_forecast)
+		).squaredNorm() / 2 + num_row * num_col * log(2 * M_PI) / 2 + 4 * row_sig_lower.diagonal().array().log().sum() + 4 * col_sig_lower.diagonal().array().log().sum();
+	}
 };
 
 inline std::vector<std::unique_ptr<MatMniwForecaster>> initialize_matmniwforecaster(
@@ -328,7 +333,7 @@ public:
 		BVHAR_LIST& param_coef_sig, BVHAR_LIST_OF_LIST& coef_sig_init,
 		BVHAR_LIST& row_prior, BVHAR_LIST_OF_LIST& row_init, const int row_prior_type,
 		BVHAR_LIST& col_prior, BVHAR_LIST_OF_LIST& col_init, const int col_prior_type,
-		int step, const Eigen::MatrixXd& y_test,
+		int step, const Eigen::MatrixXd& y_test, bool get_lpl,
 		const Eigen::MatrixXi& seed_chain, const Eigen::VectorXi& seed_forecast, bool display_progress, int nthreads,
 		BVHAR_OPTIONAL<BVHAR_LIST> row_exogen_prior = BVHAR_NULLOPT, BVHAR_OPTIONAL<BVHAR_LIST_OF_LIST> row_exogen_init = BVHAR_NULLOPT, BVHAR_OPTIONAL<int> row_exogen_prior_type = BVHAR_NULLOPT,
 		BVHAR_OPTIONAL<BVHAR_LIST> col_exogen_prior = BVHAR_NULLOPT, BVHAR_OPTIONAL<BVHAR_LIST_OF_LIST> col_exogen_init = BVHAR_NULLOPT, BVHAR_OPTIONAL<int> col_exogen_prior_type = BVHAR_NULLOPT,
@@ -338,7 +343,7 @@ public:
 		BVHAR_OPTIONAL<int> factor_lag = BVHAR_NULLOPT
 	)
 	: bvhar::McmcOutForecastRun<Eigen::MatrixXd, Eigen::MatrixXd, isUpdate>(
-			num_data, lag, num_chains, num_iter, num_burn, thin, step, y_test, y_test.rows(), false,
+			num_data, lag, num_chains, num_iter, num_burn, thin, step, y_test, y_test.rows(), get_lpl,
 			seed_chain, seed_forecast, display_progress, nthreads,
 			exogen_lag
 		),
@@ -373,7 +378,7 @@ protected:
 	using bvhar::McmcOutForecastRun<Eigen::MatrixXd, Eigen::MatrixXd, isUpdate>::num_burn;
 	using bvhar::McmcOutForecastRun<Eigen::MatrixXd, Eigen::MatrixXd, isUpdate>::thin;
 	using bvhar::McmcOutForecastRun<Eigen::MatrixXd, Eigen::MatrixXd, isUpdate>::nthreads;
-	// using bvhar::McmcOutForecastRun<Eigen::MatrixXd, Eigen::MatrixXd, isUpdate>::get_lpl;
+	using bvhar::McmcOutForecastRun<Eigen::MatrixXd, Eigen::MatrixXd, isUpdate>::get_lpl;
 	using bvhar::McmcOutForecastRun<Eigen::MatrixXd, Eigen::MatrixXd, isUpdate>::display_progress;
 	using bvhar::McmcOutForecastRun<Eigen::MatrixXd, Eigen::MatrixXd, isUpdate>::seed_forecast;
 	using bvhar::McmcOutForecastRun<Eigen::MatrixXd, Eigen::MatrixXd, isUpdate>::roll_mat;
@@ -495,7 +500,7 @@ public:
 		BVHAR_LIST& param_coef_sig, BVHAR_LIST_OF_LIST& coef_sig_init,
 		BVHAR_LIST& row_prior, BVHAR_LIST_OF_LIST& row_init, const int row_prior_type,
 		BVHAR_LIST& col_prior, BVHAR_LIST_OF_LIST& col_init, const int col_prior_type,
-		int step, const Eigen::MatrixXd& y_test,
+		int step, const Eigen::MatrixXd& y_test, bool get_lpl,
 		const Eigen::MatrixXi& seed_chain, const Eigen::VectorXi& seed_forecast, bool display_progress, int nthreads,
 		BVHAR_OPTIONAL<BVHAR_LIST> row_exogen_prior = BVHAR_NULLOPT, BVHAR_OPTIONAL<BVHAR_LIST_OF_LIST> row_exogen_init = BVHAR_NULLOPT, BVHAR_OPTIONAL<int> row_exogen_prior_type = BVHAR_NULLOPT,
 		BVHAR_OPTIONAL<BVHAR_LIST> col_exogen_prior = BVHAR_NULLOPT, BVHAR_OPTIONAL<BVHAR_LIST_OF_LIST> col_exogen_init = BVHAR_NULLOPT, BVHAR_OPTIONAL<int> col_exogen_prior_type = BVHAR_NULLOPT,
@@ -508,7 +513,7 @@ public:
 			y, num_data, lag,
 			num_chains, num_iter, num_burn, thin, fit_record,
 			param_coef_sig, coef_sig_init, row_prior, row_init, row_prior_type, col_prior, col_init, col_prior_type,
-			step, y_test, seed_chain, seed_forecast, display_progress, nthreads,
+			step, y_test, get_lpl, seed_chain, seed_forecast, display_progress, nthreads,
 			row_exogen_prior, row_exogen_init, row_exogen_prior_type,
 			col_exogen_prior, col_exogen_init, col_exogen_prior_type,
 			exogen, exogen_lag,
@@ -576,7 +581,7 @@ public:
 		BVHAR_LIST& param_coef_sig, BVHAR_LIST_OF_LIST& coef_sig_init,
 		BVHAR_LIST& row_prior, BVHAR_LIST_OF_LIST& row_init, const int row_prior_type,
 		BVHAR_LIST& col_prior, BVHAR_LIST_OF_LIST& col_init, const int col_prior_type,
-		int step, const Eigen::MatrixXd& y_test,
+		int step, const Eigen::MatrixXd& y_test, bool get_lpl,
 		const Eigen::MatrixXi& seed_chain, const Eigen::VectorXi& seed_forecast, bool display_progress, int nthreads,
 		BVHAR_OPTIONAL<BVHAR_LIST> row_exogen_prior = BVHAR_NULLOPT, BVHAR_OPTIONAL<BVHAR_LIST_OF_LIST> row_exogen_init = BVHAR_NULLOPT, BVHAR_OPTIONAL<int> row_exogen_prior_type = BVHAR_NULLOPT,
 		BVHAR_OPTIONAL<BVHAR_LIST> col_exogen_prior = BVHAR_NULLOPT, BVHAR_OPTIONAL<BVHAR_LIST_OF_LIST> col_exogen_init = BVHAR_NULLOPT, BVHAR_OPTIONAL<int> col_exogen_prior_type = BVHAR_NULLOPT,
@@ -589,7 +594,7 @@ public:
 			y, num_data, lag,
 			num_chains, num_iter, num_burn, thin, fit_record,
 			param_coef_sig, coef_sig_init, row_prior, row_init, row_prior_type, col_prior, col_init, col_prior_type,
-			step, y_test, seed_chain, seed_forecast, display_progress, nthreads,
+			step, y_test, get_lpl, seed_chain, seed_forecast, display_progress, nthreads,
 			row_exogen_prior, row_exogen_init, row_exogen_prior_type,
 			col_exogen_prior, col_exogen_init, col_exogen_prior_type,
 			exogen, exogen_lag,
@@ -655,7 +660,7 @@ inline std::unique_ptr<bvhar::McmcOutforecastInterface> initialize_matmniwoutfor
 	BVHAR_LIST& param_coef_sig, BVHAR_LIST_OF_LIST& coef_sig_init,
 	BVHAR_LIST& row_prior, BVHAR_LIST_OF_LIST& row_init, const int row_prior_type,
 	BVHAR_LIST& col_prior, BVHAR_LIST_OF_LIST& col_init, const int col_prior_type,
-	int step, const Eigen::MatrixXd& y_test,
+	int step, const Eigen::MatrixXd& y_test, bool get_lpl,
 	const Eigen::MatrixXi& seed_chain, const Eigen::VectorXi& seed_forecast, bool display_progress, int nthreads,
 	BVHAR_OPTIONAL<BVHAR_LIST> row_exogen_prior = BVHAR_NULLOPT, BVHAR_OPTIONAL<BVHAR_LIST_OF_LIST> row_exogen_init = BVHAR_NULLOPT, BVHAR_OPTIONAL<int> row_exogen_prior_type = BVHAR_NULLOPT,
 	BVHAR_OPTIONAL<BVHAR_LIST> col_exogen_prior = BVHAR_NULLOPT, BVHAR_OPTIONAL<BVHAR_LIST_OF_LIST> col_exogen_init = BVHAR_NULLOPT, BVHAR_OPTIONAL<int> col_exogen_prior_type = BVHAR_NULLOPT,
@@ -668,7 +673,7 @@ inline std::unique_ptr<bvhar::McmcOutforecastInterface> initialize_matmniwoutfor
 		return std::make_unique<BaseOutForecast<true>>(
 			y, num_data, lag, num_chains, num_iter, num_burn, thin, fit_record,
 			param_coef_sig, coef_sig_init, row_prior, row_init, row_prior_type, col_prior, col_init, col_prior_type,
-			step, y_test, seed_chain, seed_forecast, display_progress, nthreads,
+			step, y_test, get_lpl, seed_chain, seed_forecast, display_progress, nthreads,
 			row_exogen_prior, row_exogen_init, row_exogen_prior_type,
 			col_exogen_prior, col_exogen_init, col_exogen_prior_type,
 			exogen, exogen_lag,
@@ -680,7 +685,7 @@ inline std::unique_ptr<bvhar::McmcOutforecastInterface> initialize_matmniwoutfor
 	return std::make_unique<BaseOutForecast<false>>(
 		y, num_data, lag, num_chains, num_iter, num_burn, thin, fit_record,
 		param_coef_sig, coef_sig_init, row_prior, row_init, row_prior_type, col_prior, col_init, col_prior_type,
-		step, y_test, seed_chain, seed_forecast, display_progress, nthreads,
+		step, y_test, get_lpl, seed_chain, seed_forecast, display_progress, nthreads,
 		row_exogen_prior, row_exogen_init, row_exogen_prior_type,
 		col_exogen_prior, col_exogen_init, col_exogen_prior_type,
 		exogen, exogen_lag,
