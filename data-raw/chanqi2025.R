@@ -70,7 +70,7 @@ ts_transform <-
   ) |>
   filter(
     state != "Washington",
-    date >= "2005-01-01"
+    date >= "1991-01-01"
   )
 # 3d array: series x state x date
 chanqi2025 <-
