@@ -205,11 +205,11 @@ public:
 		BVHAR_LIST& row_prior, BVHAR_LIST_OF_LIST& row_init, const int row_prior_type,
 		BVHAR_LIST& col_prior, BVHAR_LIST_OF_LIST& col_init, const int col_prior_type,
 		int nrow_factor, int ncol_factor, int factor_lag,
-		int step, const Eigen::MatrixXd& y_test, bool get_lpl,
+		int step, const Eigen::MatrixXd& y_test, bool get_lpl, bool use_fit,
 		const Eigen::MatrixXi& seed_chain, const Eigen::VectorXi& seed_forecast, bool display_progress, int nthreads
 	)
 	: bvhar::McmcOutForecastRun<Eigen::MatrixXd, Eigen::MatrixXd, isUpdate>(
-			num_data, 1, num_chains, num_iter, num_burn, thin, step, y_test, y_test.rows(), get_lpl,
+			num_data, 1, num_chains, num_iter, num_burn, thin, step, y_test, y_test.rows(), get_lpl, use_fit,
 			seed_chain, seed_forecast, display_progress, nthreads
 		),
 		num_row(y.rows() / num_data), num_col(y.cols()),
@@ -238,6 +238,7 @@ protected:
 	using bvhar::McmcOutForecastRun<Eigen::MatrixXd, Eigen::MatrixXd, isUpdate>::thin;
 	using bvhar::McmcOutForecastRun<Eigen::MatrixXd, Eigen::MatrixXd, isUpdate>::nthreads;
 	// using bvhar::McmcOutForecastRun<Eigen::MatrixXd, Eigen::MatrixXd, isUpdate>::get_lpl;
+	using bvhar::McmcOutForecastRun<Eigen::MatrixXd, Eigen::MatrixXd, isUpdate>::use_fit;
 	using bvhar::McmcOutForecastRun<Eigen::MatrixXd, Eigen::MatrixXd, isUpdate>::display_progress;
 	using bvhar::McmcOutForecastRun<Eigen::MatrixXd, Eigen::MatrixXd, isUpdate>::seed_forecast;
 	using bvhar::McmcOutForecastRun<Eigen::MatrixXd, Eigen::MatrixXd, isUpdate>::roll_mat;
@@ -254,6 +255,30 @@ protected:
 		return y_test.bottomRows(num_row);
 	}
 
+	void initForecaster(BVHAR_LIST& fit_record) {
+		BVHAR_DEBUG_LOG(debug_logger, "initForecaster(fit_record) called");
+		using is_mcmc = std::integral_constant<bool, isUpdate>;
+		if (is_mcmc::value) {
+			auto temp_forecaster = initialize_matdfmforecaster(
+				num_chains, step, nrow_factor, ncol_factor, factor_lag,
+				fit_record, seed_forecast, nthreads
+			);
+			for (int i = 0; i < num_chains; ++i) {
+				forecaster[0][i] = std::move(temp_forecaster[i]);
+			}
+		} else {
+			for (int window = 0; window < num_horizon; ++window) {
+				auto temp_forecaster = initialize_matdfmforecaster(
+					num_chains, step, nrow_factor, ncol_factor, factor_lag,
+					fit_record, seed_forecast, nthreads
+				);
+				for (int i = 0; i < num_chains; ++i) {
+					forecaster[window][i] = std::move(temp_forecaster[i]);
+				}
+			}
+		}
+	}
+
 	void initialize(
 		const Eigen::MatrixXd& y, BVHAR_LIST& fit_record,
 		BVHAR_LIST& param_coef_sig, BVHAR_LIST_OF_LIST& coef_sig_init,
@@ -264,36 +289,56 @@ protected:
 	) {
 		BVHAR_DEBUG_LOG(debug_logger, "initialize(...) called");
 		initData(y);
-		using is_mcmc = std::integral_constant<bool, isUpdate>;
-		if (is_mcmc::value) {
-			for (int window = 0; window < num_horizon; ++window) {
-				std::vector<Eigen::MatrixXd> y_data = marmatrix_to_vector(roll_mat[window], num_row);
-				std::vector<Eigen::MatrixXd> response = build_mar_response(y_data, lag);
-				auto temp_mcmc = initialize_matdfm(
-					num_chains, num_iter - num_burn, response, factor_lag,
-					param_coef_sig, coef_sig_init,
-					row_prior, row_init, row_prior_type,
-					col_prior, col_init, col_prior_type,
-					seed_chain.row(window)
-				);
-				auto temp_forecaster = initialize_matdfmforecaster(
-					num_chains, step, nrow_factor, ncol_factor, factor_lag,
-					fit_record, seed_forecast, nthreads
-				);
-				for (int i = 0; i < num_chains; ++i) {
-					model[window][i] = std::move(temp_mcmc[i]);
-					forecaster[window][i] = std::move(temp_forecaster[i]);
-				}
+		if (use_fit) {
+			initForecaster(fit_record);
+		}
+		for (int window = 0; window < num_horizon; ++window) {
+			if (use_fit && window == 0) {
+				continue;
 			}
-		} else {
-			auto temp_forecaster = initialize_matdfmforecaster(
-				num_chains, step, nrow_factor, ncol_factor, factor_lag,
-				fit_record, seed_forecast, nthreads
+			std::vector<Eigen::MatrixXd> y_data = marmatrix_to_vector(roll_mat[window], num_row);
+			std::vector<Eigen::MatrixXd> response = build_mar_response(y_data, lag);
+			auto temp_mcmc = initialize_matdfm(
+				num_chains, num_iter - num_burn, response, factor_lag,
+				param_coef_sig, coef_sig_init,
+				row_prior, row_init, row_prior_type,
+				col_prior, col_init, col_prior_type,
+				seed_chain.row(window)
 			);
 			for (int i = 0; i < num_chains; ++i) {
-				forecaster[0][i] = std::move(temp_forecaster[i]);
+				model[window][i] = std::move(temp_mcmc[i]);
 			}
 		}
+		// using is_mcmc = std::integral_constant<bool, isUpdate>;
+		// if (is_mcmc::value) {
+		// 	for (int window = 0; window < num_horizon; ++window) {
+		// 		std::vector<Eigen::MatrixXd> y_data = marmatrix_to_vector(roll_mat[window], num_row);
+		// 		std::vector<Eigen::MatrixXd> response = build_mar_response(y_data, lag);
+		// 		auto temp_mcmc = initialize_matdfm(
+		// 			num_chains, num_iter - num_burn, response, factor_lag,
+		// 			param_coef_sig, coef_sig_init,
+		// 			row_prior, row_init, row_prior_type,
+		// 			col_prior, col_init, col_prior_type,
+		// 			seed_chain.row(window)
+		// 		);
+		// 		auto temp_forecaster = initialize_matdfmforecaster(
+		// 			num_chains, step, nrow_factor, ncol_factor, factor_lag,
+		// 			fit_record, seed_forecast, nthreads
+		// 		);
+		// 		for (int i = 0; i < num_chains; ++i) {
+		// 			model[window][i] = std::move(temp_mcmc[i]);
+		// 			forecaster[window][i] = std::move(temp_forecaster[i]);
+		// 		}
+		// 	}
+		// } else {
+		// 	auto temp_forecaster = initialize_matdfmforecaster(
+		// 		num_chains, step, nrow_factor, ncol_factor, factor_lag,
+		// 		fit_record, seed_forecast, nthreads
+		// 	);
+		// 	for (int i = 0; i < num_chains; ++i) {
+		// 		forecaster[0][i] = std::move(temp_forecaster[i]);
+		// 	}
+		// }
 	}
 
 	virtual void initData(const Eigen::MatrixXd& y) = 0;
@@ -318,14 +363,14 @@ public:
 		BVHAR_LIST& row_prior, BVHAR_LIST_OF_LIST& row_init, const int row_prior_type,
 		BVHAR_LIST& col_prior, BVHAR_LIST_OF_LIST& col_init, const int col_prior_type,
 		int nrow_factor, int ncol_factor, int factor_lag,
-		int step, const Eigen::MatrixXd& y_test, bool get_lpl,
+		int step, const Eigen::MatrixXd& y_test, bool get_lpl, bool use_fit,
 		const Eigen::MatrixXi& seed_chain, const Eigen::VectorXi& seed_forecast, bool display_progress, int nthreads
 	)
 	: MatDfmOutForecastRun<isUpdate>(
 			y, num_data, num_chains, num_iter, num_burn, thin, fit_record,
 			param_coef_sig, coef_sig_init, row_prior, row_init, row_prior_type, col_prior, col_init, col_prior_type,
 			nrow_factor, ncol_factor, factor_lag,
-			step, y_test, get_lpl,
+			step, y_test, get_lpl, use_fit,
 			seed_chain, seed_forecast, display_progress, nthreads
 		) {
 		BVHAR_DEBUG_LOG(debug_logger, "MatDfmOutForecastRun constructor");
@@ -376,14 +421,14 @@ public:
 		BVHAR_LIST& row_prior, BVHAR_LIST_OF_LIST& row_init, const int row_prior_type,
 		BVHAR_LIST& col_prior, BVHAR_LIST_OF_LIST& col_init, const int col_prior_type,
 		int nrow_factor, int ncol_factor, int factor_lag,
-		int step, const Eigen::MatrixXd& y_test, bool get_lpl,
+		int step, const Eigen::MatrixXd& y_test, bool get_lpl, bool use_fit,
 		const Eigen::MatrixXi& seed_chain, const Eigen::VectorXi& seed_forecast, bool display_progress, int nthreads
 	)
 	: MatDfmOutForecastRun<isUpdate>(
 			y, num_data, num_chains, num_iter, num_burn, thin, fit_record,
 			param_coef_sig, coef_sig_init, row_prior, row_init, row_prior_type, col_prior, col_init, col_prior_type,
 			nrow_factor, ncol_factor, factor_lag,
-			step, y_test, get_lpl,
+			step, y_test, get_lpl, use_fit,
 			seed_chain, seed_forecast, display_progress, nthreads
 		) {
 		BVHAR_DEBUG_LOG(debug_logger, "MatDfmOutForecastRun constructor");
@@ -432,7 +477,7 @@ inline std::unique_ptr<bvhar::McmcOutforecastInterface> initialize_matdfmoutfore
 	BVHAR_LIST& row_prior, BVHAR_LIST_OF_LIST& row_init, const int row_prior_type,
 	BVHAR_LIST& col_prior, BVHAR_LIST_OF_LIST& col_init, const int col_prior_type,
 	int nrow_factor, int ncol_factor, int factor_lag,
-	int step, const Eigen::MatrixXd& y_test, bool get_lpl,
+	int step, const Eigen::MatrixXd& y_test, bool get_lpl, bool use_fit,
 	const Eigen::MatrixXi& seed_chain, const Eigen::VectorXi& seed_forecast, bool display_progress, int nthreads
 ) {
 	if (run_mcmc) {
@@ -440,7 +485,7 @@ inline std::unique_ptr<bvhar::McmcOutforecastInterface> initialize_matdfmoutfore
 			y, num_data, num_chains, num_iter, num_burn, thin, fit_record,
 			param_coef_sig, coef_sig_init, row_prior, row_init, row_prior_type, col_prior, col_init, col_prior_type,
 			nrow_factor, ncol_factor, factor_lag,
-			step, y_test, get_lpl,
+			step, y_test, get_lpl, use_fit,
 			seed_chain, seed_forecast, display_progress, nthreads
 		);
 	}
@@ -448,7 +493,7 @@ inline std::unique_ptr<bvhar::McmcOutforecastInterface> initialize_matdfmoutfore
 		y, num_data, num_chains, num_iter, num_burn, thin, fit_record,
 		param_coef_sig, coef_sig_init, row_prior, row_init, row_prior_type, col_prior, col_init, col_prior_type,
 		nrow_factor, ncol_factor, factor_lag,
-		step, y_test, get_lpl,
+		step, y_test, get_lpl, use_fit,
 		seed_chain, seed_forecast, display_progress, nthreads
 	);
 }

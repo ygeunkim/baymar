@@ -207,6 +207,7 @@ predict.mdfmbayes <- function(object, n_ahead, level = .05, num_thread = 1, med 
 #' @param med `r lifecycle::badge("experimental")` If `TRUE`, use median of forecast draws instead of mean (default).
 #' @param lpl `r lifecycle::badge("experimental")` Compute log-predictive likelihood (LPL). By default, `FALSE`.
 #' @param mcmc `r lifecycle::badge("experimental")` If `TRUE`, run new MCMC in new windows. By default, `TRUE`.
+#' @param use_fit `r lifecycle::badge("experimental")` Use `object` result for the first window. By default, `TRUE`.
 #' @param verbose Print the progress bar in the console. By default, `FALSE`.
 #' @param ... Additional arguments
 #' @exportS3Method bvhar::forecast_roll
@@ -217,8 +218,12 @@ forecast_roll.marbayes <- function(object, n_ahead, y_test,
                                    med = FALSE,
                                    lpl = FALSE,
                                    mcmc = TRUE,
+                                   use_fit = TRUE,
                                    verbose = FALSE, ...) {
-  fit_record <- get_bmar_records(object, TRUE)
+  fit_record <- list()
+  if (use_fit) {
+    fit_record <- get_bmar_records(object, TRUE)
+  }
   nrow_data <- dim(object$y)[1]
   ncol_data <- dim(object$y)[2]
   num_data <- dim(object$y)[3]
@@ -321,7 +326,7 @@ forecast_roll.marbayes <- function(object, n_ahead, y_test,
       factor_row_prior = row_factor_prior, factor_row_init = row_factor_init, factor_row_prior_type = row_factor_prior_type, factor_rows = nrow_factor,
       factor_col_prior = col_factor_prior, factor_col_init = col_factor_init, factor_col_prior_type = col_factor_prior_type, factor_cols = ncol_factor,
       factor_lag = factor_lag,
-      step = n_ahead, y_test = do.call(rbind, y_test_list), get_lpl = lpl,
+      step = n_ahead, y_test = do.call(rbind, y_test_list), get_lpl = lpl, use_fit = use_fit,
       seed_chain = sample.int(.Machine$integer.max, size = object$chain * num_horizon) |> matrix(ncol = object$chain),
       seed_forecast = sample.int(.Machine$integer.max, size = object$chain),
       display_progress = verbose,
@@ -351,7 +356,7 @@ forecast_roll.marbayes <- function(object, n_ahead, y_test,
       factor_row_prior = row_factor_prior, factor_row_init = row_factor_init, factor_row_prior_type = row_factor_prior_type, factor_rows = nrow_factor,
       factor_col_prior = col_factor_prior, factor_col_init = col_factor_init, factor_col_prior_type = col_factor_prior_type, factor_cols = ncol_factor,
       factor_lag = factor_lag,
-      step = n_ahead, y_test = do.call(rbind, y_test_list), get_lpl = lpl,
+      step = n_ahead, y_test = do.call(rbind, y_test_list), get_lpl = lpl, use_fit = use_fit,
       seed_chain = sample.int(.Machine$integer.max, size = object$chain * num_horizon) |> matrix(ncol = object$chain),
       seed_forecast = sample.int(.Machine$integer.max, size = object$chain),
       display_progress = verbose,
@@ -425,6 +430,7 @@ forecast_roll.marbayes <- function(object, n_ahead, y_test,
 #' @param med `r lifecycle::badge("experimental")` If `TRUE`, use median of forecast draws instead of mean (default).
 #' @param lpl `r lifecycle::badge("experimental")` Compute log-predictive likelihood (LPL). By default, `FALSE`.
 #' @param mcmc `r lifecycle::badge("experimental")` If `TRUE`, run new MCMC in new windows. By default, `TRUE`.
+#' @param use_fit `r lifecycle::badge("experimental")` Use `object` result for the first window. By default, `TRUE`.
 #' @param verbose Print the progress bar in the console. By default, `FALSE`.
 #' @param ... Additional arguments
 #' @exportS3Method bvhar::forecast_roll
@@ -435,8 +441,12 @@ forecast_roll.mdfmbayes <- function(object, n_ahead, y_test,
                                     med = FALSE,
                                     lpl = FALSE,
                                     mcmc = TRUE,
+                                    use_fit = TRUE,
                                     verbose = FALSE, ...) {
-  fit_record <- get_bmar_records(object, TRUE)
+  fit_record <- list()
+  if (use_fit) {
+    fit_record <- get_bmar_records(object, TRUE)
+  }
   nrow_data <- dim(object$y)[1]
   ncol_data <- dim(object$y)[2]
   num_data <- dim(object$y)[3]
@@ -498,7 +508,7 @@ forecast_roll.mdfmbayes <- function(object, n_ahead, y_test,
     row_prior = row_prior, row_init = object$init$row, row_prior_type = get_prior_id(object$spec$row$prior),
     col_prior = col_prior, col_init = object$init$col, col_prior_type = get_prior_id(object$spec$col$prior),
     factor_rows = nrow_factor, factor_cols = ncol_factor, factor_lag = factor_lag,
-    step = n_ahead, y_test = do.call(rbind, y_test_list), get_lpl = lpl,
+    step = n_ahead, y_test = do.call(rbind, y_test_list), get_lpl = lpl, use_fit = use_fit,
     seed_chain = sample.int(.Machine$integer.max, size = object$chain * num_horizon) |> matrix(ncol = object$chain),
     seed_forecast = sample.int(.Machine$integer.max, size = object$chain),
     display_progress = verbose,
@@ -571,6 +581,7 @@ forecast_roll.mdfmbayes <- function(object, n_ahead, y_test,
 #' @param med `r lifecycle::badge("experimental")` If `TRUE`, use median of forecast draws instead of mean (default).
 #' @param lpl `r lifecycle::badge("experimental")` Compute log-predictive likelihood (LPL). By default, `FALSE`.
 #' @param mcmc `r lifecycle::badge("experimental")` If `TRUE`, run new MCMC in new windows. By default, `TRUE`.
+#' @param use_fit `r lifecycle::badge("experimental")` Use `object` result for the first window. By default, `TRUE`.
 #' @param verbose Print the progress bar in the console. By default, `FALSE`.
 #' @param ... Additional arguments
 #' @exportS3Method bvhar::forecast_expand
@@ -581,8 +592,12 @@ forecast_expand.marbayes <- function(object, n_ahead, y_test,
                                      med = FALSE,
                                      lpl = FALSE,
                                      mcmc = TRUE,
+                                     use_fit = TRUE,
                                      verbose = FALSE, ...) {
-  fit_record <- get_bmar_records(object, TRUE)
+  fit_record <- list()
+  if (use_fit) {
+    fit_record <- get_bmar_records(object, TRUE)
+  }
   nrow_data <- dim(object$y)[1]
   ncol_data <- dim(object$y)[2]
   num_data <- dim(object$y)[3]
@@ -685,7 +700,7 @@ forecast_expand.marbayes <- function(object, n_ahead, y_test,
       factor_row_prior = row_factor_prior, factor_row_init = row_factor_init, factor_row_prior_type = row_factor_prior_type, factor_rows = nrow_factor,
       factor_col_prior = col_factor_prior, factor_col_init = col_factor_init, factor_col_prior_type = col_factor_prior_type, factor_cols = ncol_factor,
       factor_lag = factor_lag,
-      step = n_ahead, y_test = do.call(rbind, y_test_list), get_lpl = lpl,
+      step = n_ahead, y_test = do.call(rbind, y_test_list), get_lpl = lpl, use_fit = use_fit,
       seed_chain = sample.int(.Machine$integer.max, size = object$chain * num_horizon) |> matrix(ncol = object$chain),
       seed_forecast = sample.int(.Machine$integer.max, size = object$chain),
       display_progress = verbose,
@@ -715,7 +730,7 @@ forecast_expand.marbayes <- function(object, n_ahead, y_test,
       factor_row_prior = row_factor_prior, factor_row_init = row_factor_init, factor_row_prior_type = row_factor_prior_type, factor_rows = nrow_factor,
       factor_col_prior = col_factor_prior, factor_col_init = col_factor_init, factor_col_prior_type = col_factor_prior_type, factor_cols = ncol_factor,
       factor_lag = factor_lag,
-      step = n_ahead, y_test = do.call(rbind, y_test_list), get_lpl = lpl,
+      step = n_ahead, y_test = do.call(rbind, y_test_list), get_lpl = lpl, use_fit = use_fit,
       seed_chain = sample.int(.Machine$integer.max, size = object$chain * num_horizon) |> matrix(ncol = object$chain),
       seed_forecast = sample.int(.Machine$integer.max, size = object$chain),
       display_progress = verbose,
@@ -789,6 +804,7 @@ forecast_expand.marbayes <- function(object, n_ahead, y_test,
 #' @param med `r lifecycle::badge("experimental")` If `TRUE`, use median of forecast draws instead of mean (default).
 #' @param lpl `r lifecycle::badge("experimental")` Compute log-predictive likelihood (LPL). By default, `FALSE`.
 #' @param mcmc `r lifecycle::badge("experimental")` If `TRUE`, run new MCMC in new windows. By default, `TRUE`.
+#' @param use_fit `r lifecycle::badge("experimental")` Use `object` result for the first window. By default, `TRUE`.
 #' @param verbose Print the progress bar in the console. By default, `FALSE`.
 #' @param ... Additional arguments
 #' @exportS3Method bvhar::forecast_expand
@@ -799,8 +815,12 @@ forecast_expand.mdfmbayes <- function(object, n_ahead, y_test,
                                       med = FALSE,
                                       lpl = FALSE,
                                       mcmc = TRUE,
+                                      use_fit = TRUE,
                                       verbose = FALSE, ...) {
-  fit_record <- get_bmar_records(object, TRUE)
+  fit_record <- list()
+  if (use_fit) {
+    fit_record <- get_bmar_records(object, TRUE)
+  }
   nrow_data <- dim(object$y)[1]
   ncol_data <- dim(object$y)[2]
   num_data <- dim(object$y)[3]
@@ -862,7 +882,7 @@ forecast_expand.mdfmbayes <- function(object, n_ahead, y_test,
     row_prior = row_prior, row_init = object$init$row, row_prior_type = get_prior_id(object$spec$row$prior),
     col_prior = col_prior, col_init = object$init$col, col_prior_type = get_prior_id(object$spec$col$prior),
     factor_rows = nrow_factor, factor_cols = ncol_factor, factor_lag = factor_lag,
-    step = n_ahead, y_test = do.call(rbind, y_test_list), get_lpl = lpl,
+    step = n_ahead, y_test = do.call(rbind, y_test_list), get_lpl = lpl, use_fit = use_fit,
     seed_chain = sample.int(.Machine$integer.max, size = object$chain * num_horizon) |> matrix(ncol = object$chain),
     seed_forecast = sample.int(.Machine$integer.max, size = object$chain),
     display_progress = verbose,
