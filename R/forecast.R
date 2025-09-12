@@ -229,6 +229,14 @@ forecast_roll.marbayes <- function(object, n_ahead, y_test,
   num_data <- dim(object$y)[3]
   nrow_row_coef <- nrow_data * object$p
   nrow_col_coef <- ncol_data * object$p
+  is_full <- is.numeric(y_test) && length(y_test) == 1
+  if (is_full) {
+    num_test <- y_test
+    num_data <- num_data - num_test
+    y_test <- object$y[, , (num_data + 1):(num_data + num_test)]
+    object$y <- object$y[, , seq_len(num_data)]
+    use_fit <- FALSE
+  }
   num_test <- dim(y_test)[3]
   y_list <- lapply(seq_len(num_data), function(x) object$y[, , x])
   y_test_list <- lapply(seq_len(num_test), function(x) y_test[, , x])
@@ -288,6 +296,10 @@ forecast_roll.marbayes <- function(object, n_ahead, y_test,
   }
   is_exogen <- !is.null(eval.parent(object$call$exogen))
   if (is_exogen) {
+    if (is_full) {
+      newxreg <- object$exogen_data[, , (num_data + 1):(num_data + num_test)]
+      object$exogen_data <- object$exogen_data[, , seq_len(num_data)]
+    }
     newxreg_list <- validate_newxmat(newxreg = newxreg, n_ahead = num_test)
     exogen_row_prior <- validate_bmar_prior(object$spec$exogen_row)
     exogen_col_prior <- validate_bmar_prior(object$spec$exogen_col)
@@ -455,6 +467,14 @@ forecast_roll.mdfmbayes <- function(object, n_ahead, y_test,
   factor_lag <- object$spec$factor$lag
   # nrow_row_coef <- nrow_data * object$p
   # nrow_col_coef <- ncol_data * object$p
+  is_full <- is.numeric(y_test) && length(y_test) == 1
+  if (is_full) {
+    num_test <- y_test
+    num_data <- num_data - num_test
+    y_test <- object$y[, , (num_data + 1):(num_data + num_test)]
+    object$y <- object$y[, , seq_len(num_data)]
+    use_fit <- FALSE
+  }
   num_test <- dim(y_test)[3]
   y_list <- lapply(seq_len(num_data), function(x) object$y[, , x])
   y_test_list <- lapply(seq_len(num_test), function(x) y_test[, , x])
@@ -603,6 +623,14 @@ forecast_expand.marbayes <- function(object, n_ahead, y_test,
   num_data <- dim(object$y)[3]
   nrow_row_coef <- nrow_data * object$p
   nrow_col_coef <- ncol_data * object$p
+  is_full <- is.numeric(y_test) && length(y_test) == 1
+  if (is_full) {
+    num_test <- y_test
+    num_data <- num_data - num_test
+    y_test <- object$y[, , (num_data + 1):(num_data + num_test)]
+    object$y <- object$y[, , seq_len(num_data)]
+    use_fit <- FALSE
+  }
   num_test <- dim(y_test)[3]
   y_list <- lapply(seq_len(num_data), function(x) object$y[, , x])
   y_test_list <- lapply(seq_len(num_test), function(x) y_test[, , x])
@@ -662,6 +690,10 @@ forecast_expand.marbayes <- function(object, n_ahead, y_test,
   }
   is_exogen <- !is.null(eval.parent(object$call$exogen))
   if (is_exogen) {
+    if (is_full) {
+      newxreg <- object$exogen_data[, , (num_data + 1):(num_data + num_test)]
+      object$exogen_data <- object$exogen_data[, , seq_len(num_data)]
+    }
     newxreg_list <- validate_newxmat(newxreg = newxreg, n_ahead = num_test)
     exogen_row_prior <- validate_bmar_prior(object$spec$exogen_row)
     exogen_col_prior <- validate_bmar_prior(object$spec$exogen_col)
@@ -829,6 +861,14 @@ forecast_expand.mdfmbayes <- function(object, n_ahead, y_test,
   factor_lag <- object$spec$factor$lag
   # nrow_row_coef <- nrow_data * object$p
   # nrow_col_coef <- ncol_data * object$p
+  is_full <- is.numeric(y_test) && length(y_test) == 1
+  if (is_full) {
+    num_test <- y_test
+    num_data <- num_data - num_test
+    y_test <- object$y[, , (num_data + 1):(num_data + num_test)]
+    object$y <- object$y[, , seq_len(num_data)]
+    use_fit <- FALSE
+  }
   num_test <- dim(y_test)[3]
   y_list <- lapply(seq_len(num_data), function(x) object$y[, , x])
   y_test_list <- lapply(seq_len(num_test), function(x) y_test[, , x])
