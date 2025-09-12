@@ -567,6 +567,20 @@ BEGIN_RCPP
     return rcpp_result_gen;
 END_RCPP
 }
+// ar_ols_sd
+double ar_ols_sd(Eigen::MatrixXd y, int p, bool include_mean, double penalty);
+RcppExport SEXP _baymar_ar_ols_sd(SEXP ySEXP, SEXP pSEXP, SEXP include_meanSEXP, SEXP penaltySEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< Eigen::MatrixXd >::type y(ySEXP);
+    Rcpp::traits::input_parameter< int >::type p(pSEXP);
+    Rcpp::traits::input_parameter< bool >::type include_mean(include_meanSEXP);
+    Rcpp::traits::input_parameter< double >::type penalty(penaltySEXP);
+    rcpp_result_gen = Rcpp::wrap(ar_ols_sd(y, p, include_mean, penalty));
+    return rcpp_result_gen;
+END_RCPP
+}
 
 static const R_CallMethodDef CallEntries[] = {
     {"_baymar_estimate_bmdfm", (DL_FUNC) &_baymar_estimate_bmdfm, 17},
@@ -587,6 +601,7 @@ static const R_CallMethodDef CallEntries[] = {
     {"_baymar_sim_mdfm_vec_t_process", (DL_FUNC) &_baymar_sim_mdfm_vec_t_process, 12},
     {"_baymar_sim_famar_vec_process", (DL_FUNC) &_baymar_sim_famar_vec_process, 15},
     {"_baymar_sim_famar_vec_t_process", (DL_FUNC) &_baymar_sim_famar_vec_t_process, 16},
+    {"_baymar_ar_ols_sd", (DL_FUNC) &_baymar_ar_ols_sd, 4},
     {NULL, NULL, 0}
 };
 

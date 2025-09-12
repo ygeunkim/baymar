@@ -91,3 +91,8 @@ sim_famar_vec_t_process <- function(num_sim, num_burn, lag, init, row_coef, col_
     .Call(`_baymar_sim_famar_vec_t_process`, num_sim, num_burn, lag, init, row_coef, col_coef, sigma, omega, nu, factor_lag, factor_init, factor_row_coef, factor_col_coef, factor_coef, factor_sig, seed)
 }
 
+#' @noRd
+ar_ols_sd <- function(y, p, include_mean, penalty) {
+    .Call(`_baymar_ar_ols_sd`, y, p, include_mean, penalty)
+}
+
