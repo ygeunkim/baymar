@@ -110,6 +110,18 @@ private:
 	double nu;
 };
 
+inline std::unique_ptr<MatErrorGenerator> initialize_materrorgenerator(
+	const Eigen::MatrixXd& error_sig_row, const Eigen::MatrixXd& error_sig_col,
+	unsigned int seed,
+	BVHAR_OPTIONAL<double> t_nu = BVHAR_NULLOPT
+) {
+	Eigen::MatrixXd error_mean = Eigen::MatrixXd::Zero(error_sig_row.cols(), error_sig_col.cols());
+	if (t_nu) {
+		return std::make_unique<MatStudentErrorGenerator>(error_mean, error_sig_row, error_sig_col, *t_nu, seed);
+	}
+	return std::make_unique<MatGaussianErrorGenerator>(error_mean, error_sig_row, error_sig_col, seed);
+}
+
 } // namespace baymar
 
 #endif // BAYMAR_CORE_FORECASTER_H

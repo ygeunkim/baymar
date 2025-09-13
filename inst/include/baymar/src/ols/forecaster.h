@@ -21,6 +21,9 @@ public:
 		num_row(row_coef.cols()), num_col(col_coef.cols()),
 		row_coef(row_coef), col_coef(col_coef) {
 		initLagged();
+		if (exogen_forecaster) {
+			exogen_updater = std::move(*exogen_forecaster);
+		}
 		if (dgp_updater) {
 			error_updater = std::move(*dgp_updater);
 		}

@@ -22,8 +22,7 @@ public:
 		unsigned int seed
 	)
 	: num_iter(num_iter), num_burn(num_burn), num_row(row_coef.cols()), res(num_iter) {
-		Eigen::MatrixXd error_mean = Eigen::MatrixXd::Zero(num_row, col_coef.cols());
-		auto dgp_updater = std::make_unique<MatGaussianErrorGenerator>(error_mean, row_sig, col_sig, seed);
+		auto dgp_updater = initialize_materrorgenerator(row_sig, col_sig, seed);
 		generator = std::make_unique<MarForecaster>(num_iter + num_burn, init, lag, row_coef, col_coef, BVHAR_NULLOPT, std::move(dgp_updater));
 	}
 
@@ -36,8 +35,7 @@ public:
 		unsigned int seed
 	)
 	: num_iter(num_iter), num_burn(num_burn), num_row(row_coef.cols()), res(num_iter) {
-		Eigen::MatrixXd error_mean = Eigen::MatrixXd::Zero(num_row, col_coef.cols());
-		auto dgp_updater = std::make_unique<MatStudentErrorGenerator>(error_mean, t_sig, t_omega, t_nu, seed);
+		auto dgp_updater = initialize_materrorgenerator(t_sig, t_omega, seed, t_nu);
 		generator = std::make_unique<MarForecaster>(num_iter + num_burn, init, lag, row_coef, col_coef, BVHAR_NULLOPT, std::move(dgp_updater));
 	}
 	
