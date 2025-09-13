@@ -17,29 +17,28 @@ namespace baymar {
 // }
 
 inline void horseshoe_sparsity(
-	Eigen::Ref<Eigen::VectorXd> local_sparsity, double& global_sparsity, Eigen::Ref<Eigen::VectorXd> prec,
+	Eigen::Ref<Eigen::VectorXd> local_sparsity, double& global_sparsity,
 	Eigen::Ref<Eigen::MatrixXd> coef, Eigen::Ref<Eigen::MatrixXd> sig_lower,
 	Eigen::Ref<Eigen::VectorXd> local_latent, double& global_latent,
 	BVHAR_BHRNG& rng
 ) {
-	global_latent = 1 / bvhar::gamma_rand(1.0, 1 / (1 + 1 / global_sparsity), rng);
+	global_latent = bvhar::gamma_rand(1.0, 1 / (1 + global_sparsity), rng);
 	int col_coef = coef.cols();
 	Eigen::MatrixXd inv_sig_coef = sig_lower.triangularView<Eigen::Lower>().solve(coef.transpose());
 	Eigen::VectorXd prod = (inv_sig_coef.transpose() * inv_sig_coef).diagonal();
-	global_sparsity = 1 / bvhar::gamma_rand(
+	global_sparsity = bvhar::gamma_rand(
 		(col_coef + 1) / 2,
-		1 / (1 / global_latent + (prod.array() / local_sparsity.array()).sum() / 2),
+		1 / (global_latent + (prod.array() * local_sparsity.array()).sum() / 2),
 		rng
 	);
 	for (int i = 0; i < local_sparsity.size(); ++i) {
-		local_latent[i] = 1 / bvhar::gamma_rand(1.0, 1 / (1 + 1 / local_sparsity[i]), rng);
-		local_sparsity[i] = 1 / bvhar::gamma_rand(
+		local_latent[i] = bvhar::gamma_rand(1.0, 1 / (1 + local_sparsity[i]), rng);
+		local_sparsity[i] = bvhar::gamma_rand(
 			1.0,
-			1 / (1 / local_latent[i] + prod[i] / (2 * global_sparsity)),
+			1 / (local_latent[i] + 2 * prod[i] * global_sparsity),
 			rng
 		);
 	}
-	prec = 1 / (global_sparsity * local_sparsity.array());
 	// group
 }
 
