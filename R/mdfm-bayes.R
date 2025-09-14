@@ -102,15 +102,23 @@ mdfm_bayes <- function(y,
   )
   param_prior$row_prior_prec <- rep(1, nrow_factor)
   param_prior$col_prior_prec <- rep(1, ncol_factor)
-  param_init <- get_bmdfm_coef_init(
+  param_init <- get_bmar_coef_init(
     num_chains = num_chains,
     nrow_data = nrow_data,
     ncol_data = ncol_data,
     nrow_row_coef = nrow_row_coef,
-    nrow_col_coef = nrow_col_coef,
-    size_factor = size_factor,
-    factor_lag = lag_factor
+    nrow_col_coef = nrow_col_coef
   )
+  param_init <- get_bmdfm_coef_init(param_init, size_factor, lag_factor)
+  # param_init <- get_bmdfm_coef_init(
+  #   num_chains = num_chains,
+  #   nrow_data = nrow_data,
+  #   ncol_data = ncol_data,
+  #   nrow_row_coef = nrow_row_coef,
+  #   nrow_col_coef = nrow_col_coef,
+  #   size_factor = size_factor,
+  #   factor_lag = lag_factor
+  # )
   row_prior <- validate_bmar_prior(row_spec)
   col_prior <- validate_bmar_prior(col_spec)
   row_init <- get_bmar_init(row_spec, num_chains, nrow_row_coef)

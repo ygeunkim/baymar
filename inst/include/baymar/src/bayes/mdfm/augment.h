@@ -155,6 +155,19 @@ private:
 	Eigen::VectorXd prior_mean, prior_prec;
 };
 
+inline std::unique_ptr<MatFactorAugmenter> initialize_factoraugmenter(
+	int num_iter, int num_design,
+	BVHAR_LIST& param_prior, BVHAR_LIST& param_init
+) {
+	std::unique_ptr<MatFactorAugmenter> augmenter_ptr;
+	// MatDfmVarParams dfm_params(*factor_lag, *nrow_factor, *ncol_factor);
+	// MatDfmVarInits dfm_inits((*nrow_factor) * (*ncol_factor), *factor_lag);
+	MatDfmVarParams params(param_prior);
+	MatDfmVarInits inits(param_init);
+	augmenter_ptr = std::make_unique<MatFactorVarAugmenter>(num_iter, num_design, params, inits);
+	return augmenter_ptr;
+}
+
 } // namespace baymar
 
 #endif // BAYMAR_BAYES_MDFM_AUGMENT_H

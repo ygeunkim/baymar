@@ -293,9 +293,11 @@ inline std::vector<std::unique_ptr<McmcMatMniw>> initialize_matmcmc(
 		}
 		if (nrow_factor) {
 			// famar_updater = std::make_unique<MatFactorVarAugmenter>(num_iter, y.size(), *factor_lag, *nrow_factor, *ncol_factor);
-			MatDfmVarParams dfm_params(*factor_lag, *nrow_factor, *ncol_factor);
-			MatDfmVarInits dfm_inits((*nrow_factor) * (*ncol_factor), *factor_lag);
-			famar_updater = std::make_unique<MatFactorVarAugmenter>(num_iter, y.size(), dfm_params, dfm_inits);
+			// MatDfmVarParams dfm_params(*factor_lag, *nrow_factor, *ncol_factor);
+			// MatDfmVarInits dfm_inits((*nrow_factor) * (*ncol_factor), *factor_lag);
+			// famar_updater = std::make_unique<MatFactorVarAugmenter>(num_iter, y.size(), dfm_params, dfm_inits);
+			// BVHAR_LIST dfm_init_spec = coef_sig_init[i];
+			famar_updater = initialize_factoraugmenter(num_iter, y.size(), param_coef_sig, init_spec);
 		}
 		mcmc_ptr[i] = std::make_unique<McmcMatMniw>(
 			params, inits, row_updater, col_updater, static_cast<unsigned int>(seed_chain[i]),

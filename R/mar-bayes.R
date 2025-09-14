@@ -216,6 +216,7 @@ mar_bayes <- function(y,
     col_exogen_init <- get_bmar_init(exogen_col_spec, num_chains, nrow_exogen_col_coef)
   }
   if (is_famar) {
+    factor_spec <- validate_factor_spec(factor_spec)
     row_factor_prior <- validate_bmar_prior(factor_row_spec)
     col_factor_prior <- validate_bmar_prior(factor_col_spec)
     row_factor_prior_type <- get_prior_id(factor_row_spec$prior)
@@ -242,6 +243,32 @@ mar_bayes <- function(y,
     name_factor_col <- paste("factor_col", seq_len(ncol_factor), sep = "_")
     name_row_lag <- c(name_row_lag, name_factor_row)
     name_col_lag <- c(name_col_lag, name_factor_col)
+    # param_init <- lapply(
+    #   param_init,
+    #   function(init) {
+    #     size_factor <- nrow_factor * ncol_factor
+    #     append(
+    #       init,
+    #       list(
+    #         factor_arcoef_init = matrix(runif(size_factor * lag_factor, -1, 1), ncol = lag_factor),
+    #         factor_arprec_init = exp(runif(size_factor, -1, 0))
+    #       )
+    #     )
+    #   }
+    # )
+    size_factor <- nrow_factor * ncol_factor
+    param_prior <- append(
+      param_prior,
+      list(
+        nrow_factor = nrow_factor,
+        ncol_factor = ncol_factor,
+        size_factor = size_factor,
+        lag = lag_factor,
+        shape = factor_spec$arsig$shape,
+        scale = factor_spec$arsig$scale
+      )
+    )
+    param_init <- get_bmdfm_coef_init(param_init, size_factor, lag_factor)
   }
   res <- estimate_bmar_mniw(
     num_chains = num_chains, num_iter = num_iter, num_burn = num_burn, thin = thinning,

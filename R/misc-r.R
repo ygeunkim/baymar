@@ -170,7 +170,8 @@ get_empty_init <- function(num_chains) {
   lapply(
     seq_len(num_chains),
     function(init) {
-      append(init, list())
+      # append(init, list())
+      list()
     }
   )
 }
@@ -180,12 +181,13 @@ get_mat_minn_init <- function(num_chains) {
   lapply(
     seq_len(num_chains),
     function(init) {
-      append(
-        init,
-        list(
-          kappa = runif(1, 0, 1)
-        )
-      )
+      # append(
+      #   init,
+      #   list(
+      #     kappa = runif(1, 0, 1)
+      #   )
+      # )
+      list(kappa = runif(1, 0, 1))
     }
   )
 }
@@ -195,12 +197,16 @@ get_mat_hs_init <- function(num_chains, nrow_coef) {
   lapply(
     seq_len(num_chains),
     function(init) {
-      append(
-        init,
-        list(
-          local_sparsity = exp(runif(nrow_coef, -1, 1)),
-          global_sparsity = runif(1, 0, 1)
-        )
+      # append(
+      #   init,
+      #   list(
+      #     local_sparsity = exp(runif(nrow_coef, -1, 1)),
+      #     global_sparsity = runif(1, 0, 1)
+      #   )
+      # )
+      list(
+        local_sparsity = exp(runif(nrow_coef, -1, 1)),
+        global_sparsity = runif(1, 0, 1)
       )
     }
   )
@@ -223,21 +229,35 @@ get_bmar_init <- function(bayes_spec, num_chains, nrow_coef) {
 }
 
 #' @noRd
-get_bmdfm_coef_init <- function(num_chains, nrow_data, ncol_data, nrow_row_coef, nrow_col_coef, size_factor, factor_lag) {
+get_bmdfm_coef_init <- function(param_init, size_factor, factor_lag) {
   lapply(
-    seq_len(num_chains),
+    param_init,
     function(init) {
-      list(
-        row_init_coef = matrix(runif(nrow_row_coef * nrow_data, -1, 1), ncol = nrow_data),
-        row_init_lower = diag(exp(runif(nrow_data, -1, 0))),
-        col_init_coef = matrix(runif(nrow_col_coef * ncol_data, -1, 1), ncol = ncol_data),
-        col_init_lower = diag(exp(runif(ncol_data, -1, 0))),
-        factor_arcoef_init = matrix(runif(size_factor * factor_lag, -1, 1), ncol = factor_lag),
-        factor_arprec_init = exp(runif(size_factor, -1, 0))
+      append(
+        init,
+        list(
+          factor_arcoef_init = matrix(runif(size_factor * factor_lag, -1, 1), ncol = factor_lag),
+          factor_arprec_init = exp(runif(size_factor, -1, 0))
+        )
       )
     }
   )
 }
+# get_bmdfm_coef_init <- function(num_chains, nrow_data, ncol_data, nrow_row_coef, nrow_col_coef, size_factor, factor_lag) {
+#   lapply(
+#     seq_len(num_chains),
+#     function(init) {
+#       list(
+#         row_init_coef = matrix(runif(nrow_row_coef * nrow_data, -1, 1), ncol = nrow_data),
+#         row_init_lower = diag(exp(runif(nrow_data, -1, 0))),
+#         col_init_coef = matrix(runif(nrow_col_coef * ncol_data, -1, 1), ncol = ncol_data),
+#         col_init_lower = diag(exp(runif(ncol_data, -1, 0))),
+#         factor_arcoef_init = matrix(runif(size_factor * factor_lag, -1, 1), ncol = factor_lag),
+#         factor_arprec_init = exp(runif(size_factor, -1, 0))
+#       )
+#     }
+#   )
+# }
 
 #' Validate coefficient and covariance
 #'
