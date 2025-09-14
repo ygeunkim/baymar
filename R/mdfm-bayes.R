@@ -16,7 +16,7 @@
 #' @order 1
 #' @export
 mdfm_bayes <- function(y,
-                       factor_spec = set_factor(),
+                       factor_spec = set_matfactor(),
                        num_chains = 1,
                        num_iter = 1000,
                        num_burn = floor(num_iter / 2),

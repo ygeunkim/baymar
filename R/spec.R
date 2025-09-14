@@ -91,7 +91,7 @@ is.mathsspec <- function(x) {
 #'
 #' @order 1
 #' @export
-set_factor <- function(nrow_factor = 0, ncol_factor = 0, factor_lag = 1, factor_arsig = set_ldlt()) {
+set_matfactor <- function(nrow_factor = 0, ncol_factor = 0, factor_lag = 1, factor_arsig = set_ldlt()) {
   if (factor_lag <= 0 || factor_lag %% 1 != 0) {
     stop("'factor_lag' positive integer.")
   }
@@ -106,13 +106,13 @@ set_factor <- function(nrow_factor = 0, ncol_factor = 0, factor_lag = 1, factor_
     # shape = factor_arsig$shape,
     # scale = factor_arsig$scale
   )
-  class(res) <- "factorspec"
+  class(res) <- "matfactorspec"
   res
 }
 
-#' @rdname set_factor
+#' @rdname set_matfactor
 #' @param x Any object
 #' @export
-is.factorspec <- function(x) {
-  inherits(x, "factorspec")
+is.matfactorspec <- function(x) {
+  inherits(x, "matfactorspec")
 }
