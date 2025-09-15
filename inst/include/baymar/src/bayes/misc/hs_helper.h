@@ -35,7 +35,7 @@ inline void horseshoe_sparsity(
 		local_latent[i] = bvhar::gamma_rand(1.0, 1 / (1 + local_sparsity[i]), rng);
 		local_sparsity[i] = bvhar::gamma_rand(
 			1.0,
-			1 / (local_latent[i] + 2 * prod[i] * global_sparsity),
+			1 / (local_latent[i] + prod[i] * global_sparsity / 2),
 			rng
 		);
 	}
