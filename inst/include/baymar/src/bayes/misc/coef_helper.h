@@ -49,17 +49,17 @@ inline void draw_coef_sig(
 		post_solve += inv_sig_coef_x.transpose() * inv_sig_y;
 		post_iw_scl += inv_sig_y.transpose() * inv_sig_y;
 	}
-	Eigen::LLT<Eigen::MatrixXd> llt_of_prec(post_cov.selfadjointView<Eigen::Lower>());
-	double temp_penalty = .0001;
+	Eigen::LLT<Eigen::MatrixXd> llt_of_prec;
+	double temp_penalty = 0;
 	do {
 		llt_of_prec.compute((
 			post_cov + temp_penalty * Eigen::MatrixXd::Identity(post_cov.rows(), post_cov.cols())
 		).selfadjointView<Eigen::Lower>());
 		// post_cov.diagonal().array() += temp_penalty;
 		// llt_of_prec.compute(post_cov.selfadjointView<Eigen::Lower>());
-		temp_penalty *= 2;
-	} while (llt_of_prec.info() != Eigen::Success && temp_penalty < .1);
-	if (llt_of_prec.info() != Eigen::Success) {
+		temp_penalty += .01;
+	} while (llt_of_prec.info() == Eigen::NumericalIssue && temp_penalty < .1);
+	if (llt_of_prec.info() == Eigen::NumericalIssue) {
 		eigen_assert("LLT failed in precision sampler.");
 	}
 	Eigen::MatrixXd post_mean = llt_of_prec.solve(post_solve);
