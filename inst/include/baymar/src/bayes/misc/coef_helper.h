@@ -72,6 +72,31 @@ inline void draw_coef_sig(
 		}
 	}
 	coef = llt_of_prec.matrixU().solve(coef * sig_lower.transpose()) + post_mean;
+	// Indentifiability restriction
+	// M = e_k^T otimes (I_p otimes e_k^T) = M_1 otimes M_2
+	// B = B_u + V_1 (B_0 - M_2 B_u M_1^T) V_2^T
+	// V_1 = K_B^{-1} M_2^T (M_2 K_B^{-1} M_2^T)^{-1}
+	// V_2 = Sigma_c M_1^T (M_1 Sigma_c M_1^T)^{-1}
+	if (!is_row::value) {
+		int num_col = prior_mean.cols();
+		int lag = prior_mean.rows() / num_col; // when B = (B_1, ..., B_p)^T
+		Eigen::MatrixXd left_map = Eigen::VectorXd::Unit(num_col, 0).transpose();
+		Eigen::MatrixXd right_map = Eigen::KroneckerProduct(Eigen::MatrixXd::Identity(lag, lag), left_map).eval();
+		// Eigen::SparseMatrix<double> left_map = Eigen::VectorXd::Unit(num_col, 0).transpose().sparseView();;
+		// Eigen::SparseMatrix<double> right_map = Eigen::KroneckerProduct(Eigen::MatrixXd::Identity(lag, lag), left_map).eval().sparseView();
+		Eigen::MatrixXd v2_inv = left_map * sig_lower;
+		Eigen::LLT<Eigen::MatrixXd> v2_llt(v2_inv * v2_inv.transpose());
+		// Eigen::MatrixXd v1_inv = llt_of_prec.matrixL().solve(right_map.transpose().toDense());
+		Eigen::MatrixXd v1_inv = llt_of_prec.matrixL().solve(right_map.transpose());
+		Eigen::LLT<Eigen::MatrixXd> v1_llt(v1_inv.transpose() * v1_inv);
+		Eigen::MatrixXd V1_trans = llt_of_prec.matrixL().solve<Eigen::OnTheRight>(v1_llt.solve(v1_inv.transpose()));
+		Eigen::MatrixXd V2_trans = v2_llt.solve(v2_inv * sig_lower.transpose());
+		coef += V1_trans.transpose() * (Eigen::VectorXd::Ones(lag) - right_map * coef * left_map.transpose()) * V2_trans;
+		// The following is slow when matrix is large
+		// coef += llt_of_prec.matrixU().solve(v1_inv * v1_llt.solve(
+		// 	(Eigen::VectorXd::Ones(lag) - right_map * coef * left_map.transpose()) * v2_llt.solve(v2_inv * sig_lower.transpose())
+		// ));
+	}
 }
 
 } // namespace baymar
