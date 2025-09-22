@@ -25,9 +25,9 @@ namespace baymar {
 template <bool isRow = true, typename xType = Eigen::SparseMatrix<double>>
 inline void draw_coef_sig(
 	Eigen::Ref<Eigen::MatrixXd> coef, Eigen::Ref<Eigen::MatrixXd> sig_lower,
-	Eigen::Ref<Eigen::MatrixXd> other_coef, Eigen::Ref<Eigen::MatrixXd> other_sig_lower,
-	Eigen::Ref<Eigen::MatrixXd> prior_mean, Eigen::Ref<Eigen::VectorXd> prior_prec,
-	Eigen::Ref<Eigen::MatrixXd> iw_scl,
+	Eigen::Ref<const Eigen::MatrixXd> other_coef, Eigen::Ref<const Eigen::MatrixXd> other_sig_lower,
+	Eigen::Ref<const Eigen::MatrixXd> prior_mean, Eigen::Ref<const Eigen::VectorXd> prior_prec,
+	Eigen::Ref<const Eigen::MatrixXd> iw_scl,
 	double iw_df, int num_mat, int other_dim,
 	const std::vector<xType>& x, const std::vector<Eigen::MatrixXd>& y,
 	BVHAR_BHRNG& rng
@@ -78,6 +78,7 @@ inline void draw_coef_sig(
 	// V_1 = K_B^{-1} M_2^T (M_2 K_B^{-1} M_2^T)^{-1}
 	// V_2 = Sigma_c M_1^T (M_1 Sigma_c M_1^T)^{-1}
 	if (!is_row::value) {
+	// if (!is_row::value && std::is_same<xType, Eigen::SparseMatrix<double>>::value) {
 		int num_col = prior_mean.cols();
 		int lag = prior_mean.rows() / num_col; // when B = (B_1, ..., B_p)^T
 		Eigen::MatrixXd left_map = Eigen::VectorXd::Unit(num_col, 0).transpose();
