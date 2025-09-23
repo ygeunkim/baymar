@@ -191,24 +191,24 @@ protected:
 
 	void updateCoefCov() {
 		BVHAR_DEBUG_LOG(debug_logger, "updateCoefCov() called");
-		// draw_coef_sig<true>(
-		// 	row_coef.topRows(nrow_row_coef + nrow_row_exogen), row_sig_lower,
-		// 	col_coef.topRows(nrow_col_coef + nrow_col_exogen), col_sig_lower,
-		// 	row_prior_mean.topRows(nrow_row_coef + nrow_row_exogen),
-		// 	row_prior_prec.head(nrow_row_coef + nrow_row_exogen),
-		// 	row_iw_scl, row_iw_df,
-		// 	num_design, num_col,
-		// 	x, y, rng
-		// );
-		// draw_coef_sig<false>(
-		// 	col_coef.topRows(nrow_col_coef + nrow_col_exogen), col_sig_lower,
-		// 	row_coef.topRows(nrow_row_coef + nrow_row_exogen), row_sig_lower,
-		// 	col_prior_mean.topRows(nrow_col_coef + nrow_col_exogen),
-		// 	col_prior_prec.head(nrow_col_coef + nrow_col_exogen),
-		// 	col_iw_scl, col_iw_df,
-		// 	num_design, num_row,
-		// 	x, y, rng
-		// );
+		draw_coef_sig<true>(
+			row_coef.topRows(nrow_row_coef + nrow_row_exogen), row_sig_lower,
+			col_coef.topRows(nrow_col_coef + nrow_col_exogen), col_sig_lower,
+			row_prior_mean.topRows(nrow_row_coef + nrow_row_exogen),
+			row_prior_prec.head(nrow_row_coef + nrow_row_exogen),
+			row_iw_scl, row_iw_df,
+			num_design, num_col,
+			x, y, rng
+		);
+		draw_coef_sig<false>(
+			col_coef.topRows(nrow_col_coef + nrow_col_exogen), col_sig_lower,
+			row_coef.topRows(nrow_row_coef + nrow_row_exogen), row_sig_lower,
+			col_prior_mean.topRows(nrow_col_coef + nrow_col_exogen),
+			col_prior_prec.head(nrow_col_coef + nrow_col_exogen),
+			col_iw_scl, col_iw_df,
+			num_design, num_row,
+			x, y, rng
+		);
 		if (famar_updater) {
 			famar_updater->updateResid(
 				x, y,
@@ -219,38 +219,38 @@ protected:
 				col_coef.bottomRows(ncol_factor), col_sig_lower,
 				rng
 			);
-			famar_updater->appendDesign(x);
-			// famar_updater->updateCoefCov<true>(
-			// 	row_coef.bottomRows(nrow_factor), row_sig_lower,
-			// 	col_coef.bottomRows(ncol_factor), col_sig_lower,
-			// 	row_prior_mean.bottomRows(nrow_factor),
-			// 	row_prior_prec.tail(nrow_factor),
-			// 	row_iw_scl, row_iw_df,
-			// 	num_col, rng
-			// );
-			// famar_updater->updateCoefCov<false>(
-			// 	col_coef.bottomRows(ncol_factor), col_sig_lower,
-			// 	row_coef.bottomRows(nrow_factor), row_sig_lower,
-			// 	col_prior_mean.bottomRows(ncol_factor),
-			// 	col_prior_prec.tail(ncol_factor),
-			// 	col_iw_scl, col_iw_df,
-			// 	num_row, rng
-			// );
+			// famar_updater->appendDesign(x);
+			famar_updater->updateCoefCov<true>(
+				row_coef.bottomRows(nrow_factor), row_sig_lower,
+				col_coef.bottomRows(ncol_factor), col_sig_lower,
+				row_prior_mean.bottomRows(nrow_factor),
+				row_prior_prec.tail(nrow_factor),
+				row_iw_scl, row_iw_df,
+				num_col, rng
+			);
+			famar_updater->updateCoefCov<false>(
+				col_coef.bottomRows(ncol_factor), col_sig_lower,
+				row_coef.bottomRows(nrow_factor), row_sig_lower,
+				col_prior_mean.bottomRows(ncol_factor),
+				col_prior_prec.tail(ncol_factor),
+				col_iw_scl, col_iw_df,
+				num_row, rng
+			);
 		}
-		draw_coef_sig<true>(
-			row_coef, row_sig_lower,
-			col_coef, col_sig_lower,
-			row_prior_mean, row_prior_prec, row_iw_scl, row_iw_df,
-			num_design, num_col,
-			x, y, rng
-		);
-		draw_coef_sig<false>(
-			col_coef, col_sig_lower,
-			row_coef, row_sig_lower,
-			col_prior_mean, col_prior_prec, col_iw_scl, col_iw_df,
-			num_design, num_row,
-			x, y, rng
-		);
+		// draw_coef_sig<true>(
+		// 	row_coef, row_sig_lower,
+		// 	col_coef, col_sig_lower,
+		// 	row_prior_mean, row_prior_prec, row_iw_scl, row_iw_df,
+		// 	num_design, num_col,
+		// 	x, y, rng
+		// );
+		// draw_coef_sig<false>(
+		// 	col_coef, col_sig_lower,
+		// 	row_coef, row_sig_lower,
+		// 	col_prior_mean, col_prior_prec, col_iw_scl, col_iw_df,
+		// 	num_design, num_row,
+		// 	x, y, rng
+		// );
 	}
 
 	void updateRecords() {

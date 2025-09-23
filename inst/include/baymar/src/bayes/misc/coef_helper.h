@@ -77,8 +77,8 @@ inline void draw_coef_sig(
 	// B = B_u + V_1 (B_0 - M_2 B_u M_1^T) V_2^T
 	// V_1 = K_B^{-1} M_2^T (M_2 K_B^{-1} M_2^T)^{-1}
 	// V_2 = Sigma_c M_1^T (M_1 Sigma_c M_1^T)^{-1}
-	if (!is_row::value) {
-	// if (!is_row::value && std::is_same<xType, Eigen::SparseMatrix<double>>::value) {
+	// if (!is_row::value) {
+	if (!is_row::value && std::is_same<xType, Eigen::SparseMatrix<double>>::value) {
 		int num_col = prior_mean.cols();
 		int lag = prior_mean.rows() / num_col; // when B = (B_1, ..., B_p)^T
 		Eigen::MatrixXd left_map = Eigen::VectorXd::Unit(num_col, 0).transpose();

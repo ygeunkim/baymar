@@ -83,12 +83,12 @@ public:
 			num_design, other_dim,
 			factor_mat, resid, rng
 		);
-		// using is_row = std::integral_constant<bool, isRow>;
-		// if (is_row::value) {
-		// 	coef.leftCols(nrow_factor).setIdentity();
-		// } else {
-		// 	coef.leftCols(ncol_factor).setIdentity();
-		// }
+		using is_row = std::integral_constant<bool, isRow>;
+		if (is_row::value) {
+			coef.leftCols(nrow_factor).setIdentity();
+		} else {
+			coef.leftCols(ncol_factor).setIdentity();
+		}
 	}
 
 	template <bool isRow = true>
@@ -108,12 +108,12 @@ public:
 			num_design, other_dim,
 			factor_mat, y, rng
 		);
-		// using is_row = std::integral_constant<bool, isRow>;
-		// if (is_row::value) {
-		// 	coef.leftCols(nrow_factor).setIdentity();
-		// } else {
-		// 	coef.leftCols(ncol_factor).setIdentity();
-		// }
+		using is_row = std::integral_constant<bool, isRow>;
+		if (is_row::value) {
+			coef.leftCols(nrow_factor).setIdentity();
+		} else {
+			coef.leftCols(ncol_factor).setIdentity();
+		}
 	}
 
 	// void updateRecords(int id) override {
