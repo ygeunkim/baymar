@@ -29,7 +29,7 @@ inline void draw_coef_sig(
 	Eigen::Ref<const Eigen::MatrixXd> other_coef, Eigen::Ref<const Eigen::MatrixXd> other_sig_lower,
 	Eigen::Ref<const Eigen::MatrixXd> prior_mean, Eigen::Ref<const Eigen::VectorXd> prior_prec,
 	Eigen::Ref<const Eigen::MatrixXd> iw_scl,
-	double iw_df, int num_mat, int other_dim,
+	double iw_df, int num_mat, int other_dim, int dim_factor,
 	const std::vector<xType>& x, const std::vector<Eigen::MatrixXd>& y,
 	BVHAR_BHRNG& rng
 ) {
@@ -105,6 +105,76 @@ inline void draw_coef_sig(
 		// 	(Eigen::VectorXd::Ones(lag) - right_map * coef * left_map.transpose()) * v2_llt.solve(v2_inv * sig_lower.transpose())
 		// ));
 	}
+	if (dim_factor > 0) {
+		// R^T Q_1 = I, C^T Q_2 = I
+		int num_col = prior_mean.cols();
+		Eigen::MatrixXd project_restr = Eigen::MatrixXd::Zero(num_col, dim_factor);
+		project_restr.topRows(dim_factor).setIdentity();
+		// Eigen::MatrixXd v_inv = llt_of_prec.matrixL().solve(project_restr.transpose());
+		// Eigen::LLT<Eigen::MatrixXd> v_llt(v_inv.transpose() * v_inv);
+		// Eigen::MatrixXd V_trans = llt_of_prec.matrixL().solve<Eigen::OnTheRight>(v_llt.solve(v_inv.transpose()));
+		// coef += V_trans.transpose() * (Eigen::MatrixXd::Identity(num_col, num_col) - project_restr * coef);
+		Eigen::MatrixXd v_inv = project_restr.transpose() * sig_lower;
+		Eigen::LLT<Eigen::MatrixXd> v_llt(v_inv * v_inv.transpose());
+		Eigen::MatrixXd V_trans = v_llt.solve(v_inv * sig_lower.transpose());
+		// coef.bottomRows(dim_factor) += (Eigen::MatrixXd::Identity(num_col, num_col) - coef.bottomRows(dim_factor) * project_restr) * V_trans;
+		coef += (Eigen::MatrixXd::Identity(dim_factor, dim_factor) - coef * project_restr) * V_trans;
+	}
+}
+
+template <bool isRow = true, typename xType = Eigen::SparseMatrix<double>>
+inline void draw_coef_only(
+	Eigen::Ref<Eigen::MatrixXd> coef, Eigen::Ref<const Eigen::MatrixXd> sig_lower,
+	Eigen::Ref<const Eigen::MatrixXd> other_coef, Eigen::Ref<const Eigen::MatrixXd> other_sig_lower,
+	Eigen::Ref<const Eigen::MatrixXd> prior_mean, Eigen::Ref<const Eigen::VectorXd> prior_prec,
+	Eigen::Ref<const Eigen::MatrixXd> iw_scl,
+	double iw_df, int num_mat, int other_dim, int dim_factor,
+	const std::vector<xType>& x, const std::vector<Eigen::MatrixXd>& y,
+	BVHAR_BHRNG& rng
+) {
+	using is_row = std::integral_constant<bool, isRow>;
+	Eigen::MatrixXd post_cov = prior_prec.asDiagonal();
+	Eigen::MatrixXd post_solve = prior_prec.asDiagonal() * prior_mean;
+	Eigen::MatrixXd inv_sig_coef_x, inv_sig_y;
+	for (int i = 0; i < num_mat; ++i) {
+		if (is_row::value) {
+			inv_sig_coef_x = other_sig_lower.triangularView<Eigen::Lower>().solve(other_coef.transpose() * x[i].transpose());
+			inv_sig_y = other_sig_lower.triangularView<Eigen::Lower>().solve(y[i].transpose());
+		} else {
+			inv_sig_coef_x = other_sig_lower.triangularView<Eigen::Lower>().solve(other_coef.transpose() * x[i]);
+			inv_sig_y = other_sig_lower.triangularView<Eigen::Lower>().solve(y[i]);
+		}
+		post_cov += inv_sig_coef_x.transpose() * inv_sig_coef_x;
+		post_solve += inv_sig_coef_x.transpose() * inv_sig_y;
+	}
+	Eigen::LLT<Eigen::MatrixXd> llt_of_prec;
+	double temp_penalty = 0;
+	do {
+		llt_of_prec.compute((
+			post_cov + temp_penalty * Eigen::MatrixXd::Identity(post_cov.rows(), post_cov.cols())
+		).selfadjointView<Eigen::Lower>());
+		temp_penalty += .01;
+	} while (llt_of_prec.info() == Eigen::NumericalIssue && temp_penalty < .1);
+	if (llt_of_prec.info() == Eigen::NumericalIssue) {
+		eigen_assert("LLT failed in precision sampler.");
+	}
+	Eigen::MatrixXd post_mean = llt_of_prec.solve(post_solve);
+	for (int i = 0; i < prior_mean.rows(); ++i) {
+		for (int j = 0; j < prior_mean.cols(); ++j) {
+			coef(i, j) = bvhar::normal_rand(rng); // MN(0, I_n, I_k)
+		}
+	}
+	coef = llt_of_prec.matrixU().solve(coef * sig_lower.transpose()) + post_mean;
+	// R^T Q_1 = I, C^T Q_2 = I
+	int num_col = prior_mean.cols();
+	Eigen::MatrixXd project_restr = Eigen::MatrixXd::Zero(num_col, dim_factor);
+	project_restr.topRows(dim_factor).setIdentity();
+	// Eigen::MatrixXd v_inv = llt_of_prec.matrixL().solve(project_restr.transpose());
+	Eigen::MatrixXd v_inv = project_restr.transpose() * sig_lower;
+	Eigen::LLT<Eigen::MatrixXd> v_llt(v_inv * v_inv.transpose());
+	Eigen::MatrixXd V_trans = v_llt.solve(v_inv * sig_lower.transpose());
+	coef += (Eigen::MatrixXd::Identity(dim_factor, dim_factor) - coef * project_restr) * V_trans;
+	// coef += V_trans.transpose() * (Eigen::MatrixXd::Identity(num_col, num_col) - project_restr * coef);
 }
 
 } // namespace baymar

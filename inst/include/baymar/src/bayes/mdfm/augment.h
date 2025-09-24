@@ -76,19 +76,18 @@ public:
 		double iw_df, int other_dim,
 		BVHAR_BHRNG& rng
 	) {
-		draw_coef_sig<isRow, Eigen::MatrixXd>(
+		int dim_factor = ncol_factor;
+		using is_row = std::integral_constant<bool, isRow>;
+		if (is_row::value) {
+			dim_factor = nrow_factor;
+		}
+		draw_coef_only<isRow, Eigen::MatrixXd>(
 			coef, sig_lower,
 			other_coef, other_sig_lower,
 			prior_mean, prior_prec, iw_scl, iw_df,
-			num_design, other_dim,
+			num_design, other_dim, dim_factor,
 			factor_mat, resid, rng
 		);
-		using is_row = std::integral_constant<bool, isRow>;
-		if (is_row::value) {
-			coef.leftCols(nrow_factor).setIdentity();
-		} else {
-			coef.leftCols(ncol_factor).setIdentity();
-		}
 	}
 
 	template <bool isRow = true>
@@ -101,19 +100,18 @@ public:
 		const std::vector<Eigen::MatrixXd>& y,
 		BVHAR_BHRNG& rng
 	) {
+		int dim_factor = ncol_factor;
+		using is_row = std::integral_constant<bool, isRow>;
+		if (is_row::value) {
+			dim_factor = nrow_factor;
+		}
 		draw_coef_sig<isRow, Eigen::MatrixXd>(
 			coef, sig_lower,
 			other_coef, other_sig_lower,
 			prior_mean, prior_prec, iw_scl, iw_df,
-			num_design, other_dim,
+			num_design, other_dim, dim_factor,
 			factor_mat, y, rng
 		);
-		using is_row = std::integral_constant<bool, isRow>;
-		if (is_row::value) {
-			coef.leftCols(nrow_factor).setIdentity();
-		} else {
-			coef.leftCols(ncol_factor).setIdentity();
-		}
 	}
 
 	// void updateRecords(int id) override {
