@@ -1,7 +1,8 @@
 #ifndef BAYMAR_BAYES_MISC_COEF_HELPER_H
 #define BAYMAR_BAYES_MISC_COEF_HELPER_H
 
-#include <bvhar/utils>
+// #include <bvhar/utils>
+#include "../../math/random.h"
 #include <type_traits>
 
 namespace baymar {
@@ -65,7 +66,13 @@ inline void draw_coef_sig(
 	Eigen::MatrixXd post_mean = llt_of_prec.solve(post_solve);
 	post_iw_scl -= post_mean.transpose() * post_cov * post_mean;
 	double post_df = iw_df + num_mat * other_dim;
-	sig_lower = bvhar::sim_iw_tri(post_iw_scl, post_df, rng);
+	if (is_row::value) {
+		sig_lower = bvhar::sim_iw_tri(post_iw_scl, post_df, rng);
+	} else {
+		// Indentifiability restriction
+		// Sigma_c(1, 1) = 1
+		sig_lower = sim_iw_tri_restr(post_iw_scl, post_df, rng);
+	}
 	for (int i = 0; i < prior_mean.rows(); ++i) {
 		for (int j = 0; j < prior_mean.cols(); ++j) {
 			coef(i, j) = bvhar::normal_rand(rng); // MN(0, I_n, I_k)
