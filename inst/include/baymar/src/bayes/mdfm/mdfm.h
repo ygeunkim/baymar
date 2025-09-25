@@ -164,19 +164,31 @@ protected:
 
 	void updateCoefCov() {
 		BVHAR_DEBUG_LOG(debug_logger, "updateCoefCov() called");
-		draw_coef_sig<true, Eigen::MatrixXd>(
+		// draw_coef_sig<true, Eigen::MatrixXd>(
+		// 	row_coef, row_sig_lower,
+		// 	col_coef, col_sig_lower,
+		// 	row_prior_mean, row_prior_prec, row_iw_scl, row_iw_df,
+		// 	num_design, num_col,
+		// 	factor_updater->getFactor(), y, rng
+		// );
+		// draw_coef_sig<false, Eigen::MatrixXd>(
+		// 	col_coef, col_sig_lower,
+		// 	row_coef, row_sig_lower,
+		// 	col_prior_mean, col_prior_prec, col_iw_scl, col_iw_df,
+		// 	num_design, num_row,
+		// 	factor_updater->getFactor(), y, rng
+		// );
+		factor_updater->updateCoefCov<true>(
 			row_coef, row_sig_lower,
 			col_coef, col_sig_lower,
 			row_prior_mean, row_prior_prec, row_iw_scl, row_iw_df,
-			num_design, num_col,
-			factor_updater->getFactor(), y, rng
+			num_col, y, rng
 		);
-		draw_coef_sig<false, Eigen::MatrixXd>(
+		factor_updater->updateCoefCov<false>(
 			col_coef, col_sig_lower,
 			row_coef, row_sig_lower,
 			col_prior_mean, col_prior_prec, col_iw_scl, col_iw_df,
-			num_design, num_row,
-			factor_updater->getFactor(), y, rng
+			num_row, y, rng
 		);
 	}
 
