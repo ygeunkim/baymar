@@ -455,10 +455,10 @@ protected:
 				int nrow_exogen = exogen->rows() / (num_window + num_test);
 				exogen_data = marmatrix_to_vector(*(roll_exogen_mat[window]), nrow_exogen);
 			}
-			// int rows_factor = nrow_factor ? *nrow_factor : 0;
-			// int cols_factor = ncol_factor ? *ncol_factor : 0;
-			// std::vector<Eigen::SparseMatrix<double>> design = lag_exogen ? build_mar_design(y_data, *exogen_data, lag, *lag_exogen, rows_factor, cols_factor) : build_mar_design(y_data, lag, rows_factor, cols_factor);
-			std::vector<Eigen::SparseMatrix<double>> design = lag_exogen ? build_mar_design(y_data, *exogen_data, lag, *lag_exogen) : build_mar_design(y_data, lag);
+			int rows_factor = nrow_factor ? *nrow_factor : 0;
+			int cols_factor = ncol_factor ? *ncol_factor : 0;
+			std::vector<Eigen::SparseMatrix<double>> design = lag_exogen ? build_mar_design(y_data, *exogen_data, lag, *lag_exogen, rows_factor, cols_factor) : build_mar_design(y_data, lag, rows_factor, cols_factor);
+			// std::vector<Eigen::SparseMatrix<double>> design = lag_exogen ? build_mar_design(y_data, *exogen_data, lag, *lag_exogen) : build_mar_design(y_data, lag);
 			if (lag_exogen) {
 				exogen_rows = (*lag_exogen + 1) * (*exogen_data)[0].rows();
 				exogen_cols = (*lag_exogen + 1) * (*exogen_data)[0].cols();
@@ -470,6 +470,7 @@ protected:
 				seed_chain.row(window),
 				row_exogen_prior, row_exogen_init, row_exogen_prior_type, exogen_rows,
 				col_exogen_prior, col_exogen_init, col_exogen_prior_type, exogen_cols,
+				lag_exogen,
 				row_factor_prior, row_factor_init, row_factor_prior_type, nrow_factor,
 				col_factor_prior, col_factor_init, col_factor_prior_type, ncol_factor,
 				factor_lag

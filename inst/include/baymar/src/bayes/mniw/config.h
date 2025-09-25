@@ -33,18 +33,18 @@ struct MatMniwParams : public bvhar::McmcParams {
 
 struct MatMniwRegParams : public MatMniwParams {
 	std::vector<Eigen::SparseMatrix<double>> _x;
-	int _row_exogen, _col_exogen;
+	int _row_exogen, _col_exogen, _lag_exogen;
 	int _row_factor, _col_factor;
 
 	MatMniwRegParams(
 		int num_iter, std::vector<Eigen::SparseMatrix<double>>& x, std::vector<Eigen::MatrixXd>& y,
 		BVHAR_LIST& priors,
-		BVHAR_OPTIONAL<int> exogen_rows = BVHAR_NULLOPT, BVHAR_OPTIONAL<int> exogen_cols = BVHAR_NULLOPT,
+		BVHAR_OPTIONAL<int> exogen_rows = BVHAR_NULLOPT, BVHAR_OPTIONAL<int> exogen_cols = BVHAR_NULLOPT, BVHAR_OPTIONAL<int> exogen_lag = BVHAR_NULLOPT,
 		BVHAR_OPTIONAL<int> factor_rows = BVHAR_NULLOPT, BVHAR_OPTIONAL<int> factor_cols = BVHAR_NULLOPT
 	)
 	: MatMniwParams(num_iter, y, priors),
 		_x(x),
-		_row_exogen(exogen_rows ? *exogen_rows : 0), _col_exogen(exogen_cols ? *exogen_cols : 0),
+		_row_exogen(exogen_rows ? *exogen_rows : 0), _col_exogen(exogen_cols ? *exogen_cols : 0), _lag_exogen(exogen_lag ? *exogen_lag : 0),
 		_row_factor(factor_rows ? *factor_rows : 0), _col_factor(factor_cols ? *factor_cols : 0) {
 		_row_row_coef -= (_row_exogen + _row_factor);
 		_row_col_coef -= (_col_exogen + _col_factor);

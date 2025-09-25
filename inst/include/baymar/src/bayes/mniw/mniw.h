@@ -25,7 +25,7 @@ public:
 		row_updater(std::move(row_updater)), col_updater(std::move(col_updater)),
 		num_row(params._row), num_col(params._col), num_design(params._design),
 		nrow_row_coef(params._row_row_coef), nrow_col_coef(params._row_col_coef),
-		nrow_row_exogen(params._row_exogen), nrow_col_exogen(params._col_exogen),
+		nrow_row_exogen(params._row_exogen), nrow_col_exogen(params._col_exogen), exogen_lag(params._lag_exogen),
 		nrow_factor(params._row_factor), ncol_factor(params._col_factor),
 		row_record(num_iter + 1, std::vector<Eigen::MatrixXd>(2)), col_record(num_iter + 1, std::vector<Eigen::MatrixXd>(2)),
 		row_coef(inits._init_row_coef), row_sig_lower(inits._init_row_lower),
@@ -126,7 +126,7 @@ protected:
 	int num_row;
 	int num_col;
 	int num_design;
-	int nrow_row_coef, nrow_col_coef, nrow_row_exogen, nrow_col_exogen, nrow_factor, ncol_factor;
+	int nrow_row_coef, nrow_col_coef, nrow_row_exogen, nrow_col_exogen, exogen_lag, nrow_factor, ncol_factor;
 	std::vector<std::vector<Eigen::MatrixXd>> row_record, col_record;
 	Eigen::MatrixXd row_coef, row_sig_lower, col_coef, col_sig_lower;
 	std::unique_ptr<MatMniwRecords> mniw_record;
@@ -191,24 +191,24 @@ protected:
 
 	void updateCoefCov() {
 		BVHAR_DEBUG_LOG(debug_logger, "updateCoefCov() called");
-		draw_coef_sig<true>(
-			row_coef.topRows(nrow_row_coef + nrow_row_exogen), row_sig_lower,
-			col_coef.topRows(nrow_col_coef + nrow_col_exogen), col_sig_lower,
-			row_prior_mean.topRows(nrow_row_coef + nrow_row_exogen),
-			row_prior_prec.head(nrow_row_coef + nrow_row_exogen),
-			row_iw_scl, row_iw_df,
-			num_design, num_col, 0,
-			x, y, rng
-		);
-		draw_coef_sig<false>(
-			col_coef.topRows(nrow_col_coef + nrow_col_exogen), col_sig_lower,
-			row_coef.topRows(nrow_row_coef + nrow_row_exogen), row_sig_lower,
-			col_prior_mean.topRows(nrow_col_coef + nrow_col_exogen),
-			col_prior_prec.head(nrow_col_coef + nrow_col_exogen),
-			col_iw_scl, col_iw_df,
-			num_design, num_row, 0,
-			x, y, rng
-		);
+		// draw_coef_sig<true>(
+		// 	row_coef.topRows(nrow_row_coef + nrow_row_exogen), row_sig_lower,
+		// 	col_coef.topRows(nrow_col_coef + nrow_col_exogen), col_sig_lower,
+		// 	row_prior_mean.topRows(nrow_row_coef + nrow_row_exogen),
+		// 	row_prior_prec.head(nrow_row_coef + nrow_row_exogen),
+		// 	row_iw_scl, row_iw_df,
+		// 	num_design, num_col, 0,
+		// 	x, y, rng
+		// );
+		// draw_coef_sig<false>(
+		// 	col_coef.topRows(nrow_col_coef + nrow_col_exogen), col_sig_lower,
+		// 	row_coef.topRows(nrow_row_coef + nrow_row_exogen), row_sig_lower,
+		// 	col_prior_mean.topRows(nrow_col_coef + nrow_col_exogen),
+		// 	col_prior_prec.head(nrow_col_coef + nrow_col_exogen),
+		// 	col_iw_scl, col_iw_df,
+		// 	num_design, num_row, 0,
+		// 	x, y, rng
+		// );
 		if (famar_updater) {
 			famar_updater->updateResid(
 				x, y,
@@ -219,38 +219,42 @@ protected:
 				col_coef.bottomRows(ncol_factor), col_sig_lower,
 				rng
 			);
-			// famar_updater->appendDesign(x);
-			famar_updater->updateCoefCov<true>(
-				row_coef.bottomRows(nrow_factor), row_sig_lower,
-				col_coef.bottomRows(ncol_factor), col_sig_lower,
-				row_prior_mean.bottomRows(nrow_factor),
-				row_prior_prec.tail(nrow_factor),
-				row_iw_scl, row_iw_df,
-				num_col, rng
-			);
-			famar_updater->updateCoefCov<false>(
-				col_coef.bottomRows(ncol_factor), col_sig_lower,
-				row_coef.bottomRows(nrow_factor), row_sig_lower,
-				col_prior_mean.bottomRows(ncol_factor),
-				col_prior_prec.tail(ncol_factor),
-				col_iw_scl, col_iw_df,
-				num_row, rng
-			);
+			famar_updater->appendDesign(x);
+			// famar_updater->updateCoefCov<true>(
+			// 	row_coef.bottomRows(nrow_factor), row_sig_lower,
+			// 	col_coef.bottomRows(ncol_factor), col_sig_lower,
+			// 	row_prior_mean.bottomRows(nrow_factor),
+			// 	row_prior_prec.tail(nrow_factor),
+			// 	row_iw_scl, row_iw_df,
+			// 	num_col, rng
+			// );
+			// famar_updater->updateCoefCov<false>(
+			// 	col_coef.bottomRows(ncol_factor), col_sig_lower,
+			// 	row_coef.bottomRows(nrow_factor), row_sig_lower,
+			// 	col_prior_mean.bottomRows(ncol_factor),
+			// 	col_prior_prec.tail(ncol_factor),
+			// 	col_iw_scl, col_iw_df,
+			// 	num_row, rng
+			// );
 		}
-		// draw_coef_sig<true>(
-		// 	row_coef, row_sig_lower,
-		// 	col_coef, col_sig_lower,
-		// 	row_prior_mean, row_prior_prec, row_iw_scl, row_iw_df,
-		// 	num_design, num_col,
-		// 	x, y, rng
-		// );
-		// draw_coef_sig<false>(
-		// 	col_coef, col_sig_lower,
-		// 	row_coef, row_sig_lower,
-		// 	col_prior_mean, col_prior_prec, col_iw_scl, col_iw_df,
-		// 	num_design, num_row,
-		// 	x, y, rng
-		// );
+		draw_coef_sig<true>(
+			row_coef, row_sig_lower,
+			col_coef, col_sig_lower,
+			row_prior_mean, row_prior_prec, row_iw_scl, row_iw_df,
+			num_design, num_col,
+			nrow_col_exogen, exogen_lag,
+			nrow_factor,
+			x, y, rng
+		);
+		draw_coef_sig<false>(
+			col_coef, col_sig_lower,
+			row_coef, row_sig_lower,
+			col_prior_mean, col_prior_prec, col_iw_scl, col_iw_df,
+			num_design, num_row,
+			nrow_col_exogen, exogen_lag,
+			ncol_factor,
+			x, y, rng
+		);
 	}
 
 	void updateRecords() {
@@ -278,6 +282,7 @@ inline std::vector<std::unique_ptr<McmcMatMniw>> initialize_matmcmc(
   Eigen::Ref<const Eigen::VectorXi> seed_chain,
 	BVHAR_OPTIONAL<BVHAR_LIST> row_exogen_prior = BVHAR_NULLOPT, BVHAR_OPTIONAL<BVHAR_LIST_OF_LIST> row_exogen_init = BVHAR_NULLOPT, BVHAR_OPTIONAL<int> row_exogen_prior_type = BVHAR_NULLOPT, BVHAR_OPTIONAL<int> exogen_rows = BVHAR_NULLOPT,
 	BVHAR_OPTIONAL<BVHAR_LIST> col_exogen_prior = BVHAR_NULLOPT, BVHAR_OPTIONAL<BVHAR_LIST_OF_LIST> col_exogen_init = BVHAR_NULLOPT, BVHAR_OPTIONAL<int> col_exogen_prior_type = BVHAR_NULLOPT, BVHAR_OPTIONAL<int> exogen_cols = BVHAR_NULLOPT,
+	BVHAR_OPTIONAL<int> exogen_lag = BVHAR_NULLOPT,
 	BVHAR_OPTIONAL<BVHAR_LIST> row_factor_prior = BVHAR_NULLOPT, BVHAR_OPTIONAL<BVHAR_LIST_OF_LIST> row_factor_init = BVHAR_NULLOPT, BVHAR_OPTIONAL<int> row_factor_prior_type = BVHAR_NULLOPT, BVHAR_OPTIONAL<int> nrow_factor = BVHAR_NULLOPT,
 	BVHAR_OPTIONAL<BVHAR_LIST> col_factor_prior = BVHAR_NULLOPT, BVHAR_OPTIONAL<BVHAR_LIST_OF_LIST> col_factor_init = BVHAR_NULLOPT, BVHAR_OPTIONAL<int> col_factor_prior_type = BVHAR_NULLOPT, BVHAR_OPTIONAL<int> ncol_factor = BVHAR_NULLOPT,
 	BVHAR_OPTIONAL<int> factor_lag = BVHAR_NULLOPT
@@ -285,8 +290,8 @@ inline std::vector<std::unique_ptr<McmcMatMniw>> initialize_matmcmc(
 	std::vector<std::unique_ptr<McmcMatMniw>> mcmc_ptr(num_chains);
 	// MatMniwRegParams params(num_iter, x, y, param_coef_sig);
 	MatMniwRegParams params = exogen_rows
-		? (nrow_factor ? MatMniwRegParams(num_iter, x, y, param_coef_sig, *exogen_rows, *exogen_cols, *nrow_factor, *ncol_factor) : MatMniwRegParams(num_iter, x, y, param_coef_sig, *exogen_rows, *exogen_cols))
-		: (nrow_factor ? MatMniwRegParams(num_iter, x, y, param_coef_sig, BVHAR_NULLOPT, BVHAR_NULLOPT, *nrow_factor, *ncol_factor) : MatMniwRegParams(num_iter, x, y, param_coef_sig));
+		? (nrow_factor ? MatMniwRegParams(num_iter, x, y, param_coef_sig, *exogen_rows, *exogen_cols, *exogen_lag, *nrow_factor, *ncol_factor) : MatMniwRegParams(num_iter, x, y, param_coef_sig, *exogen_rows, *exogen_cols, *exogen_lag))
+		: (nrow_factor ? MatMniwRegParams(num_iter, x, y, param_coef_sig, BVHAR_NULLOPT, BVHAR_NULLOPT, BVHAR_NULLOPT, *nrow_factor, *ncol_factor) : MatMniwRegParams(num_iter, x, y, param_coef_sig));
 	for (int i = 0; i < num_chains; ++i) {
 		BVHAR_LIST row_init_spec = row_init[i];
 		BVHAR_LIST col_init_spec = col_init[i];
@@ -353,6 +358,7 @@ public:
 		const Eigen::VectorXi& seed_chain, bool display_progress, int nthreads,
 		BVHAR_OPTIONAL<BVHAR_LIST> row_exogen_prior = BVHAR_NULLOPT, BVHAR_OPTIONAL<BVHAR_LIST_OF_LIST> row_exogen_init = BVHAR_NULLOPT, BVHAR_OPTIONAL<int> row_exogen_prior_type = BVHAR_NULLOPT, BVHAR_OPTIONAL<int> exogen_rows = BVHAR_NULLOPT,
 		BVHAR_OPTIONAL<BVHAR_LIST> col_exogen_prior = BVHAR_NULLOPT, BVHAR_OPTIONAL<BVHAR_LIST_OF_LIST> col_exogen_init = BVHAR_NULLOPT, BVHAR_OPTIONAL<int> col_exogen_prior_type = BVHAR_NULLOPT, BVHAR_OPTIONAL<int> exogen_cols = BVHAR_NULLOPT,
+		BVHAR_OPTIONAL<int> exogen_lag = BVHAR_NULLOPT,
 		BVHAR_OPTIONAL<BVHAR_LIST> row_factor_prior = BVHAR_NULLOPT, BVHAR_OPTIONAL<BVHAR_LIST_OF_LIST> row_factor_init = BVHAR_NULLOPT, BVHAR_OPTIONAL<int> row_factor_prior_type = BVHAR_NULLOPT, BVHAR_OPTIONAL<int> nrow_factor = BVHAR_NULLOPT,
 		BVHAR_OPTIONAL<BVHAR_LIST> col_factor_prior = BVHAR_NULLOPT, BVHAR_OPTIONAL<BVHAR_LIST_OF_LIST> col_factor_init = BVHAR_NULLOPT, BVHAR_OPTIONAL<int> col_factor_prior_type = BVHAR_NULLOPT, BVHAR_OPTIONAL<int> ncol_factor = BVHAR_NULLOPT,
 		BVHAR_OPTIONAL<int> factor_lag = BVHAR_NULLOPT
@@ -366,6 +372,7 @@ public:
 			seed_chain,
 			row_exogen_prior, row_exogen_init, row_exogen_prior_type, exogen_rows,
 			col_exogen_prior, col_exogen_init, col_exogen_prior_type, exogen_cols,
+			exogen_lag,
 			row_factor_prior, row_factor_init, row_factor_prior_type, nrow_factor,
 			col_factor_prior, col_factor_init, col_factor_prior_type, ncol_factor,
 			factor_lag

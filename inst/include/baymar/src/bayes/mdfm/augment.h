@@ -62,33 +62,33 @@ public:
 	) override {
 		for (int i = 0; i < num_design; ++i) {
 			// resid[i] = y[i] - row_coef.topRows(row_coef.rows() - nrow_factor).transpose() * x[i].topLeftCorner(x[i].rows() - nrow_factor, x[i].cols() - ncol_factor) * col_coef.topRows(col_coef.rows() - ncol_factor);
-			// resid[i] = y[i] - row_coef.transpose() * x[i].topLeftCorner(x[i].rows() - nrow_factor, x[i].cols() - ncol_factor) * col_coef;
-			resid[i] = y[i] - row_coef.transpose() * x[i] * col_coef;
+			resid[i] = y[i] - row_coef.transpose() * x[i].topLeftCorner(x[i].rows() - nrow_factor, x[i].cols() - ncol_factor) * col_coef;
+			// resid[i] = y[i] - row_coef.transpose() * x[i] * col_coef;
 		}
 	}
 
-	template <bool isRow = true>
-	void updateCoefCov(
-		Eigen::Ref<Eigen::MatrixXd> coef, Eigen::Ref<Eigen::MatrixXd> sig_lower,
-		Eigen::Ref<const Eigen::MatrixXd> other_coef, Eigen::Ref<const Eigen::MatrixXd> other_sig_lower,
-		Eigen::Ref<const Eigen::MatrixXd> prior_mean, Eigen::Ref<const Eigen::VectorXd> prior_prec,
-		Eigen::Ref<const Eigen::MatrixXd> iw_scl,
-		double iw_df, int other_dim,
-		BVHAR_BHRNG& rng
-	) {
-		int dim_factor = ncol_factor;
-		using is_row = std::integral_constant<bool, isRow>;
-		if (is_row::value) {
-			dim_factor = nrow_factor;
-		}
-		draw_coef_only<isRow, Eigen::MatrixXd>(
-			coef, sig_lower,
-			other_coef, other_sig_lower,
-			prior_mean, prior_prec, iw_scl, iw_df,
-			num_design, other_dim, dim_factor,
-			factor_mat, resid, rng
-		);
-	}
+	// template <bool isRow = true>
+	// void updateCoefCov(
+	// 	Eigen::Ref<Eigen::MatrixXd> coef, Eigen::Ref<Eigen::MatrixXd> sig_lower,
+	// 	Eigen::Ref<const Eigen::MatrixXd> other_coef, Eigen::Ref<const Eigen::MatrixXd> other_sig_lower,
+	// 	Eigen::Ref<const Eigen::MatrixXd> prior_mean, Eigen::Ref<const Eigen::VectorXd> prior_prec,
+	// 	Eigen::Ref<const Eigen::MatrixXd> iw_scl,
+	// 	double iw_df, int other_dim,
+	// 	BVHAR_BHRNG& rng
+	// ) {
+	// 	int dim_factor = ncol_factor;
+	// 	using is_row = std::integral_constant<bool, isRow>;
+	// 	if (is_row::value) {
+	// 		dim_factor = nrow_factor;
+	// 	}
+	// 	draw_coef_only<isRow, Eigen::MatrixXd>(
+	// 		coef, sig_lower,
+	// 		other_coef, other_sig_lower,
+	// 		prior_mean, prior_prec, iw_scl, iw_df,
+	// 		num_design, other_dim, dim_factor,
+	// 		factor_mat, resid, rng
+	// 	);
+	// }
 
 	template <bool isRow = true>
 	void updateCoefCov(
@@ -109,7 +109,8 @@ public:
 			coef, sig_lower,
 			other_coef, other_sig_lower,
 			prior_mean, prior_prec, iw_scl, iw_df,
-			num_design, other_dim, dim_factor,
+			num_design, other_dim,
+			0, 0, dim_factor,
 			factor_mat, y, rng
 		);
 	}

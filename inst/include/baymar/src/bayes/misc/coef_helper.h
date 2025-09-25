@@ -30,6 +30,39 @@ inline void restrict_mar_col(int num_col, int lag,
 	coef += V1_trans.transpose() * (Eigen::VectorXd::Ones(lag) - right_map * coef * left_map.transpose()) * V2_trans;
 }
 
+inline void restrict_mar_col(int num_col, int lag,
+														 Eigen::Ref<Eigen::MatrixXd> coef,
+														 Eigen::Ref<const Eigen::MatrixXd> sig_lower,
+														 Eigen::Ref<const Eigen::MatrixXd> post_cov) {
+	Eigen::MatrixXd left_map = Eigen::VectorXd::Unit(num_col, 0).transpose();
+	// Eigen::MatrixXd right_map = Eigen::KroneckerProduct(Eigen::MatrixXd::Identity(lag, lag), left_map).eval();
+	// Eigen::MatrixXd right_map = bvhar::kronecker_eigen(Eigen::MatrixXd::Identity(lag, lag), left_map);
+	Eigen::MatrixXd right_map = bvhar::kronecker_eigen(
+		Eigen::MatrixXd::Identity(lag, lag),
+		Eigen::VectorXd::Unit(coef.rows() / lag, 0).transpose()
+	);
+	// Eigen::SparseMatrix<double> left_map = Eigen::VectorXd::Unit(num_col, 0).transpose().sparseView();
+	// Eigen::SparseMatrix<double> right_map = bvhar::kronecker_eigen(Eigen::MatrixXd::Identity(lag, lag), left_map).sparseView();
+	Eigen::LLT<Eigen::MatrixXd> llt_of_prec;
+	double temp_penalty = 0;
+	do {
+		llt_of_prec.compute((
+			post_cov + temp_penalty * Eigen::MatrixXd::Identity(post_cov.rows(), post_cov.cols())
+		).selfadjointView<Eigen::Lower>());
+		temp_penalty += .01;
+	} while (llt_of_prec.info() == Eigen::NumericalIssue && temp_penalty < .1);
+	if (llt_of_prec.info() == Eigen::NumericalIssue) {
+		eigen_assert("LLT failed in precision sampler.");
+	}
+	Eigen::MatrixXd v2_inv = left_map * sig_lower;
+	Eigen::LLT<Eigen::MatrixXd> v2_llt(v2_inv * v2_inv.transpose());
+	Eigen::MatrixXd v1_inv = llt_of_prec.matrixL().solve(right_map.transpose());
+	Eigen::LLT<Eigen::MatrixXd> v1_llt(v1_inv.transpose() * v1_inv);
+	Eigen::MatrixXd V1_trans = llt_of_prec.matrixL().solve<Eigen::OnTheRight>(v1_llt.solve(v1_inv.transpose()));
+	Eigen::MatrixXd V2_trans = v2_llt.solve(v2_inv * sig_lower.transpose());
+	coef += V1_trans.transpose() * (Eigen::VectorXd::Ones(lag) - right_map * coef * left_map.transpose()) * V2_trans;
+}
+
 // Factor loading identifiability restriction
 // R^T Q_1 = I, C^T Q_2 = I
 inline void restrict_mat_loading(int num_col, int dim_factor,
@@ -75,7 +108,9 @@ inline void draw_coef_sig(
 	Eigen::Ref<const Eigen::MatrixXd> other_coef, Eigen::Ref<const Eigen::MatrixXd> other_sig_lower,
 	Eigen::Ref<const Eigen::MatrixXd> prior_mean, Eigen::Ref<const Eigen::VectorXd> prior_prec,
 	Eigen::Ref<const Eigen::MatrixXd> iw_scl,
-	double iw_df, int num_mat, int other_dim, int dim_factor,
+	double iw_df, int num_mat, int other_dim,
+	int nrow_col_exogen, int exogen_lag,
+	int dim_factor,
 	const std::vector<xType>& x, const std::vector<Eigen::MatrixXd>& y,
 	BVHAR_BHRNG& rng
 ) {
@@ -128,8 +163,13 @@ inline void draw_coef_sig(
 	// if (!is_row::value) {
 	if (!is_row::value && std::is_same<xType, Eigen::SparseMatrix<double>>::value) {
 		int num_col = prior_mean.cols();
-		int lag = prior_mean.rows() / num_col; // when B = (B_1, ..., B_p)^T
-		restrict_mar_col(num_col, lag, coef, sig_lower, llt_of_prec);
+		int nrow_col_coef = prior_mean.rows() - nrow_col_exogen - dim_factor;
+		// int lag = nrow_col_coef / num_col; // when B = (B_1, ..., B_p)^T
+		// restrict_mar_col(num_col, lag, coef.topRows(nrow_col_coef), sig_lower, llt_of_prec);
+		restrict_mar_col(num_col, nrow_col_coef / num_col, coef.topRows(nrow_col_coef), sig_lower, post_cov.topLeftCorner(nrow_col_coef, nrow_col_coef));
+		if (nrow_col_exogen > 0) {
+			restrict_mar_col(num_col, exogen_lag + 1, coef.middleRows(nrow_col_coef, nrow_col_exogen), sig_lower, post_cov.block(nrow_col_coef, nrow_col_coef, nrow_col_exogen, nrow_col_exogen));
+		}
 	}
 	if (dim_factor > 0) {
 		restrict_mat_loading(prior_mean.cols(), dim_factor, coef.bottomRows(dim_factor), sig_lower);

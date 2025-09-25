@@ -233,12 +233,12 @@ mar_bayes <- function(y,
     param_prior$col_prior_prec <- c(param_prior$col_prior_prec, rep(1, ncol_factor))
     row_factor_init <- get_bmar_init(factor_row_spec, num_chains, nrow_factor)
     col_factor_init <- get_bmar_init(factor_col_spec, num_chains, ncol_factor)
-    # for (i in (seq_along(response) + p)) {
-    #   design[[i - p]] <- bdiag(append(
-    #     design[[i - p]],
-    #     list(matrix(1L, nrow = nrow_factor, ncol = ncol_factor))
-    #   ))
-    # }
+    for (i in (seq_along(response) + p)) {
+      design[[i - p]] <- bdiag(append(
+        design[[i - p]],
+        list(matrix(1L, nrow = nrow_factor, ncol = ncol_factor))
+      ))
+    }
     name_factor_row <- paste("factor_row", seq_len(nrow_factor), sep = "_")
     name_factor_col <- paste("factor_col", seq_len(ncol_factor), sep = "_")
     name_row_lag <- c(name_row_lag, name_factor_row)
@@ -278,6 +278,7 @@ mar_bayes <- function(y,
     col_prior = col_prior, col_init = col_init, col_prior_type = col_prior_type,
     exogen_row_prior = row_exogen_prior, exogen_row_init = row_exogen_init, exogen_row_prior_type = row_exogen_prior_type, exogen_rows = nrow_exogen_row_coef,
     exogen_col_prior = col_exogen_prior, exogen_col_init = col_exogen_init, exogen_col_prior_type = col_exogen_prior_type, exogen_cols = nrow_exogen_col_coef,
+    exogen_lag = s,
     factor_row_prior = row_factor_prior, factor_row_init = row_factor_init, factor_row_prior_type = row_factor_prior_type, factor_rows = nrow_factor,
     factor_col_prior = col_factor_prior, factor_col_init = col_factor_init, factor_col_prior_type = col_factor_prior_type, factor_cols = ncol_factor,
     factor_lag = lag_factor,

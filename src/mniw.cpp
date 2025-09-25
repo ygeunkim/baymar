@@ -9,6 +9,7 @@ Rcpp::List estimate_bmar_mniw(int num_chains, int num_iter, int num_burn, int th
 															Rcpp::List col_prior, Rcpp::List col_init, int col_prior_type,
 															Rcpp::List exogen_row_prior, Rcpp::List exogen_row_init, int exogen_row_prior_type, int exogen_rows,
 															Rcpp::List exogen_col_prior, Rcpp::List exogen_col_init, int exogen_col_prior_type, int exogen_cols,
+															int exogen_lag,
 															Rcpp::List factor_row_prior, Rcpp::List factor_row_init, int factor_row_prior_type, int factor_rows,
 															Rcpp::List factor_col_prior, Rcpp::List factor_col_init, int factor_col_prior_type, int factor_cols,
 															int factor_lag,
@@ -25,6 +26,7 @@ Rcpp::List estimate_bmar_mniw(int num_chains, int num_iter, int num_burn, int th
 					seed_chain, display_progress, nthreads,
 					exogen_row_prior, exogen_row_init, exogen_row_prior_type, exogen_rows,
 					exogen_col_prior, exogen_col_init, exogen_col_prior_type, exogen_cols,
+					exogen_lag,
 					factor_row_prior, factor_row_init, factor_row_prior_type, factor_rows,
 					factor_col_prior, factor_col_init, factor_col_prior_type, factor_cols,
 					factor_lag
@@ -39,6 +41,7 @@ Rcpp::List estimate_bmar_mniw(int num_chains, int num_iter, int num_burn, int th
 					seed_chain, display_progress, nthreads,
 					exogen_row_prior, exogen_row_init, exogen_row_prior_type, exogen_rows,
 					BVHAR_NULLOPT, BVHAR_NULLOPT, BVHAR_NULLOPT, BVHAR_NULLOPT,
+					exogen_lag,
 					factor_row_prior, factor_row_init, factor_row_prior_type, factor_rows,
 					factor_col_prior, factor_col_init, factor_col_prior_type, factor_cols,
 					factor_lag
@@ -53,6 +56,7 @@ Rcpp::List estimate_bmar_mniw(int num_chains, int num_iter, int num_burn, int th
 					seed_chain, display_progress, nthreads,
 					BVHAR_NULLOPT, BVHAR_NULLOPT, BVHAR_NULLOPT, BVHAR_NULLOPT,
 					exogen_col_prior, exogen_col_init, exogen_col_prior_type, exogen_cols,
+					exogen_lag,
 					factor_row_prior, factor_row_init, factor_row_prior_type, factor_rows,
 					factor_col_prior, factor_col_init, factor_col_prior_type, factor_cols,
 					factor_lag
@@ -67,6 +71,7 @@ Rcpp::List estimate_bmar_mniw(int num_chains, int num_iter, int num_burn, int th
 				seed_chain, display_progress, nthreads,
 				BVHAR_NULLOPT, BVHAR_NULLOPT, BVHAR_NULLOPT, BVHAR_NULLOPT,
 				BVHAR_NULLOPT, BVHAR_NULLOPT, BVHAR_NULLOPT, BVHAR_NULLOPT,
+				BVHAR_NULLOPT,
 				factor_row_prior, factor_row_init, factor_row_prior_type, factor_rows,
 				factor_col_prior, factor_col_init, factor_col_prior_type, factor_cols,
 				factor_lag
@@ -81,7 +86,8 @@ Rcpp::List estimate_bmar_mniw(int num_chains, int num_iter, int num_burn, int th
 				col_prior, col_init, col_prior_type,
 				seed_chain, display_progress, nthreads,
 				exogen_row_prior, exogen_row_init, exogen_row_prior_type, exogen_rows,
-				exogen_col_prior, exogen_col_init, exogen_col_prior_type, exogen_cols
+				exogen_col_prior, exogen_col_init, exogen_col_prior_type, exogen_cols,
+				exogen_lag
 			);
 		} if (exogen_row_prior_type != 0 && exogen_col_prior_type == 0) {
 			return std::make_unique<baymar::MatMcmcRun>(
@@ -91,7 +97,9 @@ Rcpp::List estimate_bmar_mniw(int num_chains, int num_iter, int num_burn, int th
 				row_prior, row_init, row_prior_type,
 				col_prior, col_init, col_prior_type,
 				seed_chain, display_progress, nthreads,
-				exogen_row_prior, exogen_row_init, exogen_row_prior_type, exogen_rows
+				exogen_row_prior, exogen_row_init, exogen_row_prior_type, exogen_rows,
+				BVHAR_NULLOPT, BVHAR_NULLOPT, BVHAR_NULLOPT, BVHAR_NULLOPT,
+				exogen_lag
 			); 
 		} else if (exogen_row_prior_type == 0 && exogen_col_prior_type != 0) {
 			return std::make_unique<baymar::MatMcmcRun>(
@@ -102,7 +110,8 @@ Rcpp::List estimate_bmar_mniw(int num_chains, int num_iter, int num_burn, int th
 				col_prior, col_init, col_prior_type,
 				seed_chain, display_progress, nthreads,
 				BVHAR_NULLOPT, BVHAR_NULLOPT, BVHAR_NULLOPT, BVHAR_NULLOPT,
-				exogen_col_prior, exogen_col_init, exogen_col_prior_type, exogen_cols
+				exogen_col_prior, exogen_col_init, exogen_col_prior_type, exogen_cols,
+				exogen_lag
 			);
 		}
 		return std::make_unique<baymar::MatMcmcRun>(
