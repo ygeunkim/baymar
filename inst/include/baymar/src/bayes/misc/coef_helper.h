@@ -104,7 +104,7 @@ inline void restrict_mat_loading(int num_col, int dim_factor,
 template <bool isRow = true, typename xType = Eigen::SparseMatrix<double>>
 inline void draw_coef_sig(
 	Eigen::Ref<Eigen::MatrixXd> coef, Eigen::Ref<Eigen::MatrixXd> sig_lower,
-	Eigen::Ref<const Eigen::MatrixXd> other_coef, Eigen::Ref<const Eigen::MatrixXd> other_sig_lower,
+	Eigen::Ref<Eigen::MatrixXd> other_coef, Eigen::Ref<const Eigen::MatrixXd> other_sig_lower,
 	Eigen::Ref<const Eigen::MatrixXd> prior_mean, Eigen::Ref<const Eigen::VectorXd> prior_prec,
 	Eigen::Ref<const Eigen::MatrixXd> iw_scl,
 	double iw_df, int num_mat, int other_dim,
@@ -159,15 +159,21 @@ inline void draw_coef_sig(
 		}
 	}
 	coef = llt_of_prec.matrixU().solve(coef * sig_lower.transpose()) + post_mean;
-	// if (!is_row::value) {
-	if (!is_row::value && std::is_same<xType, Eigen::SparseMatrix<double>>::value) {
-		int num_col = prior_mean.cols();
-		int nrow_col_coef = prior_mean.rows() - nrow_col_exogen - dim_factor;
-		// int lag = nrow_col_coef / num_col; // when B = (B_1, ..., B_p)^T
-		// restrict_mar_col(num_col, lag, coef.topRows(nrow_col_coef), sig_lower, llt_of_prec);
-		restrict_mar_col(num_col, nrow_col_coef / num_col, coef.topRows(nrow_col_coef), sig_lower, post_cov.topLeftCorner(nrow_col_coef, nrow_col_coef));
-		if (nrow_col_exogen > 0) {
-			restrict_mar_col(num_col, exogen_lag + 1, coef.middleRows(nrow_col_coef, nrow_col_exogen), sig_lower, post_cov.block(nrow_col_coef, nrow_col_coef, nrow_col_exogen, nrow_col_exogen));
+	if (std::is_same<xType, Eigen::SparseMatrix<double>>::value) {
+		if (!is_row::value) {
+			int num_col = prior_mean.cols();
+			int nrow_col_coef = prior_mean.rows() - nrow_col_exogen - dim_factor;
+			// int lag = nrow_col_coef / num_col; // when B = (B_1, ..., B_p)^T
+			// restrict_mar_col(num_col, lag, coef.topRows(nrow_col_coef), sig_lower, llt_of_prec);
+			restrict_mar_col(num_col, nrow_col_coef / num_col, coef.topRows(nrow_col_coef), sig_lower, post_cov.topLeftCorner(nrow_col_coef, nrow_col_coef));
+			if (nrow_col_exogen > 0) {
+				restrict_mar_col(num_col, exogen_lag + 1, coef.middleRows(nrow_col_coef, nrow_col_exogen), sig_lower, post_cov.block(nrow_col_coef, nrow_col_coef, nrow_col_exogen, nrow_col_exogen));
+			}
+		} else {
+			if (coef(0, 0) <= 0) {
+				coef = -coef;
+				other_coef = -other_coef;
+			}
 		}
 	}
 	if (dim_factor > 0) {

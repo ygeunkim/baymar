@@ -242,7 +242,7 @@ protected:
 			col_coef, col_sig_lower,
 			row_prior_mean, row_prior_prec, row_iw_scl, row_iw_df,
 			num_design, num_col,
-			nrow_col_exogen, exogen_lag,
+			nrow_row_exogen, exogen_lag,
 			nrow_factor,
 			x, y, rng
 		);

@@ -93,7 +93,7 @@ public:
 	template <bool isRow = true>
 	void updateCoefCov(
 		Eigen::Ref<Eigen::MatrixXd> coef, Eigen::Ref<Eigen::MatrixXd> sig_lower,
-		Eigen::Ref<const Eigen::MatrixXd> other_coef, Eigen::Ref<const Eigen::MatrixXd> other_sig_lower,
+		Eigen::Ref<Eigen::MatrixXd> other_coef, Eigen::Ref<const Eigen::MatrixXd> other_sig_lower,
 		Eigen::Ref<const Eigen::MatrixXd> prior_mean, Eigen::Ref<const Eigen::VectorXd> prior_prec,
 		Eigen::Ref<const Eigen::MatrixXd> iw_scl,
 		double iw_df, int other_dim,
