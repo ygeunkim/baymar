@@ -18,13 +18,14 @@ namespace baymar {
 
 inline void horseshoe_sparsity(
 	Eigen::Ref<Eigen::VectorXd> local_sparsity, double& global_sparsity,
+	Eigen::Ref<Eigen::MatrixXd> prior_mean,
 	Eigen::Ref<Eigen::MatrixXd> coef, Eigen::Ref<Eigen::MatrixXd> sig_lower,
 	Eigen::Ref<Eigen::VectorXd> local_latent, double& global_latent,
 	BVHAR_BHRNG& rng
 ) {
 	global_latent = bvhar::gamma_rand(1.0, 1 / (1 + global_sparsity), rng);
 	int col_coef = coef.cols();
-	Eigen::MatrixXd inv_sig_coef = sig_lower.triangularView<Eigen::Lower>().solve(coef.transpose());
+	Eigen::MatrixXd inv_sig_coef = sig_lower.triangularView<Eigen::Lower>().solve((coef - prior_mean).transpose());
 	Eigen::VectorXd prod = (inv_sig_coef.transpose() * inv_sig_coef).diagonal();
 	global_sparsity = bvhar::gamma_rand(
 		(col_coef + 1) / 2,

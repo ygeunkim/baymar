@@ -197,7 +197,9 @@ protected:
 		// 	row_prior_mean.topRows(nrow_row_coef + nrow_row_exogen),
 		// 	row_prior_prec.head(nrow_row_coef + nrow_row_exogen),
 		// 	row_iw_scl, row_iw_df,
-		// 	num_design, num_col, 0,
+		// 	num_design, num_col,
+		// 	nrow_row_exogen, exogen_lag,
+		// 	0,
 		// 	x, y, rng
 		// );
 		// draw_coef_sig<false>(
@@ -206,7 +208,9 @@ protected:
 		// 	col_prior_mean.topRows(nrow_col_coef + nrow_col_exogen),
 		// 	col_prior_prec.head(nrow_col_coef + nrow_col_exogen),
 		// 	col_iw_scl, col_iw_df,
-		// 	num_design, num_row, 0,
+		// 	num_design, num_row,
+		// 	nrow_col_exogen, exogen_lag,
+		// 	0,
 		// 	x, y, rng
 		// );
 		if (famar_updater) {
