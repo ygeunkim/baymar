@@ -38,9 +38,16 @@ struct MatDfmVarParams : public MatDfmParams {
 
 	MatDfmVarParams(BVHAR_LIST& priors)
 	: MatDfmParams(priors),
-		_sig_shp(BVHAR_CAST<Eigen::VectorXd>(priors["shape"])),
-		_sig_scl(BVHAR_CAST<Eigen::VectorXd>(priors["scale"])),
-		_mean(Eigen::VectorXd::Zero(_lag)), _prec(Eigen::VectorXd::Ones(_lag)) {}
+		// _sig_shp(BVHAR_CAST<Eigen::VectorXd>(priors["shape"])),
+		// _sig_scl(BVHAR_CAST<Eigen::VectorXd>(priors["scale"])),
+		_mean(Eigen::VectorXd::Zero(_lag)), _prec(Eigen::VectorXd::Ones(_lag)) {
+		_sig_shp = BVHAR_CAST<Eigen::VectorXd>(priors["shape"]).size() == 1
+			? Eigen::VectorXd::Constant(_size_factor, BVHAR_CAST_INT(priors["shape"]))
+			: BVHAR_CAST<Eigen::VectorXd>(priors["shape"]);
+		_sig_scl = BVHAR_CAST<Eigen::VectorXd>(priors["scale"]).size() == 1
+			? Eigen::VectorXd::Constant(_size_factor, BVHAR_CAST_INT(priors["scale"]))
+			: BVHAR_CAST<Eigen::VectorXd>(priors["scale"]);
+	}
 };
 
 struct MatDfmVarInits {
