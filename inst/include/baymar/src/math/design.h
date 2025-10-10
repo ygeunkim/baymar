@@ -99,15 +99,34 @@ inline Eigen::MatrixXd build_dense_design(const Eigen::MatrixXd& y, int lag) {
 	return dense_x;
 }
 
+// Get LLT from the lower part of the symmetric matrix
 inline void fill_lower(Eigen::Ref<Eigen::MatrixXd> lower_matrix, Eigen::Ref<const Eigen::VectorXd> lower_vec) {
 	int dim = lower_matrix.cols();
-  int id = 0;
-	int len = 0;
-	for (int i = 0; i < dim; ++i) {
-		len = dim - i;
-		lower_matrix.col(i).segment(i, len) = lower_vec.segment(id, len);
-		id += len;
+  // int id = 0;
+	// int len = 0;
+	// for (int i = 0; i < dim; ++i) {
+	// 	len = dim - i;
+	// 	lower_matrix.col(i).segment(i, len) = lower_vec.segment(id, len);
+	// 	id += len;
+	// }
+	lower_matrix(0, 0) = sqrt(lower_vec[0]);
+	int lower_id = 1;
+	// for (int i = 1; i < dim; ++i) {
+	// 	lower_matrix(i, 0) = lower_vec[lower_id++] / lower_matrix(0, 0);
+	// 	for (int j = 1; j < i; ++j) {
+	// 		lower_matrix(i, j) = (lower_vec[lower_id++] - lower_matrix.row(i).head(j).dot(lower_matrix.row(j).head(j))) / lower_matrix(j, j);
+	// 	}
+	// 	lower_matrix(i, i) = sqrt(lower_vec[lower_id++] - lower_matrix.row(i).head(i).squaredNorm());
+	// }
+	for (int i = 1; i < dim; ++i) {
+		lower_matrix(i, 0) = lower_vec[lower_id++] / lower_matrix(0, 0);
 	}
+	for (int j = 1; j < dim; ++j) {
+		lower_matrix(j, j) = sqrt(lower_vec[lower_id++] - lower_matrix.row(j).head(j).squaredNorm());
+    for (int i = j + 1; i < dim; ++i) {
+      lower_matrix(i, j) = (lower_vec[lower_id++] - lower_matrix.row(i).head(j).dot(lower_matrix.row(j).head(j))) / lower_matrix(j, j);
+    }
+  }
 }
 
 // Get Y_{p + 1} = A^T X B
