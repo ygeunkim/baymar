@@ -342,6 +342,64 @@ mar_bayes <- function(y,
     num_row <- c(num_row, nrow_factor, ncol_factor, nrow_factor, nrow_factor, nrow_factor)
     num_matrix <- c(num_matrix, rep(0, 2), length(y_list) - p, lag_factor, 0)
   }
+  if (is.matmnspec(row_spec)) {
+    num_col <- c(num_col, 1)
+    num_row <- c(num_row, 0)
+    num_matrix <- c(num_matrix, 0)
+  } else if (is.mathsspec(row_spec)) {
+    num_col <- c(num_col, nrow_row_coef, 1)
+    num_row <- c(num_row, rep(0, 2))
+    num_matrix <- c(num_matrix, rep(0, 2))
+  }
+  if (is.matmnspec(col_spec)) {
+    num_col <- c(num_col, 1)
+    num_row <- c(num_row, 0)
+    num_matrix <- c(num_matrix, 0)
+  } else if (is.mathsspec(col_spec)) {
+    num_col <- c(num_col, nrow_col_coef, 1)
+    num_row <- c(num_row, rep(0, 2))
+    num_matrix <- c(num_matrix, rep(0, 2))
+  }
+  if (!is.null(exogen)) {
+    if (is.matmnspec(exogen_row_spec)) {
+      num_col <- c(num_col, 1)
+      num_row <- c(num_row, 0)
+      num_matrix <- c(num_matrix, 0)
+    } else if (is.mathsspec(exogen_row_spec)) {
+      num_col <- c(num_col, nrow_exogen_row_coef, 1)
+      num_row <- c(num_row, rep(0, 2))
+      num_matrix <- c(num_matrix, rep(0, 2))
+    }
+    if (is.matmnspec(exogen_col_spec)) {
+      num_col <- c(num_col, 1)
+      num_row <- c(num_row, 0)
+      num_matrix <- c(num_matrix, 0)
+    } else if (is.mathsspec(exogen_col_spec)) {
+      num_col <- c(num_col, nrow_exogen_col_coef, 1)
+      num_row <- c(num_row, rep(0, 2))
+      num_matrix <- c(num_matrix, rep(0, 2))
+    }
+  }
+  if (is_famar) {
+    if (is.matmnspec(factor_row_spec)) {
+      num_col <- c(num_col, 1)
+      num_row <- c(num_row, 0)
+      num_matrix <- c(num_matrix, 0)
+    } else if (is.mathsspec(factor_row_spec)) {
+      num_col <- c(num_col, nrow_factor, 1)
+      num_row <- c(num_row, rep(0, 2))
+      num_matrix <- c(num_matrix, rep(0, 2))
+    }
+    if (is.matmnspec(factor_col_spec)) {
+      num_col <- c(num_col, 1)
+      num_row <- c(num_row, 0)
+      num_matrix <- c(num_matrix, 0)
+    } else if (is.mathsspec(factor_col_spec)) {
+      num_col <- c(num_col, ncol_factor, 1)
+      num_row <- c(num_row, rep(0, 2))
+      num_matrix <- c(num_matrix, rep(0, 2))
+    }
+  }
   # num_row <- c(nrow_row_coef + nrow_exogen_row_coef, nrow_data, nrow_col_coef + nrow_exogen_col_coef, ncol_data)
   res[rec_names] <- lapply(
     seq_along(res[rec_names]),

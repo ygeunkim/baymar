@@ -163,6 +163,24 @@ mdfm_bayes <- function(y,
   num_col <- c(nrow_data, nrow_data, ncol_data, ncol_data, ncol_factor, ncol_factor, ncol_factor)
   num_row <- c(nrow_row_coef, nrow_data, nrow_col_coef, ncol_data, nrow_factor, nrow_factor, nrow_factor)
   num_matrix <- c(rep(0, 4), length(y_list), lag_factor, 0)
+  if (is.matmnspec(row_spec)) {
+    num_col <- c(num_col, 1)
+    num_row <- c(num_row, 0)
+    num_matrix <- c(num_matrix, 0)
+  } else if (is.mathsspec(row_spec)) {
+    num_col <- c(num_col, nrow_row_coef, 1)
+    num_row <- c(num_row, rep(0, 2))
+    num_matrix <- c(num_matrix, rep(0, 2))
+  }
+  if (is.matmnspec(col_spec)) {
+    num_col <- c(num_col, 1)
+    num_row <- c(num_row, 0)
+    num_matrix <- c(num_matrix, 0)
+  } else if (is.mathsspec(col_spec)) {
+    num_col <- c(num_col, nrow_col_coef, 1)
+    num_row <- c(num_row, rep(0, 2))
+    num_matrix <- c(num_matrix, rep(0, 2))
+  }
   res[rec_names] <- lapply(
     seq_along(res[rec_names]),
     function(id) {

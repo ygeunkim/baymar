@@ -285,13 +285,21 @@ validate_coef_sig <- function(coef, sig) {
 split_matrix_chain <- function(x, chain = 1, varname = "A", num_row, num_col, is_symm = FALSE, num_design = 0) {
   # index <- expand.grid(seq_len(lag * num_col), seq_len(num_col))
   index <- expand.grid(seq_len(num_row), seq_len(num_col))
-  if (num_design > 0) {
-    index <- expand.grid(seq_len(num_row), seq_len(num_col), seq_len(num_design))
+  if (num_row == 0) {
+    index <- seq_len(num_col)
+    if (num_col == 1) {
+      index <- NULL
+    }
+    index <- sapply(index, function(x) sprintf("[%s]", paste(x, collapse = ",")))
+  } else {
+    if (num_design > 0) {
+      index <- expand.grid(seq_len(num_row), seq_len(num_col), seq_len(num_design))
+    }
+    if (is_symm) {
+      index <- index[apply(index, 1, function(x) x[1] >= x[2]), ]
+    }
+    index <- apply(index, 1, function(x) sprintf("[%s]", paste(x, collapse = ",")))
   }
-  if (is_symm) {
-    index <- index[apply(index, 1, function(x) x[1] >= x[2]), ]
-  }
-  index <- apply(index, 1, function(x) sprintf("[%s]", paste(x, collapse = ",")))
   # if (lag > 0) {
   #   index <- paste0(rep(1:lag, each = length(index)), index)
   # }

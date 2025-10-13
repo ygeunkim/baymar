@@ -92,6 +92,20 @@ public:
 		if (famar_updater) {
 			famar_updater->appendRecords(res);
 		}
+		row_updater->appendRowRecords(res);
+		col_updater->appendColRecords(res);
+		if (exogen_row_updater) {
+			exogen_row_updater->appendExogenRowRecords(res);
+		}
+		if (exogen_col_updater) {
+			exogen_col_updater->appendExogenColRecords(res);
+		}
+		if (factor_row_updater) {
+			factor_row_updater->appendFactorRowRecords(res);
+		}
+		if (factor_col_updater) {
+			factor_col_updater->appendFactorColRecords(res);
+		}
 		for (auto& record : res) {
 			if (BVHAR_IS_MATRIX(BVHAR_ACCESS_LIST(record, res))) {
 				BVHAR_ACCESS_LIST(record, res) = bvhar::thin_record(BVHAR_CAST<Eigen::MatrixXd>(BVHAR_ACCESS_LIST(record, res)), num_iter, num_burn, thin);
@@ -272,6 +286,20 @@ protected:
 			nrow_row_coef, num_row, nrow_row_exogen, nrow_factor,
 			nrow_col_coef, num_col, nrow_col_exogen, ncol_factor
 		);
+		row_updater->updateRecords(mcmc_step);
+		col_updater->updateRecords(mcmc_step);
+		if (exogen_row_updater) {
+			exogen_row_updater->updateRecords(mcmc_step);
+		}
+		if (exogen_col_updater) {
+			exogen_col_updater->updateRecords(mcmc_step);
+		}
+		if (factor_row_updater) {
+			factor_row_updater->updateRecords(mcmc_step);
+		}
+		if (factor_col_updater) {
+			factor_col_updater->updateRecords(mcmc_step);
+		}
 		if (famar_updater) {
 			famar_updater->updateRecords(mcmc_step);
 		}
