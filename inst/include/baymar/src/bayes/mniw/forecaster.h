@@ -257,14 +257,14 @@ protected:
 	}
 
 	void forecastIn(const int i, const Eigen::MatrixXd& design) override {
-		BVHAR_DEBUG_LOG(debug_logger, "updateRecursion(i={}, design) called", i);
+		BVHAR_DEBUG_LOG(debug_logger, "forecastIn(i={}, design) called", i);
 		for (int h = 0; h < step; ++h) {
 			point_forecast.setZero();
 			for (int j = 0; j < lag; ++j) {
-				point_forecast += row_coef.middleRows(j * num_row, num_row).transpose() * response.middleRows((h + j) * num_row, num_row) * col_coef.middleRows(j * num_col, num_col);
+				point_forecast += row_coef.middleRows(j * num_row, num_row).transpose() * response.middleRows((lag + h - j - 1) * num_row, num_row) * col_coef.middleRows(j * num_col, num_col);
 			}
 			if (exogen_updater) {
-				exogen_updater->appendForecast(point_forecast, 0);
+				exogen_updater->appendForecast(point_forecast, lag + h - exogen_updater->getLag());
 			}
 			if (famar_updater) {
 				famar_updater->appendForecast(point_forecast, 0);

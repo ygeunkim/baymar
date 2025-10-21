@@ -34,15 +34,13 @@ predict.marbayes <- function(object, n_ahead, level = .05, newxreg, num_thread =
     factor_lag <- object$spec$factor$lag
   }
   if (!is.null(eval.parent(object$call$exogen))) {
-    exogen_list <-
-      lapply(seq_len(dim(object$exogen_data)[3]), function(x) object$exogen_data[, , x]) |>
-      tail(object$s)
+    exogen_list <- lapply(seq_len(dim(object$exogen_data)[3]), function(x) object$exogen_data[, , x])
     if (is_insample) {
       exogen_list <- do.call(rbind, exogen_list)
     } else {
       newxreg_list <- validate_newxmat(newxreg = newxreg, n_ahead = n_ahead)
       exogen_list <- rbind(
-        do.call(rbind, exogen_list),
+        do.call(rbind, tail(exogen_list, object$s)),
         do.call(rbind, newxreg_list)
       )
     }
@@ -148,9 +146,14 @@ predict.mdfmbayes <- function(object, n_ahead, level = .05, num_thread = 1, med 
   nrow_data <- dim(object$y)[1]
   ncol_data <- dim(object$y)[2]
   num_data <- dim(object$y)[3]
+  y_list <- lapply(seq_len(num_data), function(x) object$y[, , x])
+  is_insample <- missing(n_ahead) || is.null(n_ahead)
+  if (is_insample) {
+    # n_ahead <- length(y_list) - object$spec$factor$lag
+    n_ahead <- length(y_list)
+  }
   var_names <- dimnames(object$y)
   var_names[[3]] <- 1:n_ahead
-  y_list <- lapply(seq_len(num_data), function(x) object$y[, , x])
   nrow_factor <- object$spec$factor$nrow_factor
   ncol_factor <- object$spec$factor$ncol_factor
   factor_lag <- object$spec$factor$lag
@@ -162,7 +165,8 @@ predict.mdfmbayes <- function(object, n_ahead, level = .05, num_thread = 1, med 
     factor_lag = factor_lag,
     fit_record = fit_record,
     seed_chain = sample.int(.Machine$integer.max, size = object$chain),
-    nthreads = num_thread
+    nthreads = num_thread,
+    insample = is_insample
   )
   num_draw <- nrow(object$param)
   y_distn <- process_mar_forecast_draws(

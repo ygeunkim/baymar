@@ -129,6 +129,16 @@ protected:
 		BVHAR_DEBUG_LOG(debug_logger, "getDesign() called");
 		return Eigen::MatrixXd();
 	}
+
+	void forecastIn(const int i, const Eigen::MatrixXd& design) override {
+		BVHAR_DEBUG_LOG(debug_logger, "forecastIn(i={}, design) called", i);
+		for (int h = 0; h < step; ++h) {
+			point_forecast.setZero();
+			updateVariance();
+			factor_updater->appendForecast(point_forecast, 0);
+			pred_save.block(h * num_row, i * num_col, num_row, num_col) = point_forecast + error_mat;
+		}
+	}
 };
 
 class MatDfmVarForecaster : public MatDfmForecaster {

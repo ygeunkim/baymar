@@ -7,8 +7,8 @@ estimate_bmdfm <- function(num_chains, num_iter, num_burn, thin, y, factor_lag, 
 }
 
 #' @noRd
-forecast_bdfm_mniw <- function(num_chains, step, nrow_factor, ncol_factor, factor_lag, fit_record, seed_chain, nthreads) {
-    .Call(`_baymar_forecast_bdfm_mniw`, num_chains, step, nrow_factor, ncol_factor, factor_lag, fit_record, seed_chain, nthreads)
+forecast_bdfm_mniw <- function(num_chains, step, nrow_factor, ncol_factor, factor_lag, fit_record, seed_chain, nthreads, insample) {
+    .Call(`_baymar_forecast_bdfm_mniw`, num_chains, step, nrow_factor, ncol_factor, factor_lag, fit_record, seed_chain, nthreads, insample)
 }
 
 #' @noRd

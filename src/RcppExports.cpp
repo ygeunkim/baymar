@@ -40,8 +40,8 @@ BEGIN_RCPP
 END_RCPP
 }
 // forecast_bdfm_mniw
-Rcpp::List forecast_bdfm_mniw(int num_chains, int step, int nrow_factor, int ncol_factor, int factor_lag, Rcpp::List fit_record, Eigen::VectorXi seed_chain, int nthreads);
-RcppExport SEXP _baymar_forecast_bdfm_mniw(SEXP num_chainsSEXP, SEXP stepSEXP, SEXP nrow_factorSEXP, SEXP ncol_factorSEXP, SEXP factor_lagSEXP, SEXP fit_recordSEXP, SEXP seed_chainSEXP, SEXP nthreadsSEXP) {
+Rcpp::List forecast_bdfm_mniw(int num_chains, int step, int nrow_factor, int ncol_factor, int factor_lag, Rcpp::List fit_record, Eigen::VectorXi seed_chain, int nthreads, bool insample);
+RcppExport SEXP _baymar_forecast_bdfm_mniw(SEXP num_chainsSEXP, SEXP stepSEXP, SEXP nrow_factorSEXP, SEXP ncol_factorSEXP, SEXP factor_lagSEXP, SEXP fit_recordSEXP, SEXP seed_chainSEXP, SEXP nthreadsSEXP, SEXP insampleSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
@@ -53,7 +53,8 @@ BEGIN_RCPP
     Rcpp::traits::input_parameter< Rcpp::List >::type fit_record(fit_recordSEXP);
     Rcpp::traits::input_parameter< Eigen::VectorXi >::type seed_chain(seed_chainSEXP);
     Rcpp::traits::input_parameter< int >::type nthreads(nthreadsSEXP);
-    rcpp_result_gen = Rcpp::wrap(forecast_bdfm_mniw(num_chains, step, nrow_factor, ncol_factor, factor_lag, fit_record, seed_chain, nthreads));
+    Rcpp::traits::input_parameter< bool >::type insample(insampleSEXP);
+    rcpp_result_gen = Rcpp::wrap(forecast_bdfm_mniw(num_chains, step, nrow_factor, ncol_factor, factor_lag, fit_record, seed_chain, nthreads, insample));
     return rcpp_result_gen;
 END_RCPP
 }
@@ -587,7 +588,7 @@ END_RCPP
 
 static const R_CallMethodDef CallEntries[] = {
     {"_baymar_estimate_bmdfm", (DL_FUNC) &_baymar_estimate_bmdfm, 17},
-    {"_baymar_forecast_bdfm_mniw", (DL_FUNC) &_baymar_forecast_bdfm_mniw, 8},
+    {"_baymar_forecast_bdfm_mniw", (DL_FUNC) &_baymar_forecast_bdfm_mniw, 9},
     {"_baymar_roll_bdfm_mniw", (DL_FUNC) &_baymar_roll_bdfm_mniw, 27},
     {"_baymar_expand_bdfm_mniw", (DL_FUNC) &_baymar_expand_bdfm_mniw, 27},
     {"_baymar_estimate_bmar_mniw", (DL_FUNC) &_baymar_estimate_bmar_mniw, 35},
