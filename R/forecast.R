@@ -19,8 +19,12 @@ predict.marbayes <- function(object, n_ahead, level = .05, newxreg, num_thread =
   ncol_data <- dim(object$y)[2]
   num_data <- dim(object$y)[3]
   var_names <- dimnames(object$y)
-  var_names[[3]] <- 1:n_ahead
   y_list <- lapply(seq_len(num_data), function(x) object$y[, , x])
+  is_insample <- missing(n_ahead) || is.null(n_ahead)
+  if (is_insample) {
+    n_ahead <- length(y_list) - object$p
+  }
+  var_names[[3]] <- 1:n_ahead
   nrow_factor <- 0
   ncol_factor <- 0
   factor_lag <- 0
@@ -30,10 +34,18 @@ predict.marbayes <- function(object, n_ahead, level = .05, newxreg, num_thread =
     factor_lag <- object$spec$factor$lag
   }
   if (!is.null(eval.parent(object$call$exogen))) {
-    newxreg_list <- validate_newxmat(newxreg = newxreg, n_ahead = n_ahead)
     exogen_list <-
-      lapply(seq_len(dim(object$exogen_data)[3]), function(x) object$exogen_data[, , x]) |> 
+      lapply(seq_len(dim(object$exogen_data)[3]), function(x) object$exogen_data[, , x]) |>
       tail(object$s)
+    if (is_insample) {
+      exogen_list <- do.call(rbind, exogen_list)
+    } else {
+      newxreg_list <- validate_newxmat(newxreg = newxreg, n_ahead = n_ahead)
+      exogen_list <- rbind(
+        do.call(rbind, exogen_list),
+        do.call(rbind, newxreg_list)
+      )
+    }
     pred_res <- forecast_bmarx_mniw(
       num_chains = object$chain,
       lag = object$p,
@@ -45,12 +57,10 @@ predict.marbayes <- function(object, n_ahead, level = .05, newxreg, num_thread =
       factor_lag = factor_lag,
       fit_record = fit_record,
       seed_chain = sample.int(.Machine$integer.max, size = object$chain),
-      exogen = rbind(
-        do.call(rbind, exogen_list),
-        do.call(rbind, newxreg_list)
-      ),
+      exogen = exogen_list,
       exogen_lag = object$s,
-      nthreads = num_thread
+      nthreads = num_thread,
+      insample = is_insample
     )
   } else {
     pred_res <- forecast_bmar_mniw(
@@ -64,7 +74,8 @@ predict.marbayes <- function(object, n_ahead, level = .05, newxreg, num_thread =
       factor_lag = factor_lag,
       fit_record = fit_record,
       seed_chain = sample.int(.Machine$integer.max, size = object$chain),
-      nthreads = num_thread
+      nthreads = num_thread,
+      insample = is_insample
     )
   }
   num_draw <- nrow(object$param)

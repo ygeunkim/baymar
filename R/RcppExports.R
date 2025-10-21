@@ -27,13 +27,13 @@ estimate_bmar_mniw <- function(num_chains, num_iter, num_burn, thin, x, y, param
 }
 
 #' @noRd
-forecast_bmar_mniw <- function(num_chains, lag, step, response_mat, num_data, nrow_factor, ncol_factor, factor_lag, fit_record, seed_chain, nthreads) {
-    .Call(`_baymar_forecast_bmar_mniw`, num_chains, lag, step, response_mat, num_data, nrow_factor, ncol_factor, factor_lag, fit_record, seed_chain, nthreads)
+forecast_bmar_mniw <- function(num_chains, lag, step, response_mat, num_data, nrow_factor, ncol_factor, factor_lag, fit_record, seed_chain, nthreads, insample) {
+    .Call(`_baymar_forecast_bmar_mniw`, num_chains, lag, step, response_mat, num_data, nrow_factor, ncol_factor, factor_lag, fit_record, seed_chain, nthreads, insample)
 }
 
 #' @noRd
-forecast_bmarx_mniw <- function(num_chains, lag, step, response_mat, num_data, nrow_factor, ncol_factor, factor_lag, fit_record, seed_chain, exogen, exogen_lag, nthreads) {
-    .Call(`_baymar_forecast_bmarx_mniw`, num_chains, lag, step, response_mat, num_data, nrow_factor, ncol_factor, factor_lag, fit_record, seed_chain, exogen, exogen_lag, nthreads)
+forecast_bmarx_mniw <- function(num_chains, lag, step, response_mat, num_data, nrow_factor, ncol_factor, factor_lag, fit_record, seed_chain, exogen, exogen_lag, nthreads, insample) {
+    .Call(`_baymar_forecast_bmarx_mniw`, num_chains, lag, step, response_mat, num_data, nrow_factor, ncol_factor, factor_lag, fit_record, seed_chain, exogen, exogen_lag, nthreads, insample)
 }
 
 #' @noRd

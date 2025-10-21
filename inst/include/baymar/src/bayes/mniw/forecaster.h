@@ -246,6 +246,33 @@ protected:
 			row_sig_lower.triangularView<Eigen::Lower>().solve(valid_vec - point_forecast)
 		).squaredNorm() / 2 + num_row * num_col * log(2 * M_PI) / 2 + 4 * row_sig_lower.diagonal().array().log().sum() + 4 * col_sig_lower.diagonal().array().log().sum();
 	}
+
+	Eigen::MatrixXd getDesign() override {
+		BVHAR_DEBUG_LOG(debug_logger, "getDesign() called");
+		return Eigen::MatrixXd();
+		// if (exogen_updater) {
+		// 	return this->response;
+		// }
+		// return this->response;
+	}
+
+	void forecastIn(const int i, const Eigen::MatrixXd& design) override {
+		BVHAR_DEBUG_LOG(debug_logger, "updateRecursion(i={}, design) called", i);
+		for (int h = 0; h < step; ++h) {
+			point_forecast.setZero();
+			for (int j = 0; j < lag; ++j) {
+				point_forecast += row_coef.middleRows(j * num_row, num_row).transpose() * response.middleRows((h + j) * num_row, num_row) * col_coef.middleRows(j * num_col, num_col);
+			}
+			if (exogen_updater) {
+				exogen_updater->appendForecast(point_forecast, 0);
+			}
+			if (famar_updater) {
+				famar_updater->appendForecast(point_forecast, 0);
+			}
+			updateVariance();
+			pred_save.block(h * num_row, i * num_col, num_row, num_col) = point_forecast + error_mat;
+		}
+	}
 };
 
 inline std::vector<std::unique_ptr<MatMniwForecaster>> initialize_matmniwforecaster(
