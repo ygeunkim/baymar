@@ -133,7 +133,7 @@ Rcpp::List forecast_bmar_mniw(int num_chains, int lag, int step, Eigen::MatrixXd
 													 	 	Rcpp::List fit_record, Eigen::VectorXi seed_chain, int nthreads,
 															bool insample) {
 	auto forecaster = [&]() -> std::unique_ptr<baymar::MatMniwForecastRun> {
-		if (nrow_factor > 0 && ncol_factor > 0 && factor_lag > 0) {
+		if (nrow_factor > 0 && ncol_factor > 0) {
 			return std::make_unique<baymar::MatMniwForecastRun>(
 				num_chains, lag, step, response_mat, num_data, fit_record, seed_chain, nthreads,
 				BVHAR_NULLOPT, BVHAR_NULLOPT,
@@ -156,7 +156,7 @@ Rcpp::List forecast_bmarx_mniw(int num_chains, int lag, int step, Eigen::MatrixX
 															 Eigen::MatrixXd exogen, int exogen_lag, int nthreads,
 															 bool insample) {
 	auto forecaster = [&]() -> std::unique_ptr<baymar::MatMniwForecastRun> {
-		if (nrow_factor > 0 && ncol_factor > 0 && factor_lag > 0) {
+		if (nrow_factor > 0 && ncol_factor > 0) {
 			return std::make_unique<baymar::MatMniwForecastRun>(
 				num_chains, lag, step, response_mat, num_data, fit_record, seed_chain, nthreads,
 				exogen, exogen_lag,

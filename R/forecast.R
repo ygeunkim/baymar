@@ -31,7 +31,7 @@ predict.marbayes <- function(object, n_ahead, level = .05, newxreg, num_thread =
   if ("factor" %in% names(object$spec)) {
     nrow_factor <- object$spec$factor$nrow_factor
     ncol_factor <- object$spec$factor$ncol_factor
-    factor_lag <- object$spec$factor$lag
+    factor_lag <- ifelse(is_insample, 0, object$spec$factor$lag)
   }
   if (!is.null(eval.parent(object$call$exogen))) {
     exogen_list <- lapply(seq_len(dim(object$exogen_data)[3]), function(x) object$exogen_data[, , x])

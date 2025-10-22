@@ -74,6 +74,15 @@ public:
 	
 	void updateVarCoef(const int id, BVHAR_BHRNG& rng) override {
 		BVHAR_DEBUG_LOG(debug_logger, "updateVarCoef(id={}) called", id);
+		if (factor_lag == 0) {
+			for (int i = 0; i < num_design; ++i) {
+				exogen.middleRows(i * nrow_exogen, nrow_exogen) = bvhar::unvectorize(
+					mdfm_record->factor_record.row(id).segment(i * size_factor, size_factor),
+					ncol_exogen
+				);
+			}
+			return;
+		}
 		mdfm_record->updateParams(id, factor_coef, factor_sig, factor_lag);
 		// exogen.topRows(factor_lag * nrow_exogen) = F_{T - s + 1}, ..., F_T
 		// Eigen::MatrixXd factor_design(factor_lag, size_factor);
