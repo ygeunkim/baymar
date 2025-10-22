@@ -156,7 +156,7 @@ predict.mdfmbayes <- function(object, n_ahead, level = .05, num_thread = 1, med 
   var_names[[3]] <- 1:n_ahead
   nrow_factor <- object$spec$factor$nrow_factor
   ncol_factor <- object$spec$factor$ncol_factor
-  factor_lag <- object$spec$factor$lag
+  factor_lag <- ifelse(is_insample, 0, object$spec$factor$lag)
   pred_res <- forecast_bdfm_mniw(
     num_chains = object$chain,
     step = n_ahead,

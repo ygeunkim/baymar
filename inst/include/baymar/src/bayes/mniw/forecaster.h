@@ -276,7 +276,7 @@ protected:
 				exogen_updater->appendForecast(point_forecast, lag + h - exogen_updater->getLag());
 			}
 			if (famar_updater) {
-				famar_updater->appendForecast(point_forecast, 0);
+				famar_updater->appendForecast(point_forecast, h);
 			}
 			updateVariance();
 			pred_save.block(h * num_row, i * num_col, num_row, num_col) = point_forecast + error_mat;
