@@ -338,9 +338,15 @@ mar_bayes <- function(y,
     num_matrix <- c(num_matrix, rep(0, 2))
   }
   if (is_famar) {
-    num_col <- c(num_col, nrow_data, ncol_data, ncol_factor, ncol_factor, ncol_factor)
-    num_row <- c(num_row, nrow_factor, ncol_factor, nrow_factor, nrow_factor, nrow_factor)
-    num_matrix <- c(num_matrix, rep(0, 2), length(y_list) - p, lag_factor, 0)
+    if (lag_factor == 0) {
+      num_col <- c(num_col, nrow_data, ncol_data, ncol_factor)
+      num_row <- c(num_row, nrow_factor, ncol_factor, nrow_factor)
+      num_matrix <- c(num_matrix, rep(0, 2), length(y_list) - p)
+    } else {
+      num_col <- c(num_col, nrow_data, ncol_data, ncol_factor, ncol_factor, ncol_factor)
+      num_row <- c(num_row, nrow_factor, ncol_factor, nrow_factor, nrow_factor, nrow_factor)
+      num_matrix <- c(num_matrix, rep(0, 2), length(y_list) - p, lag_factor, 0)
+    }
   }
   if (is.matmnspec(row_spec)) {
     num_col <- c(num_col, 1)

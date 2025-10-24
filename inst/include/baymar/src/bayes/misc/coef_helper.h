@@ -109,7 +109,7 @@ inline void draw_coef_sig(
 	Eigen::Ref<const Eigen::MatrixXd> iw_scl,
 	double iw_df, int num_mat, int other_dim,
 	int nrow_col_exogen, int exogen_lag,
-	int dim_factor,
+	int dim_factor, bool factor_restrict,
 	const std::vector<xType>& x, const std::vector<Eigen::MatrixXd>& y,
 	BVHAR_BHRNG& rng
 ) {
@@ -176,7 +176,7 @@ inline void draw_coef_sig(
 			}
 		}
 	}
-	if (dim_factor > 0) {
+	if (dim_factor > 0 && factor_restrict) {
 		restrict_mat_loading(prior_mean.cols(), dim_factor, coef.bottomRows(dim_factor), sig_lower);
 	}
 }

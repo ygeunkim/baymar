@@ -44,10 +44,16 @@ public:
 class MatFactorAugmenter : public MatAugmenter {
 public:
 	MatFactorAugmenter(int num_iter, int num_design, const MatDfmParams& params)
-	: num_iter(num_iter), nrow_factor(params._nrow_factor), ncol_factor(params._ncol_factor),
+	: need_restrict(false), num_iter(num_iter), nrow_factor(params._nrow_factor), ncol_factor(params._ncol_factor),
 		size_factor(params._size_factor), lag(params._lag), num_design(num_design),
-		resid(num_design), factor_mat(num_design) {}
+		resid(num_design), factor_mat(num_design) {
+		mdfm_record = std::make_unique<MatDfmRecords>(num_iter, num_design, size_factor);
+	}
 	virtual ~MatFactorAugmenter() = default;
+
+	bool NeedsRestrict() {
+		return need_restrict;
+	}
 
 	void appendDesign(std::vector<Eigen::SparseMatrix<double>>& x) override {
 		// diag(Y_{t - 1}, ..., Y_{t - p}, X_t, ..., X_{t - s}, F_t)
@@ -65,6 +71,33 @@ public:
 			resid[i] = y[i] - row_coef.transpose() * x[i].topLeftCorner(x[i].rows() - nrow_factor, x[i].cols() - ncol_factor) * col_coef;
 			// resid[i] = y[i] - row_coef.transpose() * x[i] * col_coef;
 		}
+	}
+
+	void updateFactor(
+		Eigen::Ref<const Eigen::MatrixXd> row_coef, Eigen::Ref<const Eigen::MatrixXd> row_sig_lower,
+		Eigen::Ref<const Eigen::MatrixXd> col_coef, Eigen::Ref<const Eigen::MatrixXd> col_sig_lower,
+		BVHAR_BHRNG& rng
+	) override {
+		draw_wn_factor(
+			factor_mat, nrow_factor, ncol_factor,
+			row_coef.transpose(), row_sig_lower,
+			col_coef.transpose(), col_sig_lower,
+			resid, rng
+		);
+	}
+
+	void updateFactor(
+		Eigen::Ref<const Eigen::MatrixXd> row_coef, Eigen::Ref<const Eigen::MatrixXd> row_sig_lower,
+		Eigen::Ref<const Eigen::MatrixXd> col_coef, Eigen::Ref<const Eigen::MatrixXd> col_sig_lower,
+		std::vector<Eigen::MatrixXd>& y,
+		BVHAR_BHRNG& rng
+	) override {
+		draw_wn_factor(
+			factor_mat, nrow_factor, ncol_factor,
+			row_coef.transpose(), row_sig_lower,
+			col_coef.transpose(), col_sig_lower,
+			y, rng
+		);
 	}
 
 	// template <bool isRow = true>
@@ -110,24 +143,19 @@ public:
 			other_coef, other_sig_lower,
 			prior_mean, prior_prec, iw_scl, iw_df,
 			num_design, other_dim,
-			0, 0, dim_factor,
+			0, 0, dim_factor, need_restrict,
 			factor_mat, y, rng
 		);
 	}
 
-	// void updateRecords(int id) override {
-	// 	for (int i = 0; i < num_design; ++i) {
-	// 		// f_{11, p + 1}, f_{21, p + 1}, ..., f_{p1p2, p + 1}, f_{11, p + 2}, ..., f_{p1p2, T}
-	// 		factor_record.row(id).segment(i * size_factor, size_factor) = factor_mat[i].reshaped();
-	// 	}
-	// 	coef_record.row(id) = dfm_coef.reshaped();
-	// 	prec_record.row(id) = dfm_sig;
-	// }
+	void updateRecords(int id) override {
+		mdfm_record->assignRecords(
+			id, factor_mat,
+			num_design, size_factor
+		);
+	}
 
 	void appendRecords(BVHAR_LIST& list) override {
-		// list["F_record"] = factor_record;
-		// list["Rho_record"] = coef_record;
-		// list["Lambda_record"] = prec_record;
 		mdfm_record->appendRecords(list);
 	}
 
@@ -141,6 +169,7 @@ public:
 	}
 	
 protected:
+	bool need_restrict;
 	int num_iter, nrow_factor, ncol_factor, size_factor, lag, num_design;
 	std::vector<Eigen::MatrixXd> resid;
 	std::vector<Eigen::MatrixXd> factor_mat; // F_{p + 1}, ..., F_t
@@ -154,6 +183,7 @@ public:
 		dfm_coef(inits._init_factor_coef), dfm_sig(inits._init_factor_prec),
 		ig_shp(params._sig_shp), ig_scl(params._sig_scl), prior_mean(params._mean), prior_prec(params._prec) {
 		mdfm_record = std::make_unique<MatDfmVarRecords>(num_iter, num_design, size_factor, lag);
+		need_restrict = true;
 		// use ShrinkageUpdater for prior_prec later!
 	}
 	virtual ~MatFactorVarAugmenter() = default;
@@ -211,9 +241,15 @@ inline std::unique_ptr<MatFactorAugmenter> initialize_factoraugmenter(
 	std::unique_ptr<MatFactorAugmenter> augmenter_ptr;
 	// MatDfmVarParams dfm_params(*factor_lag, *nrow_factor, *ncol_factor);
 	// MatDfmVarInits dfm_inits((*nrow_factor) * (*ncol_factor), *factor_lag);
-	MatDfmVarParams params(param_prior);
-	MatDfmVarInits inits(param_init);
-	augmenter_ptr = std::make_unique<MatFactorVarAugmenter>(num_iter, num_design, params, inits);
+	int lag = BVHAR_CAST_INT(param_prior["lag"]);
+	if (lag == 0) {
+		MatDfmParams params(param_prior);
+		augmenter_ptr = std::make_unique<MatFactorAugmenter>(num_iter, num_design, params);
+	} else {
+		MatDfmVarParams params(param_prior);
+		MatDfmVarInits inits(param_init);
+		augmenter_ptr = std::make_unique<MatFactorVarAugmenter>(num_iter, num_design, params, inits);
+	}
 	return augmenter_ptr;
 }
 

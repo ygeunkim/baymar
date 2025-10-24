@@ -92,8 +92,8 @@ is.mathsspec <- function(x) {
 #' @order 1
 #' @export
 set_matfactor <- function(nrow_factor = 0, ncol_factor = 0, factor_lag = 1, factor_arsig = set_ldlt()) {
-  if (factor_lag <= 0 || factor_lag %% 1 != 0) {
-    stop("'factor_lag' positive integer.")
+  if (factor_lag < 0 || factor_lag %% 1 != 0) {
+    stop("'factor_lag' should be non-negative integer.")
   }
   if (!inherits(factor_arsig, "ldltspec")) {
     stop("Use 'set_ldlt()' for 'factor_arsig'.")

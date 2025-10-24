@@ -35,7 +35,7 @@ Rcpp::List forecast_bdfm_mniw(int num_chains, int step,
 															bool insample) {
 	auto forecaster = std::make_unique<baymar::MatDfmForecastRun>(
 		num_chains, step, nrow_factor, ncol_factor, factor_lag,
-		fit_record, seed_chain, nthreads
+		fit_record, seed_chain, nthreads, insample
 	);
 	if (insample) {
 		return Rcpp::wrap(forecaster->returnPredict());

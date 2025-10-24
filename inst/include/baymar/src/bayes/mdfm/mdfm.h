@@ -274,7 +274,7 @@ inline std::vector<std::unique_ptr<McmcMatDfm>> initialize_matdfm(
 	// using PARAMS = typename std::conditional<std::is_same<BaseDfm, McmcMatDfmVar>::value, MatDfmVarParams, MatDfmParams>::type;
 	// using INITS = typename std::conditional<std::is_same<BaseDfm, McmcMatDfmVar>::value, MatDfmVarInits, MatMniwInits>::type;
 	MatMniwParams mniw_params(num_iter, y, param_dfm);
-	MatDfmVarParams params(param_dfm);
+	// MatDfmVarParams params(param_dfm);
 	std::unique_ptr<MatFactorAugmenter> factor_updater;
 	std::vector<std::unique_ptr<McmcMatDfm>> mcmc_ptr(num_chains);
 	for (int i = 0; i < num_chains; ++i) {
@@ -286,8 +286,9 @@ inline std::vector<std::unique_ptr<McmcMatDfm>> initialize_matdfm(
 		col_updater->initPrec(mniw_params._col_prec.head(mniw_params._row_col_coef));
 		BVHAR_LIST init_spec = dfm_init[i];
 		MatMniwInits mniw_inits(init_spec);
-		MatDfmVarInits inits(init_spec);
-		factor_updater = std::make_unique<MatFactorVarAugmenter>(num_iter, y.size(), params, inits);
+		// MatDfmVarInits inits(init_spec);
+		// factor_updater = std::make_unique<MatFactorVarAugmenter>(num_iter, y.size(), params, inits);
+		factor_updater = initialize_factoraugmenter(num_iter, y.size(), param_dfm, init_spec);
 		mcmc_ptr[i] = std::make_unique<McmcMatDfm>(mniw_params, mniw_inits, factor_updater, row_updater, col_updater, static_cast<unsigned int>(seed_chain[i]));
 	}
 	return mcmc_ptr;
