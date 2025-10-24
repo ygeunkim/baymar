@@ -6,9 +6,11 @@ help_bmar_pred <- function(row_spec, col_spec, exogen_row_spec = NULL, exogen_co
     exogen <- chanqi2025[3:4, 4:5, 1:10]
     newxreg <- chanqi2025[3:4, 4:5, 11:13]
   }
-  factor_spec <- set_matfactor(nrow_factor = 0, ncol_factor = 0, factor_lag = 1)
+  factor_spec1 <- set_matfactor(nrow_factor = 0, ncol_factor = 0, factor_lag = 0)
+  factor_spec2 <- factor_spec1
   if (!is.null(factor_row_spec)) {
-    factor_spec <- set_matfactor(nrow_factor = 2, ncol_factor = 2, factor_lag = 2, factor_arsig = set_ldlt())
+    factor_spec1 <- set_matfactor(nrow_factor = 2, ncol_factor = 2, factor_lag = 1, factor_arsig = set_ldlt())
+    factor_spec2 <- set_matfactor(nrow_factor = 2, ncol_factor = 2, factor_lag = 0, factor_arsig = set_ldlt())
   }
   set.seed(1)
   fit_test <- mar_bayes(
@@ -16,7 +18,24 @@ help_bmar_pred <- function(row_spec, col_spec, exogen_row_spec = NULL, exogen_co
     p = 2,
     exogen = exogen,
     s = 0,
-    factor_spec = factor_spec,
+    factor_spec = factor_spec1,
+    num_chains = 2,
+    num_iter = 5,
+    num_burn = 2,
+    thinning = 1,
+    row_spec = row_spec,
+    col_spec = col_spec,
+    exogen_row_spec = exogen_row_spec,
+    exogen_col_spec = exogen_col_spec,
+    num_thread = 1
+  )
+  set.seed(1)
+  fit_test2 <- mar_bayes(
+    toy_data,
+    p = 2,
+    exogen = exogen,
+    s = 0,
+    factor_spec = factor_spec2,
     num_chains = 2,
     num_iter = 5,
     num_burn = 2,
@@ -29,6 +48,8 @@ help_bmar_pred <- function(row_spec, col_spec, exogen_row_spec = NULL, exogen_co
   )
   set.seed(1)
   predict(fit_test, n_ahead = 3, newxreg = newxreg)
+  set.seed(1)
+  predict(fit_test2, n_ahead = 3, newxreg = newxreg)
 }
 
 help_bmar_insample <- function(row_spec, col_spec, exogen_row_spec = NULL, exogen_col_spec = NULL, factor_row_spec = NULL, factor_col_spec = NULL) {
@@ -37,9 +58,11 @@ help_bmar_insample <- function(row_spec, col_spec, exogen_row_spec = NULL, exoge
   if (!is.null(exogen_row_spec)) {
     exogen <- chanqi2025[3:4, 4:5, 1:10]
   }
-  factor_spec <- set_matfactor(nrow_factor = 0, ncol_factor = 0, factor_lag = 1)
+  factor_spec1 <- set_matfactor(nrow_factor = 0, ncol_factor = 0, factor_lag = 0)
+  factor_spec2 <- factor_spec1
   if (!is.null(factor_row_spec)) {
-    factor_spec <- set_matfactor(nrow_factor = 2, ncol_factor = 2, factor_lag = 2, factor_arsig = set_ldlt())
+    factor_spec1 <- set_matfactor(nrow_factor = 2, ncol_factor = 2, factor_lag = 1, factor_arsig = set_ldlt())
+    factor_spec2 <- set_matfactor(nrow_factor = 2, ncol_factor = 2, factor_lag = 0, factor_arsig = set_ldlt())
   }
   set.seed(1)
   fit_test <- mar_bayes(
@@ -47,7 +70,24 @@ help_bmar_insample <- function(row_spec, col_spec, exogen_row_spec = NULL, exoge
     p = 2,
     exogen = exogen,
     s = 0,
-    factor_spec = factor_spec,
+    factor_spec = factor_spec1,
+    num_chains = 2,
+    num_iter = 5,
+    num_burn = 2,
+    thinning = 1,
+    row_spec = row_spec,
+    col_spec = col_spec,
+    exogen_row_spec = exogen_row_spec,
+    exogen_col_spec = exogen_col_spec,
+    num_thread = 1
+  )
+  set.seed(1)
+  fit_test2 <- mar_bayes(
+    toy_data,
+    p = 2,
+    exogen = exogen,
+    s = 0,
+    factor_spec = factor_spec2,
     num_chains = 2,
     num_iter = 5,
     num_burn = 2,
@@ -60,6 +100,8 @@ help_bmar_insample <- function(row_spec, col_spec, exogen_row_spec = NULL, exoge
   )
   set.seed(1)
   predict(fit_test)
+  set.seed(1)
+  predict(fit_test2)
 }
 
 help_bmdfm_pred <- function(row_spec, col_spec) {
@@ -77,7 +119,21 @@ help_bmdfm_pred <- function(row_spec, col_spec) {
     num_thread = 1
   )
   set.seed(1)
+  fit_test2 <- mdfm_bayes(
+    toy_data,
+    factor_spec = set_matfactor(nrow_factor = 2, ncol_factor = 2, factor_lag = 0, factor_arsig = set_ldlt()),
+    num_chains = 2,
+    num_iter = 5,
+    num_burn = 2,
+    thinning = 1,
+    row_spec = row_spec,
+    col_spec = col_spec,
+    num_thread = 1
+  )
+  set.seed(1)
   predict(fit_test, n_ahead = 3)
+  set.seed(1)
+  predict(fit_test2, n_ahead = 3)
 }
 
 help_bmdfm_insample <- function(row_spec, col_spec) {
@@ -95,7 +151,21 @@ help_bmdfm_insample <- function(row_spec, col_spec) {
     num_thread = 1
   )
   set.seed(1)
+  fit_test2 <- mdfm_bayes(
+    toy_data,
+    factor_spec = set_matfactor(nrow_factor = 2, ncol_factor = 2, factor_lag = 0, factor_arsig = set_ldlt()),
+    num_chains = 2,
+    num_iter = 5,
+    num_burn = 2,
+    thinning = 1,
+    row_spec = row_spec,
+    col_spec = col_spec,
+    num_thread = 1
+  )
+  set.seed(1)
   predict(fit_test)
+  set.seed(1)
+  predict(fit_test2)
 }
 
 test_that("Forecasting - Minnesota Prior", {

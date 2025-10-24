@@ -202,7 +202,9 @@ inline void initialize_matdfm_record(
 			BVHAR_CAST<Eigen::MatrixXd>(factor_prec_list[chain_id])
 		);
 	} else {
-		// Add when other priors are defined
+		record = std::make_unique<MatDfmRecords>(
+			BVHAR_CAST<Eigen::MatrixXd>(factor_list[chain_id])
+		);
 	}
 }
 

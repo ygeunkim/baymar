@@ -8,7 +8,7 @@
 namespace baymar {
 
 class MatDfmForecaster;
-class MatDfmVarForecaster;
+// class MatDfmVarForecaster;
 class MatDfmForecastRun;
 template <bool> class MatDfmOutForecastRun;
 template <bool> class MatDfmRollForecastRun;
@@ -18,11 +18,16 @@ class MatDfmForecaster : public bvhar::BayesForecaster<Eigen::MatrixXd, Eigen::M
 public:
 	MatDfmForecaster(
 		const MatMniwRecords& mniw_records,
-		int step, int nrow_factor, int ncol_factor, unsigned int seed
+		std::unique_ptr<MatFactorForecaster>& factor_forecaster,
+		int step,
+		// int nrow_factor, int ncol_factor,
+		unsigned int seed
 	)
 	: bvhar::BayesForecaster<Eigen::MatrixXd, Eigen::MatrixXd>(step, Eigen::MatrixXd(), 1, mniw_records.row_coef_record.rows(), seed),
 		mat_record(std::make_unique<MatMniwRecords>(mniw_records)),
-		nrow_factor(nrow_factor), ncol_factor(ncol_factor),
+		factor_updater(std::move(factor_forecaster)),
+		// nrow_factor(nrow_factor), ncol_factor(ncol_factor),
+		nrow_factor(factor_updater->get_nrow_factor()), ncol_factor(factor_updater->get_ncol_factor()),
 		num_row(mniw_records.row_coef_record.cols() / nrow_factor),
 		num_col(mniw_records.col_coef_record.cols() / ncol_factor),
 		row_coef(Eigen::MatrixXd::Zero(nrow_factor, num_row)),
@@ -141,22 +146,23 @@ protected:
 	}
 };
 
-class MatDfmVarForecaster : public MatDfmForecaster {
-public:
-	MatDfmVarForecaster(
-		const MatMniwRecords& mniw_records,
-		std::unique_ptr<MatFactorVarForecaster>& factor_forecaster,
-		int step, unsigned int seed
-	)
-	: MatDfmForecaster(mniw_records, step, factor_forecaster->get_nrow_factor(), factor_forecaster->get_ncol_factor(), seed) {
-		factor_updater = std::move(factor_forecaster);
-	}
-	virtual ~MatDfmVarForecaster() = default;
-};
+// class MatDfmVarForecaster : public MatDfmForecaster {
+// public:
+// 	MatDfmVarForecaster(
+// 		const MatMniwRecords& mniw_records,
+// 		std::unique_ptr<MatFactorVarForecaster>& factor_forecaster,
+// 		int step, unsigned int seed
+// 	)
+// 	: MatDfmForecaster(mniw_records, step, factor_forecaster->get_nrow_factor(), factor_forecaster->get_ncol_factor(), seed) {
+// 		factor_updater = std::move(factor_forecaster);
+// 	}
+// 	virtual ~MatDfmVarForecaster() = default;
+// };
 
 inline std::vector<std::unique_ptr<MatDfmForecaster>> initialize_matdfmforecaster(
 	int num_chains, int step, int nrow_factor, int ncol_factor, int factor_lag,
-	BVHAR_LIST& fit_record, Eigen::Ref<const Eigen::VectorXi> seed_chain, int nthreads
+	BVHAR_LIST& fit_record, Eigen::Ref<const Eigen::VectorXi> seed_chain, int nthreads,
+	BVHAR_OPTIONAL<bool> factor_insample = BVHAR_NULLOPT
 ) {
 	BVHAR_STRING a_name = "A_record";
 	BVHAR_STRING sigr_name = "SigmaR_record";
@@ -169,19 +175,39 @@ inline std::vector<std::unique_ptr<MatDfmForecaster>> initialize_matdfmforecaste
 	for (int i = 0; i < num_chains; ++i) {
 		std::unique_ptr<MatMniwRecords> mat_record;
 		std::unique_ptr<MatDfmRecords> mdfm_record;
-		std::unique_ptr<MatFactorVarForecaster> factor_updater;
+		std::unique_ptr<MatFactorForecaster> factor_updater;
 		initialize_matmniw_record(mat_record, i, fit_record, a_name, sigr_name, b_name, sigc_name);
-		initialize_matdfm_record(mdfm_record, i, fit_record, f_name, rho_name, prec_name);
-		auto* mdfm_var_record = dynamic_cast<MatDfmVarRecords*>(mdfm_record.get());
-		// int num_row = mat_record->row_coef_record.cols() / nrow_factor;
-		// int num_col = mat_record->col_coef_record.cols() / ncol_factor;
-		factor_updater = std::make_unique<MatFactorVarForecaster>(
-			*mdfm_var_record, step, factor_lag,
-			mat_record->row_coef_record.cols() / nrow_factor,
-			mat_record->col_coef_record.cols() / ncol_factor,
-			nrow_factor, ncol_factor
-		);
-		forecaster[i] = std::make_unique<MatDfmVarForecaster>(*mat_record, factor_updater, step, static_cast<unsigned int>(seed_chain[i]));
+		if (BVHAR_CONTAINS(fit_record, "Rho_record")) {
+			initialize_matdfm_record(mdfm_record, i, fit_record, f_name, rho_name, prec_name);
+			auto* mdfm_var_record = dynamic_cast<MatDfmVarRecords*>(mdfm_record.get());
+			// int num_row = mat_record->row_coef_record.cols() / nrow_factor;
+			// int num_col = mat_record->col_coef_record.cols() / ncol_factor;
+			factor_updater = std::make_unique<MatFactorVarForecaster>(
+				*mdfm_var_record, step, factor_lag,
+				mat_record->row_coef_record.cols() / nrow_factor,
+				mat_record->col_coef_record.cols() / ncol_factor,
+				nrow_factor, ncol_factor
+			);
+		} else {
+			if (factor_insample && *factor_insample) {
+				initialize_matdfm_record(mdfm_record, i, fit_record, f_name);
+				factor_updater = std::make_unique<MatFactorForecaster>(
+					*mdfm_record, step, 0,
+					mat_record->row_coef_record.cols() / nrow_factor,
+					mat_record->col_coef_record.cols() / ncol_factor,
+					nrow_factor, ncol_factor
+				);
+			} else {
+				factor_updater = std::make_unique<MatFactorForecaster>(
+					step, 0,
+					mat_record->row_coef_record.cols() / nrow_factor,
+					mat_record->col_coef_record.cols() / ncol_factor,
+					nrow_factor, ncol_factor
+				);
+			}
+		}
+		// forecaster[i] = std::make_unique<MatDfmVarForecaster>(*mat_record, factor_updater, step, static_cast<unsigned int>(seed_chain[i]));
+		forecaster[i] = std::make_unique<MatDfmForecaster>(*mat_record, factor_updater, step, static_cast<unsigned int>(seed_chain[i]));
 	}
 	return forecaster;
 }
@@ -190,7 +216,8 @@ class MatDfmForecastRun : public bvhar::McmcForecastRun<Eigen::MatrixXd, Eigen::
 public:
 	MatDfmForecastRun(
 		int num_chains, int step, int nrow_factor, int ncol_factor, int factor_lag,
-		BVHAR_LIST& fit_record, Eigen::Ref<const Eigen::VectorXi> seed_chain, int nthreads
+		BVHAR_LIST& fit_record, Eigen::Ref<const Eigen::VectorXi> seed_chain, int nthreads,
+		BVHAR_OPTIONAL<bool> factor_insample = BVHAR_NULLOPT
 	)
 	: bvhar::McmcForecastRun<Eigen::MatrixXd, Eigen::MatrixXd>(num_chains, 1, step, nthreads) {
 		BVHAR_DEBUG_LOG(
@@ -201,7 +228,8 @@ public:
 		auto temp_forecaster = initialize_matdfmforecaster(
 			num_chains, step,
 			nrow_factor, ncol_factor, factor_lag,
-			fit_record, seed_chain, nthreads
+			fit_record, seed_chain, nthreads,
+			factor_insample
 		);
 		for (int i = 0; i < num_chains; ++i) {
 			forecaster[i] = std::move(temp_forecaster[i]);
@@ -363,8 +391,11 @@ protected:
 		auto* mcmc_mdfm = dynamic_cast<McmcMatDfm*>(model[window][chain].get());
 		MatMniwRecords mniw_record = mcmc_mdfm->returnMniwRecords(0, thin);
 		MatDfmVarRecords mdfm_var_record = mcmc_mdfm->returnStructRecords<MatDfmVarRecords>(0, thin);
-		auto factor_updater = std::make_unique<MatFactorVarForecaster>(mdfm_var_record, step, factor_lag, num_row, num_col, nrow_factor, ncol_factor);
-		forecaster[window][chain] = std::make_unique<MatDfmVarForecaster>(mniw_record, factor_updater, step, static_cast<unsigned int>(seed_forecast[chain]));
+		// auto factor_updater = std::make_unique<MatFactorVarForecaster>(mdfm_var_record, step, factor_lag, num_row, num_col, nrow_factor, ncol_factor);
+		std::unique_ptr<MatFactorForecaster> factor_updater;
+		factor_updater = std::make_unique<MatFactorVarForecaster>(mdfm_var_record, step, factor_lag, num_row, num_col, nrow_factor, ncol_factor);
+		// forecaster[window][chain] = std::make_unique<MatDfmVarForecaster>(mniw_record, factor_updater, step, static_cast<unsigned int>(seed_forecast[chain]));
+		forecaster[window][chain] = std::make_unique<MatDfmForecaster>(mniw_record, factor_updater, step, static_cast<unsigned int>(seed_forecast[chain]));
 	}
 };
 
