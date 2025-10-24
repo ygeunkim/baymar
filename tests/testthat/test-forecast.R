@@ -10,7 +10,7 @@ help_bmar_pred <- function(row_spec, col_spec, exogen_row_spec = NULL, exogen_co
   factor_spec2 <- factor_spec1
   if (!is.null(factor_row_spec)) {
     factor_spec1 <- set_matfactor(nrow_factor = 2, ncol_factor = 2, factor_lag = 1, factor_arsig = set_ldlt())
-    factor_spec2 <- set_matfactor(nrow_factor = 2, ncol_factor = 2, factor_lag = 0, factor_arsig = set_ldlt())
+    factor_spec2 <- set_matfactor(nrow_factor = 2, ncol_factor = 2, factor_lag = 0)
   }
   set.seed(1)
   fit_test <- mar_bayes(
@@ -267,9 +267,11 @@ help_bmar_roll <- function(row_spec, col_spec, exogen_row_spec = NULL, exogen_co
     exogen <- chanqi2025[3:4, 4:5, 1:10]
     newxreg <- chanqi2025[3:4, 4:5, 11:12]
   }
-  factor_spec <- set_matfactor(nrow_factor = 0, ncol_factor = 0, factor_lag = 1)
+  factor_spec1 <- set_matfactor(nrow_factor = 0, ncol_factor = 0, factor_lag = 1)
+  factor_spec2 <- factor_spec1
   if (!is.null(factor_row_spec)) {
-    factor_spec <- set_matfactor(nrow_factor = 2, ncol_factor = 2, factor_lag = 2, factor_arsig = set_ldlt())
+    factor_spec1 <- set_matfactor(nrow_factor = 2, ncol_factor = 2, factor_lag = 2, factor_arsig = set_ldlt())
+    factor_spec2 <- set_matfactor(nrow_factor = 2, ncol_factor = 2, factor_lag = 0)
   }
   set.seed(1)
   fit_test <- mar_bayes(
@@ -277,7 +279,24 @@ help_bmar_roll <- function(row_spec, col_spec, exogen_row_spec = NULL, exogen_co
     p = 1,
     exogen = exogen,
     s = 0,
-    factor_spec = factor_spec,
+    factor_spec = factor_spec1,
+    num_chains = 2,
+    num_iter = 5,
+    num_burn = 2,
+    thinning = 1,
+    row_spec = row_spec,
+    col_spec = col_spec,
+    exogen_row_spec = exogen_row_spec,
+    exogen_col_spec = exogen_col_spec,
+    num_thread = 1
+  )
+  set.seed(1)
+  fit_test2 <- mar_bayes(
+    toy_data,
+    p = 1,
+    exogen = exogen,
+    s = 0,
+    factor_spec = factor_spec2,
     num_chains = 2,
     num_iter = 5,
     num_burn = 2,
@@ -290,6 +309,8 @@ help_bmar_roll <- function(row_spec, col_spec, exogen_row_spec = NULL, exogen_co
   )
   set.seed(1)
   forecast_roll(fit_test, 1, y_test = eval_data, newxreg = newxreg, lpl = TRUE)
+  set.seed(1)
+  forecast_roll(fit_test2, 1, y_test = eval_data, newxreg = newxreg, lpl = TRUE)
 }
 
 help_bmdfm_roll <- function(row_spec, col_spec) {
@@ -308,7 +329,21 @@ help_bmdfm_roll <- function(row_spec, col_spec) {
     num_thread = 1
   )
   set.seed(1)
+  fit_test2 <- mdfm_bayes(
+    toy_data,
+    factor_spec = set_matfactor(nrow_factor = 2, ncol_factor = 2, factor_lag = 0),
+    num_chains = 2,
+    num_iter = 5,
+    num_burn = 2,
+    thinning = 1,
+    row_spec = row_spec,
+    col_spec = col_spec,
+    num_thread = 1
+  )
+  set.seed(1)
   forecast_roll(fit_test, 1, y_test = eval_data, lpl = TRUE)
+  set.seed(1)
+  forecast_roll(fit_test2, 1, y_test = eval_data, lpl = TRUE)
 }
 
 test_that("Minnesota Prior - Rolling", {
@@ -365,9 +400,11 @@ help_bmar_expand <- function(row_spec, col_spec, exogen_row_spec = NULL, exogen_
     exogen <- chanqi2025[3:4, 4:5, 1:10]
     newxreg <- chanqi2025[3:4, 4:5, 11:12]
   }
-  factor_spec <- set_matfactor(nrow_factor = 0, ncol_factor = 0, factor_lag = 1)
+  factor_spec1 <- set_matfactor(nrow_factor = 0, ncol_factor = 0, factor_lag = 1)
+  factor_spec2 <- factor_spec1
   if (!is.null(factor_row_spec)) {
     factor_spec <- set_matfactor(nrow_factor = 2, ncol_factor = 2, factor_lag = 2, factor_arsig = set_ldlt())
+    factor_spec2 <- set_matfactor(nrow_factor = 2, ncol_factor = 2, factor_lag = 0)
   }
   set.seed(1)
   fit_test <- mar_bayes(
@@ -375,7 +412,24 @@ help_bmar_expand <- function(row_spec, col_spec, exogen_row_spec = NULL, exogen_
     p = 1,
     exogen = exogen,
     s = 0,
-    factor_spec = factor_spec,
+    factor_spec = factor_spec1,
+    num_chains = 2,
+    num_iter = 5,
+    num_burn = 2,
+    thinning = 1,
+    row_spec = row_spec,
+    col_spec = col_spec,
+    exogen_row_spec = exogen_row_spec,
+    exogen_col_spec = exogen_col_spec,
+    num_thread = 1
+  )
+  set.seed(1)
+  fit_test2 <- mar_bayes(
+    toy_data,
+    p = 1,
+    exogen = exogen,
+    s = 0,
+    factor_spec = factor_spec2,
     num_chains = 2,
     num_iter = 5,
     num_burn = 2,
@@ -388,6 +442,8 @@ help_bmar_expand <- function(row_spec, col_spec, exogen_row_spec = NULL, exogen_
   )
   set.seed(1)
   forecast_expand(fit_test, 1, y_test = eval_data, newxreg = newxreg, lpl = TRUE)
+  set.seed(1)
+  forecast_expand(fit_test2, 1, y_test = eval_data, newxreg = newxreg, lpl = TRUE)
 }
 
 help_bmdfm_expand <- function(row_spec, col_spec) {
@@ -406,7 +462,21 @@ help_bmdfm_expand <- function(row_spec, col_spec) {
     num_thread = 1
   )
   set.seed(1)
+  fit_test2 <- mdfm_bayes(
+    toy_data,
+    factor_spec = set_matfactor(nrow_factor = 2, ncol_factor = 2, factor_lag = 0),
+    num_chains = 2,
+    num_iter = 5,
+    num_burn = 2,
+    thinning = 1,
+    row_spec = row_spec,
+    col_spec = col_spec,
+    num_thread = 1
+  )
+  set.seed(1)
   forecast_expand(fit_test, 1, y_test = eval_data, lpl = TRUE)
+  set.seed(1)
+  forecast_expand(fit_test2, 1, y_test = eval_data, lpl = TRUE)
 }
 
 test_that("Minnesota Prior - Expanding", {
