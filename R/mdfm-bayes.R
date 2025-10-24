@@ -160,9 +160,15 @@ mdfm_bayes <- function(y,
   fac_series <- array(colMeans(res$F_record), dim = c(nrow_factor, ncol_factor, length(y_list)))
   # Should compute posterior mean of F_t: will be 3d array
   is_symm <- grepl(pattern = "^Sigma", x = param_names)
-  num_col <- c(nrow_data, nrow_data, ncol_data, ncol_data, ncol_factor, ncol_factor, ncol_factor)
-  num_row <- c(nrow_row_coef, nrow_data, nrow_col_coef, ncol_data, nrow_factor, nrow_factor, nrow_factor)
-  num_matrix <- c(rep(0, 4), length(y_list), lag_factor, 0)
+  if (lag_factor == 0) {
+    num_col <- c(nrow_data, nrow_data, ncol_data, ncol_data, ncol_factor)
+    num_row <- c(nrow_row_coef, nrow_data, nrow_col_coef, ncol_data, nrow_factor)
+    num_matrix <- c(rep(0, 4), length(y_list))
+  } else {
+    num_col <- c(nrow_data, nrow_data, ncol_data, ncol_data, ncol_factor, ncol_factor, ncol_factor)
+    num_row <- c(nrow_row_coef, nrow_data, nrow_col_coef, ncol_data, nrow_factor, nrow_factor, nrow_factor)
+    num_matrix <- c(rep(0, 4), length(y_list), lag_factor, 0)
+  }
   if (is.matmnspec(row_spec)) {
     num_col <- c(num_col, 1)
     num_row <- c(num_row, 0)

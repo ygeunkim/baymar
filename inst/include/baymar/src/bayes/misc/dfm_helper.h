@@ -5,6 +5,43 @@
 
 namespace baymar {
 
+inline void draw_wn_factor(std::vector<Eigen::MatrixXd>& factor_mat, int rows_factor, int cols_factor,
+													 Eigen::Ref<const Eigen::MatrixXd> row_coef, Eigen::Ref<const Eigen::MatrixXd> row_sig_lower,
+													 Eigen::Ref<const Eigen::MatrixXd> col_coef, Eigen::Ref<const Eigen::MatrixXd> col_sig_lower,
+													 std::vector<Eigen::MatrixXd>& y, BVHAR_BHRNG& rng) {
+	Eigen::MatrixXd col_inv_sig_coef = col_sig_lower.triangularView<Eigen::Lower>().solve<Eigen::OnTheRight>(
+		col_sig_lower.triangularView<Eigen::Lower>().solve(col_coef).transpose()
+	);
+	Eigen::MatrixXd row_inv_sig_coef = row_sig_lower.triangularView<Eigen::Lower>().solve<Eigen::OnTheRight>(
+		row_sig_lower.triangularView<Eigen::Lower>().solve(row_coef).transpose()
+	);
+	Eigen::MatrixXd post_solve = bvhar::kronecker_eigen(col_inv_sig_coef, row_inv_sig_coef);
+	Eigen::MatrixXd post_cov = post_solve * bvhar::kronecker_eigen(col_coef, row_coef);
+	// Eigen::MatrixXd post_cov = bvhar::kronecker_eigen((col_inv_sig_coef * col_coef).eval(), (row_inv_sig_coef * row_coef).eval());
+	Eigen::LLT<Eigen::MatrixXd> llt_of_prec;
+	int len_factor = rows_factor * cols_factor;
+	Eigen::VectorXd vec_normal(len_factor);
+	Eigen::VectorXd post_mean(len_factor);
+	double temp_penalty = 0;
+	do {
+		Eigen::MatrixXd I_n = Eigen::MatrixXd::Identity(len_factor, len_factor);
+		llt_of_prec.compute((post_cov + I_n + temp_penalty * I_n).selfadjointView<Eigen::Lower>());
+		temp_penalty += .01;
+	} while (llt_of_prec.info() != Eigen::Success && temp_penalty < .1);
+	if (llt_of_prec.info() != Eigen::Success) {
+		eigen_assert("LLT failed in precision sampler.");
+	}
+	int num_design = y.size();
+	for (int i = 0; i < num_design; ++i) {
+		post_mean = llt_of_prec.solve(post_solve * y[i].reshaped());
+		// post_mean = llt_of_prec.solve((row_inv_sig_coef * y[i] * col_inv_sig_coef.transpose()).reshaped());
+		for (int j = 0; j < len_factor; ++j) {
+			vec_normal[j] = bvhar::normal_rand(rng);
+		}
+		factor_mat[i] = bvhar::unvectorize(post_mean + llt_of_prec.matrixU().solve(vec_normal), cols_factor);
+	}
+}
+
 /**
  * @brief Generate factor matrix of vec(F_t) modeling
  * 

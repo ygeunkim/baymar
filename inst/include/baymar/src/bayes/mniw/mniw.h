@@ -227,6 +227,7 @@ protected:
 		// 	0,
 		// 	x, y, rng
 		// );
+		bool factor_restrict = false;
 		if (famar_updater) {
 			famar_updater->updateResid(
 				x, y,
@@ -238,6 +239,7 @@ protected:
 				rng
 			);
 			famar_updater->appendDesign(x);
+			factor_restrict = famar_updater->NeedsRestrict();
 			// famar_updater->updateCoefCov<true>(
 			// 	row_coef.bottomRows(nrow_factor), row_sig_lower,
 			// 	col_coef.bottomRows(ncol_factor), col_sig_lower,
@@ -261,7 +263,7 @@ protected:
 			row_prior_mean, row_prior_prec, row_iw_scl, row_iw_df,
 			num_design, num_col,
 			nrow_row_exogen, exogen_lag,
-			nrow_factor,
+			nrow_factor, factor_restrict,
 			x, y, rng
 		);
 		draw_coef_sig<false>(
@@ -270,7 +272,7 @@ protected:
 			col_prior_mean, col_prior_prec, col_iw_scl, col_iw_df,
 			num_design, num_row,
 			nrow_col_exogen, exogen_lag,
-			ncol_factor,
+			ncol_factor, factor_restrict,
 			x, y, rng
 		);
 	}

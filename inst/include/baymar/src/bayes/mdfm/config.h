@@ -66,6 +66,8 @@ struct MatDfmVarInits {
 struct MatDfmRecords {
 	Eigen::MatrixXd factor_record;
 
+	MatDfmRecords() {}
+
 	MatDfmRecords(int num_iter, int num_design, int size_factor)
 	: factor_record(Eigen::MatrixXd::Zero(num_iter + 1, num_design * size_factor)) {}
 	
@@ -90,7 +92,9 @@ struct MatDfmRecords {
 		std::vector<Eigen::MatrixXd>& factor_mat,
 		const Eigen::MatrixXd& factor_coef, const Eigen::VectorXd& factor_prec,
 		int num_design, int size_factor
-	) = 0;
+	) {
+		assignRecords(id, factor_mat, num_design, size_factor);
+	}
 
 	// BVHAR_LIST returnListRecords(int nrow_row_coef, int num_row, int nrow_col_coef, int num_col, int num_design, int size_factor) {
 	// 	BVHAR_LIST res = MatMniwRecords::returnListRecords(nrow_row_coef, num_row, 0, 0, nrow_col_coef, num_col, 0, 0);
@@ -102,19 +106,15 @@ struct MatDfmRecords {
 		list["F_record"] = factor_record;
 	}
 
-	virtual void updateParams(const int id, Eigen::Ref<Eigen::MatrixXd> factor_coef, Eigen::Ref<Eigen::VectorXd> factor_sig, const int lag) = 0;
+	virtual void updateParams(const int id, Eigen::Ref<Eigen::MatrixXd> factor_coef, Eigen::Ref<Eigen::VectorXd> factor_sig, const int lag) {}
 
-	// MatDfmRecords returnDfmRecords(int num_iter, int num_burn, int thin) const {
-	// 	return MatDfmRecords(
-	// 		bvhar::thin_record(row_coef_record, num_iter, num_burn, thin).derived(),
-	// 		bvhar::thin_record(row_sigma_record, num_iter, num_burn, thin).derived(),
-	// 		bvhar::thin_record(col_coef_record, num_iter, num_burn, thin).derived(),
-	// 		bvhar::thin_record(col_sigma_record, num_iter, num_burn, thin).derived(),
-	// 		bvhar::thin_record(factor_record, num_iter, num_burn, thin).derived()
-	// 	);
-	// }
+	MatDfmRecords returnDfmRecords(int num_iter, int num_burn, int thin) const {
+		return MatDfmRecords(
+			bvhar::thin_record(factor_record, num_iter, num_burn, thin).derived()
+		);
+	}
 
-	virtual MatDfmVarRecords returnDfmVarRecords(int num_iter, int num_burn, int thin) const = 0;
+	virtual MatDfmVarRecords returnDfmVarRecords(int num_iter, int num_burn, int thin) const;
 
 	template <typename RecordType = MatDfmRecords>
 	RecordType returnRecords(int num_iter, int num_burn, int thin) const;
@@ -123,6 +123,8 @@ struct MatDfmRecords {
 struct MatDfmVarRecords : public MatDfmRecords {
 	Eigen::MatrixXd factor_coef_record;
 	Eigen::MatrixXd factor_prec_record;
+
+	MatDfmVarRecords() {}
 
 	MatDfmVarRecords(int num_iter, int num_design, int size_factor, int lag)
 	: MatDfmRecords(num_iter, num_design, size_factor),
@@ -171,10 +173,14 @@ struct MatDfmVarRecords : public MatDfmRecords {
 	}
 };
 
-// template <>
-// inline MatDfmRecords MatDfmRecords::returnRecords(int num_iter, int num_burn, int thin) const {
-//   return returnDfmRecords(num_iter, num_burn, thin);
-// }
+inline MatDfmVarRecords MatDfmRecords::returnDfmVarRecords(int num_iter, int num_burn, int thin) const {
+	return MatDfmVarRecords();
+}
+
+template <>
+inline MatDfmRecords MatDfmRecords::returnRecords(int num_iter, int num_burn, int thin) const {
+  return returnDfmRecords(num_iter, num_burn, thin);
+}
 
 template <>
 inline MatDfmVarRecords MatDfmRecords::returnRecords(int num_iter, int num_burn, int thin) const {
