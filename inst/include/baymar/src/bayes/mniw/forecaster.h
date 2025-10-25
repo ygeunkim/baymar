@@ -40,12 +40,14 @@ public:
 class MatFactorForecaster : public MatMniwExogenForecaster{
 public:
 	MatFactorForecaster(int step, int factor_lag, int num_row, int num_col, int nrow_factor, int ncol_factor)
-	: MatMniwExogenForecaster(0, Eigen::MatrixXd::Zero((factor_lag + step) * nrow_factor, ncol_factor), factor_lag + step, num_row, num_col),
+	// : MatMniwExogenForecaster(0, Eigen::MatrixXd::Zero((factor_lag + step) * nrow_factor, ncol_factor), factor_lag + step, num_row, num_col),
+	: MatMniwExogenForecaster(0, Eigen::MatrixXd::Zero(step * nrow_factor, ncol_factor), step, num_row, num_col),
 		step(step), factor_lag(factor_lag), size_factor(nrow_factor * ncol_factor),
 		vec_normal(size_factor) {}
 
 	MatFactorForecaster(const MatDfmRecords& records, int step, int factor_lag, int num_row, int num_col, int nrow_factor, int ncol_factor)
-	: MatMniwExogenForecaster(0, Eigen::MatrixXd::Zero((factor_lag + step) * nrow_factor, ncol_factor), factor_lag + step, num_row, num_col),
+	// : MatMniwExogenForecaster(0, Eigen::MatrixXd::Zero((factor_lag + step) * nrow_factor, ncol_factor), factor_lag + step, num_row, num_col),
+	: MatMniwExogenForecaster(0, Eigen::MatrixXd::Zero(step * nrow_factor, ncol_factor), step, num_row, num_col),
 		step(step), factor_lag(factor_lag), size_factor(nrow_factor * ncol_factor),
 		vec_normal(size_factor) {
 		mdfm_record = std::make_unique<MatDfmRecords>(records);
@@ -121,12 +123,13 @@ public:
 		Eigen::VectorXd factor_x(factor_lag * size_factor);
 		// Eigen::VectorXd vec_normal(size_factor);
 		for (int i = 0; i < factor_lag; ++i) {
-			exogen.middleRows(i * nrow_exogen, nrow_exogen) = bvhar::unvectorize(
-				mdfm_record->factor_record.row(id).segment((num_design - factor_lag + i) * size_factor, size_factor),
-				ncol_exogen
-			);
+			// exogen.middleRows(i * nrow_exogen, nrow_exogen) = bvhar::unvectorize(
+			// 	mdfm_record->factor_record.row(id).segment((num_design - factor_lag + i) * size_factor, size_factor),
+			// 	ncol_exogen
+			// );
 			// factor_design.row(i) = mdfm_record->factor_record.row(id).segment((num_design - factor_lag + i) * size_factor, size_factor);
-			factor_x.segment(i * size_factor, size_factor) = mdfm_record->factor_record.row(id).segment((num_design - factor_lag + i) * size_factor, size_factor);
+			// factor_x.segment(i * size_factor, size_factor) = mdfm_record->factor_record.row(id).segment((num_design - factor_lag + i) * size_factor, size_factor);
+			factor_x.segment(i * size_factor, size_factor) = mdfm_record->factor_record.row(id).segment((num_design - 1 - i) * size_factor, size_factor);
 		}
 		Eigen::VectorXd tmp_x = factor_x.segment(size_factor, (factor_lag - 1) * size_factor);
 		Eigen::VectorXd factor_pred = factor_x.head(size_factor);
@@ -134,11 +137,12 @@ public:
 			factor_x.segment(size_factor, (factor_lag - 1) * size_factor) = tmp_x;
 			factor_x.head(size_factor) = factor_pred;
 			for (int i = 0; i < size_factor; ++i) {
-				vec_normal[i] = bvhar::normal_rand(rng) * factor_sig[i];
+				vec_normal[i] = bvhar::normal_rand(rng) * sqrt(factor_sig[i]);
 			}
 			factor_pred = factor_coef.transpose() * factor_x + vec_normal;
 			tmp_x = factor_x.head((factor_lag - 1) * size_factor);
-			exogen.middleRows((factor_lag + h) * nrow_exogen, nrow_exogen) = bvhar::unvectorize(factor_pred, ncol_exogen);
+			// exogen.middleRows((factor_lag + h) * nrow_exogen, nrow_exogen) = bvhar::unvectorize(factor_pred, ncol_exogen);
+			exogen.middleRows(h * nrow_exogen, nrow_exogen) = bvhar::unvectorize(factor_pred, ncol_exogen);
 		}
 		// factor_generator = std::make_unique<bvhar::OlsSimulator>(
 		// 	step, 0, factor_lag,
@@ -200,7 +204,7 @@ protected:
 
 	void initLagged() override {
 		BVHAR_DEBUG_LOG(debug_logger, "initLagged() called");
-		last_pvec = build_dense_design(response, lag);
+		last_pvec = build_dense_design(response, num_row, lag);
 		point_forecast = Eigen::MatrixXd::Zero(num_row, num_col);
 		pred_save = Eigen::MatrixXd::Zero(step * num_row, num_sim * num_col);
 		tmp_vec = last_pvec.block(num_row, num_col, num_row * (lag - 1), num_col * (lag - 1));
@@ -210,7 +214,8 @@ protected:
 		BVHAR_DEBUG_LOG(debug_logger, "initRecursion(obs_vec) called");
 		last_pvec = obs_vec;
 		point_forecast = obs_vec.topLeftCorner(num_row, num_col);
-		tmp_vec = obs_vec.bottomRightCorner(num_row * (lag - 1), num_col * (lag - 1));
+		// tmp_vec = obs_vec.bottomRightCorner(num_row * (lag - 1), num_col * (lag - 1));
+		tmp_vec = obs_vec.block(num_row, num_col, num_row * (lag - 1), num_col * (lag - 1));
 	}
 
 	void setRecursion() override {

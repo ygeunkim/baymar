@@ -88,13 +88,16 @@ inline std::vector<Eigen::MatrixXd> marmatrix_to_vector(const Eigen::MatrixXd& y
 	return response;
 }
 
-// y is (Y_1^T, ..., Y_T^T)^T
-inline Eigen::MatrixXd build_dense_design(const Eigen::MatrixXd& y, int lag) {
-	int num_row = y.rows() / lag;
+// y is rbind(Y_1, ..., Y_T)
+// returns diag(Y_T, ..., Y_{T - p + 1})
+inline Eigen::MatrixXd build_dense_design(const Eigen::MatrixXd& y, int num_row, int lag) {
+	// int num_row = y.rows() / lag;
+	int num_data = y.rows() / num_row;
 	int num_col = y.cols();
 	Eigen::MatrixXd dense_x = Eigen::MatrixXd::Zero(num_row * lag, num_col * lag);
 	for (int i = 0; i < lag; ++i) {
-		dense_x.block(i * num_row, i * num_col, num_row, num_col) = y.middleRows(i * num_row, num_row);
+		// dense_x.block(i * num_row, i * num_col, num_row, num_col) = y.middleRows(i * num_row, num_row);
+		dense_x.block(i * num_row, i * num_col, num_row, num_col) = y.middleRows((num_data - 1 - i) * num_row, num_row);
 	}
 	return dense_x;
 }

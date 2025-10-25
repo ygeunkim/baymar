@@ -38,7 +38,7 @@ protected:
 
 	void initLagged() override {
 		BVHAR_DEBUG_LOG(debug_logger, "initLagged() called");
-		last_pvec = build_dense_design(response, lag);
+		last_pvec = build_dense_design(response, num_row, lag);
 		point_forecast = Eigen::MatrixXd::Zero(num_row, num_col);
 		pred_save = Eigen::MatrixXd::Zero(step * num_row, num_col);
 		tmp_vec = last_pvec.block(num_row, num_col, num_row * (lag - 1), num_col * (lag - 1));
