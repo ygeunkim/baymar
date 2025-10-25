@@ -2,6 +2,7 @@
 #define BAYMAR_BAYES_MDFM_AUGMENT_H
 
 #include "./config.h"
+// #include "../shrinkage/shrinkage.h"
 // #include "../misc/draw.h"
 // #include "../../math/design.h"
 
@@ -10,6 +11,7 @@ namespace baymar {
 class MatAugmenter;
 class MatFactorAugmenter;
 class MatFactorVarAugmenter;
+class MatFactorMarAugmenter;
 
 class MatAugmenter {
 public:
@@ -234,6 +236,149 @@ private:
 	Eigen::VectorXd prior_mean, prior_prec;
 };
 
+class MatFactorMarAugmenter : public MatFactorAugmenter {
+public:
+	MatFactorMarAugmenter(int num_iter, int num_design, const MatDfmParams& params)
+	: MatFactorAugmenter(num_iter, num_design, params),
+		fac_nrow_row_coef(nrow_factor * lag), fac_nrow_col_coef(ncol_factor * lag),
+		fac_row_coef(Eigen::MatrixXd::Random(fac_nrow_row_coef, nrow_factor)),
+		fac_row_sig_lower(Eigen::MatrixXd::Identity(nrow_factor, nrow_factor)),
+		fac_col_coef(Eigen::MatrixXd::Random(fac_nrow_col_coef, ncol_factor)),
+		fac_col_sig_lower(Eigen::MatrixXd::Identity(ncol_factor, ncol_factor)),
+		fac_row_mean(Eigen::MatrixXd::Zero(fac_nrow_row_coef, nrow_factor)),
+		fac_row_iw(Eigen::MatrixXd::Identity(nrow_factor, nrow_factor)),
+		fac_col_mean(Eigen::MatrixXd::Zero(fac_nrow_col_coef, ncol_factor)),
+		fac_col_iw(Eigen::MatrixXd::Identity(ncol_factor, ncol_factor)),
+		fac_row_prec(Eigen::VectorXd::Ones(fac_nrow_row_coef)),
+		fac_col_prec(Eigen::VectorXd::Ones(fac_nrow_col_coef)),
+		fac_row_df(nrow_factor + 2), fac_col_df(ncol_factor + 2) {
+		mdfm_record = std::make_unique<MatDfmMarRecords>(num_iter, num_design, nrow_factor, ncol_factor, lag);
+		need_restrict = true;
+	}
+	// MatFactorMarAugmenter(int num_iter, int num_design, const MatDfmMarParams& params, const MatDfmMarInits& inits)
+	// : MatFactorAugmenter(num_iter, num_design, params),
+	// 	fac_nrow_row_coef(nrow_factor * lag), fac_nrow_col_coef(ncol_factor * lag),
+	// 	fac_row_coef(inits.mniw_init._init_row_coef), fac_row_sig_lower(inits.mniw_init._init_row_lower),
+	// 	fac_col_coef(inits.mniw_init._init_col_coef), fac_col_sig_lower(inits.mniw_init._init_col_lower),
+	// 	fac_row_mean(params.mniw_params._row_mean), fac_row_iw(params.mniw_params._row_iw_scl),
+	// 	fac_col_mean(params.mniw_params._col_mean), fac_col_iw(params.mniw_params._col_iw_scl),
+	// 	fac_row_prec(params.mniw_params._row_prec), fac_col_prec(params.mniw_params._col_prec),
+	// 	fac_row_df(params.mniw_params._row_iw_df), fac_col_df(params.mniw_params._col_iw_df) {
+	// 	mdfm_record = std::make_unique<MatDfmMarRecords>(num_iter, num_design, nrow_factor, ncol_factor, lag);
+	// 	need_restrict = true;
+	// }
+	virtual ~MatFactorMarAugmenter() = default;
+
+	void updateFactor(
+		Eigen::Ref<const Eigen::MatrixXd> row_coef, Eigen::Ref<const Eigen::MatrixXd> row_sig_lower,
+		Eigen::Ref<const Eigen::MatrixXd> col_coef, Eigen::Ref<const Eigen::MatrixXd> col_sig_lower,
+		BVHAR_BHRNG& rng
+	) override {
+		// row_updater->updatePrec(
+		// 	fac_row_prec,
+		// 	fac_row_coef, fac_row_sig_lower,
+		// 	fac_row_mean,
+		// 	rng
+		// );
+		// col_updater->updatePrec(
+		// 	fac_col_prec,
+		// 	fac_col_coef, fac_col_sig_lower,
+		// 	fac_col_mean,
+		// 	rng
+		// );
+		draw_mar_factor(
+			factor_mat, lag, nrow_factor, ncol_factor,
+			fac_row_coef, fac_row_sig_lower,
+			fac_col_coef, fac_col_sig_lower,
+			row_coef.transpose(), row_sig_lower,
+			col_coef.transpose(), col_sig_lower,
+			resid, rng
+		);
+		// draw_coef_sig<true>(
+		// 	fac_row_coef, fac_row_sig_lower,
+		// 	fac_col_coef, fac_col_sig_lower,
+		// 	fac_row_mean, fac_row_prec, fac_row_iw, fac_row_df,
+		// 	num_design, ncol_factor,
+		// 	0, 0, 0, false,
+		// 	factor_x, factor_mat, rng
+		// );
+		// draw_coef_sig<false>(
+		// 	fac_col_coef, fac_col_sig_lower,
+		// 	fac_row_coef, fac_row_sig_lower,
+		// 	fac_col_mean, fac_col_prec, fac_col_iw, fac_col_df,
+		// 	num_design, nrow_factor,
+		// 	0, 0, 0, false,
+		// 	factor_x, factor_mat, rng
+		// );
+	}
+
+	void updateFactor(
+		Eigen::Ref<const Eigen::MatrixXd> row_coef, Eigen::Ref<const Eigen::MatrixXd> row_sig_lower,
+		Eigen::Ref<const Eigen::MatrixXd> col_coef, Eigen::Ref<const Eigen::MatrixXd> col_sig_lower,
+		std::vector<Eigen::MatrixXd>& y,
+		BVHAR_BHRNG& rng
+	) override {
+		// row_updater->updatePrec(
+		// 	fac_row_prec,
+		// 	fac_row_coef, fac_row_sig_lower,
+		// 	fac_row_mean,
+		// 	rng
+		// );
+		// col_updater->updatePrec(
+		// 	fac_col_prec,
+		// 	fac_col_coef, fac_col_sig_lower,
+		// 	fac_col_mean,
+		// 	rng
+		// );
+		draw_mar_factor(
+			factor_mat, lag, nrow_factor, ncol_factor,
+			fac_row_coef, fac_row_sig_lower,
+			fac_col_coef, fac_col_sig_lower,
+			row_coef.transpose(), row_sig_lower,
+			col_coef.transpose(), col_sig_lower,
+			y, rng
+		);
+		// draw_coef_sig<true>(
+		// 	fac_row_coef, fac_row_sig_lower,
+		// 	fac_col_coef, fac_col_sig_lower,
+		// 	fac_row_mean, fac_row_prec, fac_row_iw, fac_row_df,
+		// 	num_design, ncol_factor,
+		// 	0, 0, 0, false,
+		// 	factor_x, factor_mat, rng
+		// );
+		// draw_coef_sig<false>(
+		// 	fac_col_coef, fac_col_sig_lower,
+		// 	fac_row_coef, fac_row_sig_lower,
+		// 	fac_col_mean, fac_col_prec, fac_col_iw, fac_col_df,
+		// 	num_design, nrow_factor,
+		// 	0, 0, 0, false,
+		// 	factor_x, factor_mat, rng
+		// );
+	}
+
+	void updateRecords(int id) override {
+		mdfm_record->assignRecords(
+			id,
+			factor_mat,
+			fac_row_coef, fac_row_sig_lower,
+			fac_col_coef, fac_col_sig_lower,
+			num_design,
+			fac_nrow_row_coef, nrow_factor,
+			fac_nrow_col_coef, ncol_factor
+		);
+	}
+
+private:
+	int fac_nrow_row_coef, fac_nrow_col_coef;
+	Eigen::MatrixXd fac_row_coef, fac_row_sig_lower, fac_col_coef, fac_col_sig_lower;
+	Eigen::MatrixXd fac_row_mean, fac_row_iw, fac_col_mean, fac_col_iw;
+	Eigen::VectorXd fac_row_prec, fac_col_prec;
+	double fac_row_df, fac_col_df;
+	std::vector<Eigen::SparseMatrix<double>> factor_x;
+	// std::unique_ptr<MatShrinkageUpdater> row_updater;
+	// std::unique_ptr<MatShrinkageUpdater> col_updater;
+};
+
 inline std::unique_ptr<MatFactorAugmenter> initialize_factoraugmenter(
 	int num_iter, int num_design,
 	BVHAR_LIST& param_prior, BVHAR_LIST& param_init
@@ -241,6 +386,11 @@ inline std::unique_ptr<MatFactorAugmenter> initialize_factoraugmenter(
 	std::unique_ptr<MatFactorAugmenter> augmenter_ptr;
 	// MatDfmVarParams dfm_params(*factor_lag, *nrow_factor, *ncol_factor);
 	// MatDfmVarInits dfm_inits((*nrow_factor) * (*ncol_factor), *factor_lag);
+	// MatDfmParams params(param_prior);
+	// // MatDfmMarParams params(param_prior);
+	// // MatDfmMarInits inits(param_init);
+	// augmenter_ptr = std::make_unique<MatFactorMarAugmenter>(num_iter, num_design, params);
+	// return augmenter_ptr;
 	int lag = BVHAR_CAST_INT(param_prior["lag"]);
 	if (lag == 0) {
 		MatDfmParams params(param_prior);
