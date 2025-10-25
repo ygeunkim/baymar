@@ -108,7 +108,7 @@ inline void draw_coef_sig(
 	Eigen::Ref<const Eigen::MatrixXd> prior_mean, Eigen::Ref<const Eigen::VectorXd> prior_prec,
 	Eigen::Ref<const Eigen::MatrixXd> iw_scl,
 	double iw_df, int num_mat, int other_dim,
-	int nrow_col_exogen, int exogen_lag,
+	int nrow_exogen_coef, int exogen_lag,
 	int dim_factor, bool factor_restrict,
 	const std::vector<xType>& x, const std::vector<Eigen::MatrixXd>& y,
 	BVHAR_BHRNG& rng
@@ -160,22 +160,30 @@ inline void draw_coef_sig(
 	}
 	coef = llt_of_prec.matrixU().solve(coef * sig_lower.transpose()) + post_mean;
 	if (std::is_same<xType, Eigen::SparseMatrix<double>>::value) {
+		int ncol_coef = prior_mean.cols();
+		int nrow_coef = prior_mean.rows() - nrow_exogen_coef - dim_factor;
+		int lag = nrow_coef / ncol_coef;
 		if (!is_row::value) {
-			int num_col = prior_mean.cols();
-			int nrow_col_coef = prior_mean.rows() - nrow_col_exogen - dim_factor;
+			// int num_col = prior_mean.cols();
+			// int nrow_col_coef = prior_mean.rows() - nrow_exogen_coef - dim_factor;
 			// int lag = nrow_col_coef / num_col; // when B = (B_1, ..., B_p)^T
 			// restrict_mar_col(num_col, lag, coef.topRows(nrow_col_coef), sig_lower, llt_of_prec);
-			restrict_mar_col(num_col, nrow_col_coef / num_col, coef.topRows(nrow_col_coef), sig_lower, post_cov.topLeftCorner(nrow_col_coef, nrow_col_coef));
-			if (nrow_col_exogen > 0) {
-				restrict_mar_col(num_col, exogen_lag + 1, coef.middleRows(nrow_col_coef, nrow_col_exogen), sig_lower, post_cov.block(nrow_col_coef, nrow_col_coef, nrow_col_exogen, nrow_col_exogen));
+			restrict_mar_col(ncol_coef, lag, coef.topRows(nrow_coef), sig_lower, post_cov.topLeftCorner(nrow_coef, nrow_coef));
+			if (nrow_exogen_coef > 0) {
+				restrict_mar_col(ncol_coef, exogen_lag + 1, coef.middleRows(nrow_coef, nrow_exogen_coef), sig_lower, post_cov.block(nrow_coef, nrow_coef, nrow_exogen_coef, nrow_exogen_coef));
 			}
 		} else {
-			int num_row = coef.cols();
-			if (coef.topRows(num_row).trace() < 0) { // tr(A) > 0
-				coef *= -1.0;
-				other_coef *= -1.0;
+			for (int i = 0; i < lag; ++i) {
+				if (coef.middleRows(i * ncol_coef, ncol_coef).trace() <= 0) { // tr(A_i) > 0
+					coef.middleRows(i * ncol_coef, ncol_coef) *= -1.0;
+					other_coef.middleRows(i * other_dim, other_dim) *= -1.0;
+				}
+				// if (coef(i * ncol_coef, 0) <= 0) {
+				// 	coef.middleRows(i * ncol_coef, ncol_coef) *= -1.0;
+				// 	other_coef.middleRows(i * other_dim, other_dim) *= -1.0;
+				// }
 			}
-			coef /= coef.norm(); // fronorm(A) = 1
+			// Add trace > 0 for exogen part later
 			// if (coef(0, 0) <= 0) {
 			// 	coef = -coef;
 			// 	other_coef = -other_coef;
