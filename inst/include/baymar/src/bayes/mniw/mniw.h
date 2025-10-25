@@ -1,8 +1,8 @@
 #ifndef BAYMAR_BAYES_MNIW_MNIW_H
 #define BAYMAR_BAYES_MNIW_MNIW_H
 
-#include "./config.h"
-#include "../mdfm/augment.h"
+// #include "./config.h"
+#include "../mdfm/augment.h" // <- mdfm/config.h includes ./config.h
 
 namespace baymar {
 
