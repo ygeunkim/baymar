@@ -180,7 +180,7 @@ struct MatDfmVarRecords : public MatDfmRecords {
 	) override {
 		MatDfmRecords::assignRecords(id, factor_mat, num_design, size_factor);
 		factor_coef_record.row(id) = factor_coef.reshaped();
-		factor_prec_record.row(id) = factor_prec;
+		factor_prec_record.row(id) = factor_prec; // this is sigma, not precision -> change the name
 	}
 
 	void appendRecords(BVHAR_LIST& list) override {
@@ -196,7 +196,8 @@ struct MatDfmVarRecords : public MatDfmRecords {
 			// factor_coef.middleRows(i * size_factor, size_factor) = factor_coef_record.row(id).segment(i * size_factor, size_factor).asDiagonal();
 			factor_coef.middleRows(i * size_factor, size_factor) = temp_coef.col(i).asDiagonal();
 		}
-		factor_sig.array() = 1 / factor_prec_record.row(id).array();
+		// factor_sig.array() = 1 / factor_prec_record.row(id).array();
+		factor_sig = factor_prec_record.row(id).transpose();
 	}
 
 	MatDfmVarRecords returnDfmVarRecords(int num_iter, int num_burn, int thin) const override {
