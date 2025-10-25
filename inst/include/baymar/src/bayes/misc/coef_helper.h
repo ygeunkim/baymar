@@ -170,10 +170,16 @@ inline void draw_coef_sig(
 				restrict_mar_col(num_col, exogen_lag + 1, coef.middleRows(nrow_col_coef, nrow_col_exogen), sig_lower, post_cov.block(nrow_col_coef, nrow_col_coef, nrow_col_exogen, nrow_col_exogen));
 			}
 		} else {
-			if (coef(0, 0) <= 0) {
-				coef = -coef;
-				other_coef = -other_coef;
+			int num_row = coef.cols();
+			if (coef.topRows(num_row).trace() < 0) { // tr(A) > 0
+				coef *= -1.0;
+				other_coef *= -1.0;
 			}
+			coef /= coef.norm(); // fronorm(A) = 1
+			// if (coef(0, 0) <= 0) {
+			// 	coef = -coef;
+			// 	other_coef = -other_coef;
+			// }
 		}
 	}
 	if (dim_factor > 0 && factor_restrict) {
