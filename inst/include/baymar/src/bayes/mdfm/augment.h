@@ -294,22 +294,26 @@ public:
 			col_coef.transpose(), col_sig_lower,
 			resid, rng
 		);
-		// draw_coef_sig<true>(
-		// 	fac_row_coef, fac_row_sig_lower,
-		// 	fac_col_coef, fac_col_sig_lower,
-		// 	fac_row_mean, fac_row_prec, fac_row_iw, fac_row_df,
-		// 	num_design, ncol_factor,
-		// 	0, 0, 0, false,
-		// 	factor_x, factor_mat, rng
-		// );
-		// draw_coef_sig<false>(
-		// 	fac_col_coef, fac_col_sig_lower,
-		// 	fac_row_coef, fac_row_sig_lower,
-		// 	fac_col_mean, fac_col_prec, fac_col_iw, fac_col_df,
-		// 	num_design, nrow_factor,
-		// 	0, 0, 0, false,
-		// 	factor_x, factor_mat, rng
-		// );
+		// factor_mat: p + 1, ..., T
+		// F_t = A^T diag(F_{t - 1}, ..., F_{t - s}) B + V_t, t = p + 1 + s, ..., T
+		std::vector<Eigen::MatrixXd> response = build_mar_response(factor_mat, lag);
+		std::vector<Eigen::SparseMatrix<double>> factor_design = build_mar_design(factor_mat, lag);
+		draw_coef_sig<true>(
+			fac_row_coef, fac_row_sig_lower,
+			fac_col_coef, fac_col_sig_lower,
+			fac_row_mean, fac_row_prec, fac_row_iw, fac_row_df,
+			num_design - lag, ncol_factor,
+			0, 0, 0, false,
+			factor_design, response, rng
+		);
+		draw_coef_sig<false>(
+			fac_col_coef, fac_col_sig_lower,
+			fac_row_coef, fac_row_sig_lower,
+			fac_col_mean, fac_col_prec, fac_col_iw, fac_col_df,
+			num_design - lag, nrow_factor,
+			0, 0, 0, false,
+			factor_design, response, rng
+		);
 	}
 
 	void updateFactor(
@@ -338,22 +342,24 @@ public:
 			col_coef.transpose(), col_sig_lower,
 			y, rng
 		);
-		// draw_coef_sig<true>(
-		// 	fac_row_coef, fac_row_sig_lower,
-		// 	fac_col_coef, fac_col_sig_lower,
-		// 	fac_row_mean, fac_row_prec, fac_row_iw, fac_row_df,
-		// 	num_design, ncol_factor,
-		// 	0, 0, 0, false,
-		// 	factor_x, factor_mat, rng
-		// );
-		// draw_coef_sig<false>(
-		// 	fac_col_coef, fac_col_sig_lower,
-		// 	fac_row_coef, fac_row_sig_lower,
-		// 	fac_col_mean, fac_col_prec, fac_col_iw, fac_col_df,
-		// 	num_design, nrow_factor,
-		// 	0, 0, 0, false,
-		// 	factor_x, factor_mat, rng
-		// );
+		std::vector<Eigen::MatrixXd> response = build_mar_response(factor_mat, lag);
+		std::vector<Eigen::SparseMatrix<double>> factor_design = build_mar_design(factor_mat, lag);
+		draw_coef_sig<true>(
+			fac_row_coef, fac_row_sig_lower,
+			fac_col_coef, fac_col_sig_lower,
+			fac_row_mean, fac_row_prec, fac_row_iw, fac_row_df,
+			num_design - lag, ncol_factor,
+			0, 0, 0, false,
+			factor_design, response, rng
+		);
+		draw_coef_sig<false>(
+			fac_col_coef, fac_col_sig_lower,
+			fac_row_coef, fac_row_sig_lower,
+			fac_col_mean, fac_col_prec, fac_col_iw, fac_col_df,
+			num_design - lag, nrow_factor,
+			0, 0, 0, false,
+			factor_design, response, rng
+		);
 	}
 
 	void updateRecords(int id) override {
@@ -374,7 +380,6 @@ private:
 	Eigen::MatrixXd fac_row_mean, fac_row_iw, fac_col_mean, fac_col_iw;
 	Eigen::VectorXd fac_row_prec, fac_col_prec;
 	double fac_row_df, fac_col_df;
-	std::vector<Eigen::SparseMatrix<double>> factor_x;
 	// std::unique_ptr<MatShrinkageUpdater> row_updater;
 	// std::unique_ptr<MatShrinkageUpdater> col_updater;
 };
@@ -386,15 +391,15 @@ inline std::unique_ptr<MatFactorAugmenter> initialize_factoraugmenter(
 	std::unique_ptr<MatFactorAugmenter> augmenter_ptr;
 	// MatDfmVarParams dfm_params(*factor_lag, *nrow_factor, *ncol_factor);
 	// MatDfmVarInits dfm_inits((*nrow_factor) * (*ncol_factor), *factor_lag);
-	// MatDfmParams params(param_prior);
-	// // MatDfmMarParams params(param_prior);
-	// // MatDfmMarInits inits(param_init);
-	// augmenter_ptr = std::make_unique<MatFactorMarAugmenter>(num_iter, num_design, params);
-	// return augmenter_ptr;
 	int lag = BVHAR_CAST_INT(param_prior["lag"]);
 	if (lag == 0) {
 		MatDfmParams params(param_prior);
 		augmenter_ptr = std::make_unique<MatFactorAugmenter>(num_iter, num_design, params);
+	} else if (false) {
+		MatDfmParams params(param_prior);
+		// MatDfmMarParams params(param_prior);
+		// MatDfmMarInits inits(param_init);
+		augmenter_ptr = std::make_unique<MatFactorMarAugmenter>(num_iter, num_design, params);
 	} else {
 		MatDfmVarParams params(param_prior);
 		MatDfmVarInits inits(param_init);

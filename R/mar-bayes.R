@@ -328,7 +328,7 @@ mar_bayes <- function(y,
   col_sig <- diag(ncol_data)
   col_sig[lower.tri(col_sig, diag = TRUE)] <- colMeans(res$SigmaC_record)
   col_sig[upper.tri(col_sig, diag = FALSE)] <- col_sig[lower.tri(col_sig, diag = FALSE)]
-  is_symm <- grepl(pattern = "^Sigma", x = param_names)
+  is_symm <- grepl(pattern = "^Sigma|^Omega", x = param_names)
   num_col <- c(nrow_data, nrow_data, ncol_data, ncol_data)
   num_row <- c(nrow_row_coef, nrow_data, nrow_col_coef, ncol_data)
   num_matrix <- rep(0, 4)
@@ -343,9 +343,25 @@ mar_bayes <- function(y,
       num_row <- c(num_row, nrow_factor, ncol_factor, nrow_factor)
       num_matrix <- c(num_matrix, rep(0, 2), length(y_list) - p)
     } else {
-      num_col <- c(num_col, nrow_data, ncol_data, ncol_factor, ncol_factor, ncol_factor)
-      num_row <- c(num_row, nrow_factor, ncol_factor, nrow_factor, nrow_factor, nrow_factor)
-      num_matrix <- c(num_matrix, rep(0, 2), length(y_list) - p, lag_factor, 0)
+      if (FALSE) {
+        # Factor ~ MAR
+        num_col <- c(
+          num_col, nrow_data, ncol_data,
+          ncol_factor, nrow_factor, nrow_factor, ncol_factor, ncol_factor
+        )
+        nrow_factor_row_coef <- nrow_factor * lag_factor
+        nrow_factor_col_coef <- ncol_factor * lag_factor
+        num_row <- c(
+          num_row, nrow_factor, ncol_factor,
+          nrow_factor, nrow_factor_row_coef, nrow_factor, nrow_factor_col_coef, ncol_factor
+        )
+        num_matrix <- c(num_matrix, rep(0, 2), length(y_list) - p, rep(0, 4))
+      } else {
+        # Factor ~ VAR
+        num_col <- c(num_col, nrow_data, ncol_data, ncol_factor, ncol_factor, ncol_factor)
+        num_row <- c(num_row, nrow_factor, ncol_factor, nrow_factor, nrow_factor, nrow_factor)
+        num_matrix <- c(num_matrix, rep(0, 2), length(y_list) - p, lag_factor, 0)
+      }
     }
   }
   if (is.matmnspec(row_spec)) {
