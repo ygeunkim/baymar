@@ -341,11 +341,11 @@ inline void draw_mar_factor(std::vector<Eigen::MatrixXd>& factor_mat, int factor
 		eigen_assert("LLT failed in precision sampler.");
 	}
 	Eigen::MatrixXd fac_ar(rows_factor, cols_factor);
-	Eigen::MatrixXd left_ar = fac_row_coef.transpose().triangularView<Eigen::Upper>().solve(
+	Eigen::MatrixXd left_ar = fac_row_sig_lower.transpose().triangularView<Eigen::Upper>().solve(
 		fac_row_sig_lower.triangularView<Eigen::Lower>().solve(fac_row_coef.transpose())
 	);
 	Eigen::MatrixXd right_ar = fac_col_sig_lower.triangularView<Eigen::Lower>().solve<Eigen::OnTheRight>(
-		fac_col_sig_lower.triangularView<Eigen::Lower>().solve(fac_row_coef.transpose()).transpose()
+		fac_col_sig_lower.triangularView<Eigen::Lower>().solve(fac_col_coef.transpose()).transpose()
 	);
 	int num_design = y.size();
 	for (int i = factor_lag; i < num_design; ++i) {
