@@ -241,9 +241,9 @@ public:
 	MatFactorMarAugmenter(int num_iter, int num_design, const MatDfmParams& params)
 	: MatFactorAugmenter(num_iter, num_design, params),
 		fac_nrow_row_coef(nrow_factor * lag), fac_nrow_col_coef(ncol_factor * lag),
-		fac_row_coef(Eigen::MatrixXd::Random(fac_nrow_row_coef, nrow_factor)),
+		fac_row_coef(Eigen::MatrixXd::Identity(fac_nrow_row_coef, nrow_factor)),
 		fac_row_sig_lower(Eigen::MatrixXd::Identity(nrow_factor, nrow_factor)),
-		fac_col_coef(Eigen::MatrixXd::Random(fac_nrow_col_coef, ncol_factor)),
+		fac_col_coef(Eigen::MatrixXd::Identity(fac_nrow_col_coef, ncol_factor)),
 		fac_col_sig_lower(Eigen::MatrixXd::Identity(ncol_factor, ncol_factor)),
 		fac_row_mean(Eigen::MatrixXd::Zero(fac_nrow_row_coef, nrow_factor)),
 		fac_row_iw(Eigen::MatrixXd::Identity(nrow_factor, nrow_factor)),

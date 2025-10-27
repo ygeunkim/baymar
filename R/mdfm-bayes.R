@@ -167,7 +167,19 @@ mdfm_bayes <- function(y,
     num_row <- c(nrow_row_coef, nrow_data, nrow_col_coef, ncol_data, nrow_factor)
     num_matrix <- c(rep(0, 4), length(y_list))
   } else if (factor_spec$factor_type == "mar") {
-    # 
+    num_col <- c(
+      nrow_data, nrow_data, ncol_data, ncol_data,
+      ncol_factor,
+      nrow_factor, nrow_factor, ncol_factor, ncol_factor
+    )
+    nrow_factor_row_coef <- nrow_factor * lag_factor
+    nrow_factor_col_coef <- ncol_factor * lag_factor
+    num_row <- c(
+      nrow_row_coef, nrow_data, nrow_col_coef, ncol_data,
+      nrow_factor,
+      nrow_factor_row_coef, nrow_factor, nrow_factor_col_coef, ncol_factor
+    )
+    num_matrix <- c(rep(0, 4), length(y_list), rep(0, 4))
   } else if (factor_spec$factor_type == "var") {
     num_col <- c(nrow_data, nrow_data, ncol_data, ncol_data, ncol_factor, ncol_factor, ncol_factor)
     num_row <- c(nrow_row_coef, nrow_data, nrow_col_coef, ncol_data, nrow_factor, nrow_factor, nrow_factor)
