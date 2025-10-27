@@ -156,6 +156,8 @@ struct MatDfmRecords {
 
 	virtual MatDfmVarRecords returnDfmVarRecords(int num_iter, int num_burn, int thin) const;
 
+	virtual MatDfmMarRecords returnDfmMarRecords(int num_iter, int num_burn, int thin) const;
+
 	template <typename RecordType = MatDfmRecords>
 	RecordType returnRecords(int num_iter, int num_burn, int thin) const;
 };
@@ -217,6 +219,8 @@ struct MatDfmVarRecords : public MatDfmRecords {
 struct MatDfmMarRecords : public MatDfmRecords {
 	MatMniwRecords mniw_record;
 
+	MatDfmMarRecords() {}
+
 	MatDfmMarRecords(int num_iter, int num_design, int nrow_factor, int ncol_factor, int lag)
 	: MatDfmRecords(num_iter, num_design, nrow_factor * ncol_factor),
 		mniw_record(num_iter, nrow_factor, ncol_factor, nrow_factor * lag, ncol_factor * lag) {}
@@ -265,10 +269,24 @@ struct MatDfmMarRecords : public MatDfmRecords {
 			col_coef.rows(), col_coef.cols()
 		);
 	}
+
+	MatDfmMarRecords returnDfmMarRecords(int num_iter, int num_burn, int thin) const override {
+		return MatDfmMarRecords(
+			bvhar::thin_record(factor_record, num_iter, num_burn, thin).derived(),
+			bvhar::thin_record(mniw_record.row_coef_record, num_iter, num_burn, thin).derived(),
+			bvhar::thin_record(mniw_record.row_sigma_record, num_iter, num_burn, thin).derived(),
+			bvhar::thin_record(mniw_record.col_coef_record, num_iter, num_burn, thin).derived(),
+			bvhar::thin_record(mniw_record.col_sigma_record, num_iter, num_burn, thin).derived()
+		);
+	}
 };
 
 inline MatDfmVarRecords MatDfmRecords::returnDfmVarRecords(int num_iter, int num_burn, int thin) const {
 	return MatDfmVarRecords();
+}
+
+inline MatDfmMarRecords MatDfmRecords::returnDfmMarRecords(int num_iter, int num_burn, int thin) const {
+	return MatDfmMarRecords();
 }
 
 template <>
@@ -279,6 +297,11 @@ inline MatDfmRecords MatDfmRecords::returnRecords(int num_iter, int num_burn, in
 template <>
 inline MatDfmVarRecords MatDfmRecords::returnRecords(int num_iter, int num_burn, int thin) const {
   return returnDfmVarRecords(num_iter, num_burn, thin);
+}
+
+template <>
+inline MatDfmMarRecords MatDfmRecords::returnRecords(int num_iter, int num_burn, int thin) const {
+	return returnDfmMarRecords(num_iter, num_burn, thin);
 }
 
 inline void initialize_matdfm_record(

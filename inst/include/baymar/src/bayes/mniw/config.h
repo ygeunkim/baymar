@@ -67,6 +67,9 @@ struct MatMniwRecords {
 	Eigen::MatrixXd col_coef_record;
 	Eigen::MatrixXd col_sigma_record;
 
+	MatMniwRecords()
+	: row_coef_record(), row_sigma_record(), col_coef_record(), col_sigma_record() {}
+
 	MatMniwRecords(int num_iter, int num_row, int num_col, int nrow_row_coef, int nrow_col_coef)
 	: row_coef_record(num_iter + 1, nrow_row_coef * num_row),
 		row_sigma_record(num_iter + 1, num_row * (num_row + 1) / 2),
