@@ -305,8 +305,8 @@ inline void initialize_matdfm_record(
 		record = std::make_unique<MatDfmMarRecords>(
 			BVHAR_CAST<Eigen::MatrixXd>(factor_list[chain_id]),
 			BVHAR_CAST<Eigen::MatrixXd>(row_coef_list[chain_id]),
-			BVHAR_CAST<Eigen::MatrixXd>(col_coef_list[chain_id]),
 			BVHAR_CAST<Eigen::MatrixXd>(row_sig_list[chain_id]),
+			BVHAR_CAST<Eigen::MatrixXd>(col_coef_list[chain_id]),
 			BVHAR_CAST<Eigen::MatrixXd>(col_sig_list[chain_id])
 		);
 	} else {

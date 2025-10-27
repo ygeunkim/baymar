@@ -167,6 +167,7 @@ public:
 		col_coef(Eigen::MatrixXd::Zero(ncol_factor * factor_lag, ncol_factor)),
 		col_sig_lower(Eigen::MatrixXd::Ones(ncol_factor, ncol_factor)) {
 		mdfm_record = std::make_unique<MatDfmMarRecords>(records);
+		num_design = mdfm_record->factor_record.cols() / size_factor;
 	}
 	virtual ~MatFactorMarForecaster() = default;
 	
@@ -177,7 +178,7 @@ public:
 			return;
 		}
 		mdfm_record->updateParams(id, row_coef, row_sig_lower, col_coef, col_sig_lower);
-		Eigen::MatrixXd factor_x(factor_lag * nrow_exogen, factor_lag * ncol_exogen);
+		Eigen::MatrixXd factor_x = Eigen::MatrixXd::Zero(factor_lag * nrow_exogen, factor_lag * ncol_exogen);
 		for (int i = 0; i < factor_lag; ++i) {
 			factor_x.block(i * nrow_exogen, i * ncol_exogen, nrow_exogen, ncol_exogen) = bvhar::unvectorize(
 				mdfm_record->factor_record.row(id).segment((num_design - 1 - i) * size_factor, size_factor),
