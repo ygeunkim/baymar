@@ -146,6 +146,19 @@ struct MatMniwRecords {
 		}
 	}
 
+	void updateParams(
+		const int id,
+		Eigen::Ref<Eigen::MatrixXd> row_coef, Eigen::Ref<Eigen::MatrixXd> row_sig_lower,
+		Eigen::Ref<Eigen::MatrixXd> col_coef, Eigen::Ref<Eigen::MatrixXd> col_sig_lower,
+		int nrow_row_coef, int num_row,
+		int nrow_col_coef, int num_col
+	) {
+		row_coef = bvhar::unvectorize(row_coef_record.row(id).head(nrow_row_coef * num_row).transpose(), num_row);
+		col_coef = bvhar::unvectorize(col_coef_record.row(id).head(nrow_col_coef * num_col).transpose(), num_col);
+		fill_lower(row_sig_lower, row_sigma_record.row(id).transpose());
+		fill_lower(col_sig_lower, col_sigma_record.row(id).transpose());
+	}
+
 	BVHAR_LIST returnListRecords(
 		int nrow_row_coef, int num_row, int nrow_row_exogen, int nrow_factor,
 		int nrow_col_coef, int num_col, int nrow_col_exogen, int ncol_factor

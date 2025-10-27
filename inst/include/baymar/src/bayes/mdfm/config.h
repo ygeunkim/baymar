@@ -143,6 +143,11 @@ struct MatDfmRecords {
 
 	virtual void updateParams(const int id, Eigen::Ref<Eigen::MatrixXd> factor_coef, Eigen::Ref<Eigen::VectorXd> factor_sig, const int lag) {}
 
+	virtual void updateParams(
+		const int id, Eigen::Ref<Eigen::MatrixXd> row_coef, Eigen::Ref<Eigen::MatrixXd> row_sig_lower,
+		Eigen::Ref<Eigen::MatrixXd> col_coef, Eigen::Ref<Eigen::MatrixXd> col_sig_lower
+	) {}
+
 	MatDfmRecords returnDfmRecords(int num_iter, int num_burn, int thin) const {
 		return MatDfmRecords(
 			bvhar::thin_record(factor_record, num_iter, num_burn, thin).derived()
@@ -240,6 +245,17 @@ struct MatDfmMarRecords : public MatDfmRecords {
 		list["OmegaR_record"] = mniw_record.row_sigma_record;
 		list["FB_record"] = mniw_record.col_coef_record;
 		list["OmegaC_record"] = mniw_record.col_sigma_record;
+	}
+
+	void updateParams(
+		const int id, Eigen::Ref<Eigen::MatrixXd> row_coef, Eigen::Ref<Eigen::MatrixXd> row_sig_lower,
+		Eigen::Ref<Eigen::MatrixXd> col_coef, Eigen::Ref<Eigen::MatrixXd> col_sig_lower
+	) override {
+		mniw_record.updateParams(
+			id, row_coef, row_sig_lower, col_coef, col_sig_lower,
+			row_coef.rows(), row_coef.cols(),
+			col_coef.rows(), col_coef.cols()
+		);
 	}
 };
 
