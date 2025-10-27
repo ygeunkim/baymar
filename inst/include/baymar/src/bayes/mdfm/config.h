@@ -221,6 +221,14 @@ struct MatDfmMarRecords : public MatDfmRecords {
 	: MatDfmRecords(num_iter, num_design, nrow_factor * ncol_factor),
 		mniw_record(num_iter, nrow_factor, ncol_factor, nrow_factor * lag, ncol_factor * lag) {}
 
+	MatDfmMarRecords(
+		const Eigen::MatrixXd& factor_record,
+		const Eigen::MatrixXd& coef_row_record, const Eigen::MatrixXd& row_sigma_record,
+		const Eigen::MatrixXd& coef_col_record, const Eigen::MatrixXd& col_sigma_record
+	)
+	: MatDfmRecords(factor_record),
+		mniw_record(coef_row_record, row_sigma_record, coef_col_record, col_sigma_record) {}
+
 	void assignRecords(
 		int id,
 		std::vector<Eigen::MatrixXd>& factor_mat,
@@ -276,7 +284,9 @@ inline MatDfmVarRecords MatDfmRecords::returnRecords(int num_iter, int num_burn,
 inline void initialize_matdfm_record(
 	std::unique_ptr<MatDfmRecords>& record, int chain_id, BVHAR_LIST& dfm_record,
 	BVHAR_STRING& factor_name,
-	BVHAR_OPTIONAL<BVHAR_STRING> rho_name = BVHAR_NULLOPT, BVHAR_OPTIONAL<BVHAR_STRING> lambda_name = BVHAR_NULLOPT
+	BVHAR_OPTIONAL<BVHAR_STRING> rho_name = BVHAR_NULLOPT, BVHAR_OPTIONAL<BVHAR_STRING> lambda_name = BVHAR_NULLOPT,
+	BVHAR_OPTIONAL<BVHAR_STRING> fa_name = BVHAR_NULLOPT, BVHAR_OPTIONAL<BVHAR_STRING> fb_name = BVHAR_NULLOPT,
+	BVHAR_OPTIONAL<BVHAR_STRING> omegar_name = BVHAR_NULLOPT, BVHAR_OPTIONAL<BVHAR_STRING> omegac_name = BVHAR_NULLOPT
 ) {
 	BVHAR_PY_LIST factor_list = dfm_record[factor_name];
 	if (rho_name && lambda_name) {
@@ -286,6 +296,18 @@ inline void initialize_matdfm_record(
 			BVHAR_CAST<Eigen::MatrixXd>(factor_list[chain_id]),
 			BVHAR_CAST<Eigen::MatrixXd>(factor_coef_list[chain_id]),
 			BVHAR_CAST<Eigen::MatrixXd>(factor_prec_list[chain_id])
+		);
+	} else if (fa_name && fb_name && omegar_name && omegac_name) {
+		BVHAR_PY_LIST row_coef_list = dfm_record[*fa_name];
+		BVHAR_PY_LIST col_coef_list = dfm_record[*fb_name];
+		BVHAR_PY_LIST row_sig_list = dfm_record[*omegar_name];
+		BVHAR_PY_LIST col_sig_list = dfm_record[*omegac_name];
+		record = std::make_unique<MatDfmMarRecords>(
+			BVHAR_CAST<Eigen::MatrixXd>(factor_list[chain_id]),
+			BVHAR_CAST<Eigen::MatrixXd>(row_coef_list[chain_id]),
+			BVHAR_CAST<Eigen::MatrixXd>(col_coef_list[chain_id]),
+			BVHAR_CAST<Eigen::MatrixXd>(row_sig_list[chain_id]),
+			BVHAR_CAST<Eigen::MatrixXd>(col_sig_list[chain_id])
 		);
 	} else {
 		record = std::make_unique<MatDfmRecords>(

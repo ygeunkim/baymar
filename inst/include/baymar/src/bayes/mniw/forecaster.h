@@ -209,6 +209,41 @@ private:
 	Eigen::MatrixXd row_coef, row_sig_lower, col_coef, col_sig_lower;
 };
 
+inline std::unique_ptr<MatFactorForecaster> initialize_matfactorforecaster(
+	int step, BVHAR_LIST& fit_record, int chain_id, int num_row, int num_col,
+	int nrow_factor, int ncol_factor, int factor_lag,
+	BVHAR_OPTIONAL<bool> factor_insample = BVHAR_NULLOPT
+) {
+	std::unique_ptr<MatFactorForecaster> factor_forecaster;
+	std::unique_ptr<MatDfmRecords> mdfm_record;
+	BVHAR_STRING f_name = "F_record";
+	if (BVHAR_CONTAINS(fit_record, "Rho_record")) {
+		BVHAR_STRING rho_name = "Rho_record";
+		BVHAR_STRING prec_name = "Lambda_record";
+		initialize_matdfm_record(mdfm_record, chain_id, fit_record, f_name, rho_name, prec_name);
+		auto* mdfm_var_record = dynamic_cast<MatDfmVarRecords*>(mdfm_record.get());
+		factor_forecaster = std::make_unique<MatFactorVarForecaster>(*mdfm_var_record, step, factor_lag, num_row, num_col, nrow_factor, ncol_factor);
+	} else if (BVHAR_CONTAINS(fit_record, "FA_record")) {
+		BVHAR_STRING fa_name = "FA_record";
+		BVHAR_STRING fb_name = "FB_record";
+		BVHAR_STRING omegar_name = "OmegaR_record";
+		BVHAR_STRING omegac_name = "OmegaC_record";
+		initialize_matdfm_record(
+			mdfm_record, chain_id, fit_record,
+			f_name, BVHAR_NULLOPT, BVHAR_NULLOPT,
+			fa_name, fb_name, omegar_name, omegac_name
+		);
+		auto* mdfm_mar_record = dynamic_cast<MatDfmMarRecords*>(mdfm_record.get());
+		factor_forecaster = std::make_unique<MatFactorMarForecaster>(*mdfm_mar_record, step, factor_lag, num_row, num_col, nrow_factor, ncol_factor);
+	} else if (factor_insample && *factor_insample) {
+		initialize_matdfm_record(mdfm_record, chain_id, fit_record, f_name);
+		factor_forecaster = std::make_unique<MatFactorForecaster>(*mdfm_record, step, 0, num_row, num_col, nrow_factor, ncol_factor);
+	} else {
+		factor_forecaster = std::make_unique<MatFactorForecaster>(step, 0, num_row, num_col, nrow_factor, ncol_factor);
+	}
+	return factor_forecaster;
+}
+
 class MatMniwForecaster : public bvhar::BayesForecaster<Eigen::MatrixXd, Eigen::MatrixXd> {
 public:
 	MatMniwForecaster(
@@ -407,21 +442,25 @@ inline std::vector<std::unique_ptr<MatMniwForecaster>> initialize_matmniwforecas
 			initialize_matmniw_record(mat_record, i, fit_record, a_name, sigr_name, b_name, sigc_name, g_name, h_name);
 		}
 		if (nrow_factor) {
-			BVHAR_STRING f_name = "F_record";
-			if (BVHAR_CONTAINS(fit_record, "Rho_record")) {
-				BVHAR_STRING rho_name = "Rho_record";
-				BVHAR_STRING prec_name = "Lambda_record";
-				initialize_matdfm_record(mdfm_record, i, fit_record, f_name, rho_name, prec_name);
-				auto* mdfm_var_record = dynamic_cast<MatDfmVarRecords*>(mdfm_record.get());
-				factor_updater = std::make_unique<MatFactorVarForecaster>(*mdfm_var_record, step, *factor_lag, y.rows() / num_data, y.cols(), *nrow_factor, *ncol_factor);
-			} else {
-				if (factor_insample && *factor_insample) {
-					initialize_matdfm_record(mdfm_record, i, fit_record, f_name);
-					factor_updater = std::make_unique<MatFactorForecaster>(*mdfm_record, step, 0, y.rows() / num_data, y.cols(), *nrow_factor, *ncol_factor);
-				} else {
-					factor_updater = std::make_unique<MatFactorForecaster>(step, 0, y.rows() / num_data, y.cols(), *nrow_factor, *ncol_factor);
-				}
-			}
+			// BVHAR_STRING f_name = "F_record";
+			// if (BVHAR_CONTAINS(fit_record, "Rho_record")) {
+			// 	BVHAR_STRING rho_name = "Rho_record";
+			// 	BVHAR_STRING prec_name = "Lambda_record";
+			// 	initialize_matdfm_record(mdfm_record, i, fit_record, f_name, rho_name, prec_name);
+			// 	auto* mdfm_var_record = dynamic_cast<MatDfmVarRecords*>(mdfm_record.get());
+			// 	factor_updater = std::make_unique<MatFactorVarForecaster>(*mdfm_var_record, step, *factor_lag, y.rows() / num_data, y.cols(), *nrow_factor, *ncol_factor);
+			// } else {
+			// 	if (factor_insample && *factor_insample) {
+			// 		initialize_matdfm_record(mdfm_record, i, fit_record, f_name);
+			// 		factor_updater = std::make_unique<MatFactorForecaster>(*mdfm_record, step, 0, y.rows() / num_data, y.cols(), *nrow_factor, *ncol_factor);
+			// 	} else {
+			// 		factor_updater = std::make_unique<MatFactorForecaster>(step, 0, y.rows() / num_data, y.cols(), *nrow_factor, *ncol_factor);
+			// 	}
+			// }
+			factor_updater = initialize_matfactorforecaster(
+				step, fit_record, i, y.rows() / num_data, y.cols(),
+				*nrow_factor, *ncol_factor, *factor_lag, factor_insample
+			);
 		}
 		forecaster[i] = std::make_unique<MatMniwForecaster>(
 			*mat_record, step, y, num_data, lag, static_cast<unsigned int>(seed_chain[i]),
