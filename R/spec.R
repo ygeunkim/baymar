@@ -86,26 +86,56 @@ is.mathsspec <- function(x) {
 #' @param ncol_factor Number of columns of factor matrix.
 #' By default, `0` which will does not use factor term.
 #' @param factor_lag Lag of factor autoregressions.
+#' @param row_spec Row coefficient specification in factor MAR
+#' @param col_spec Column coefficient specification in factor MAR
 #' @param factor_arsig Inverse-Gamma prior for factor AR covariance.
 #' [bvhar::set_ldlt()] can specify the IG shape and scale.
 #'
 #' @order 1
 #' @export
-set_matfactor <- function(nrow_factor = 0, ncol_factor = 0, factor_lag = 1, factor_arsig = set_ldlt()) {
+set_matfactor <- function(nrow_factor = 0, ncol_factor = 0,
+                          factor_lag = 1,
+                          row_spec = NULL,
+                          col_spec = NULL,
+                          factor_arsig = set_ldlt()) {
   if (factor_lag < 0 || factor_lag %% 1 != 0) {
     stop("'factor_lag' should be non-negative integer.")
-  }
-  if (!inherits(factor_arsig, "ldltspec")) {
-    stop("Use 'set_ldlt()' for 'factor_arsig'.")
   }
   res <- list(
     nrow_factor = nrow_factor,
     ncol_factor = ncol_factor,
     lag = factor_lag,
-    arsig = factor_arsig
-    # shape = factor_arsig$shape,
-    # scale = factor_arsig$scale
+    factor_type = "wn"
   )
+  if (factor_lag > 0) {
+    if (!is.null(row_spec) && !is.null(col_spec)) {
+      if (!is.bmarspec(row_spec)) {
+        stop("Wrong 'row_spec'")
+      }
+      if (!is.bmarspec(col_spec)) {
+        stop("Wrong 'col_spec'")
+      }
+      res$row_spec <- validate_bmar_prior(row_spec)
+      res$col_spec <- validate_bmar_prior(col_spec)
+      res$factor_type <- "mar"
+    } else if (!is.null(factor_arsig)) {
+      if (!inherits(factor_arsig, "ldltspec")) {
+        stop("Use 'set_ldlt()' for 'factor_arsig'.")
+      }
+      # res$arsig <- factor_arsig
+      res$shape <- factor_arsig$shape
+      res$scale <- factor_arsig$scale
+      res$factor_type <- "var"
+    }
+  }
+  # res <- list(
+  #   nrow_factor = nrow_factor,
+  #   ncol_factor = ncol_factor,
+  #   lag = factor_lag,
+  #   arsig = factor_arsig
+  #   # shape = factor_arsig$shape,
+  #   # scale = factor_arsig$scale
+  # )
   class(res) <- "matfactorspec"
   res
 }

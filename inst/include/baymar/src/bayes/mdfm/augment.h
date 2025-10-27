@@ -389,21 +389,53 @@ inline std::unique_ptr<MatFactorAugmenter> initialize_factoraugmenter(
 	BVHAR_LIST& param_prior, BVHAR_LIST& param_init
 ) {
 	std::unique_ptr<MatFactorAugmenter> augmenter_ptr;
-	// MatDfmVarParams dfm_params(*factor_lag, *nrow_factor, *ncol_factor);
-	// MatDfmVarInits dfm_inits((*nrow_factor) * (*ncol_factor), *factor_lag);
-	int lag = BVHAR_CAST_INT(param_prior["lag"]);
-	if (lag == 0) {
-		MatDfmParams params(param_prior);
-		augmenter_ptr = std::make_unique<MatFactorAugmenter>(num_iter, num_design, params);
-	} else if (false) {
-		MatDfmParams params(param_prior);
-		// MatDfmMarParams params(param_prior);
-		// MatDfmMarInits inits(param_init);
-		augmenter_ptr = std::make_unique<MatFactorMarAugmenter>(num_iter, num_design, params);
-	} else {
-		MatDfmVarParams params(param_prior);
-		MatDfmVarInits inits(param_init);
-		augmenter_ptr = std::make_unique<MatFactorVarAugmenter>(num_iter, num_design, params, inits);
+	// // MatDfmVarParams dfm_params(*factor_lag, *nrow_factor, *ncol_factor);
+	// // MatDfmVarInits dfm_inits((*nrow_factor) * (*ncol_factor), *factor_lag);
+	// int lag = BVHAR_CAST_INT(param_prior["lag"]);
+	// if (lag == 0) {
+	// 	MatDfmParams params(param_prior);
+	// 	augmenter_ptr = std::make_unique<MatFactorAugmenter>(num_iter, num_design, params);
+	// } else if (false) {
+	// 	MatDfmParams params(param_prior);
+	// 	// MatDfmMarParams params(param_prior);
+	// 	// MatDfmMarInits inits(param_init);
+	// 	augmenter_ptr = std::make_unique<MatFactorMarAugmenter>(num_iter, num_design, params);
+	// } else {
+	// 	MatDfmVarParams params(param_prior);
+	// 	MatDfmVarInits inits(param_init);
+	// 	augmenter_ptr = std::make_unique<MatFactorVarAugmenter>(num_iter, num_design, params, inits);
+	// }
+	BVHAR_STRING factor_model_nm = BVHAR_CAST<BVHAR_STRING>(param_prior["factor_type"]);
+	int factor_type = 0;
+	if (factor_model_nm == "wn") {
+		factor_type = 1;
+	} else if (factor_model_nm == "var") {
+		factor_type = 2;
+	} else if (factor_model_nm == "mar") {
+		factor_type = 3;
+	}
+	switch (factor_type) {
+		case 1: {
+			MatDfmParams params(param_prior);
+			augmenter_ptr = std::make_unique<MatFactorAugmenter>(num_iter, num_design, params);
+			return augmenter_ptr;
+		}
+		case 2: {
+			MatDfmVarParams params(param_prior);
+			MatDfmVarInits inits(param_init);
+			augmenter_ptr = std::make_unique<MatFactorVarAugmenter>(num_iter, num_design, params, inits);
+			return augmenter_ptr;
+		}
+		case 3: {
+			MatDfmParams params(param_prior);
+			// MatDfmMarParams params(param_prior);
+			// MatDfmMarInits inits(param_init);
+			augmenter_ptr = std::make_unique<MatFactorMarAugmenter>(num_iter, num_design, params);
+			return augmenter_ptr;
+		}
+		default: {
+			BVHAR_STOP("Not defined.");
+		}
 	}
 	return augmenter_ptr;
 }

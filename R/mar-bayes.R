@@ -259,14 +259,16 @@ mar_bayes <- function(y,
     size_factor <- nrow_factor * ncol_factor
     param_prior <- append(
       param_prior,
-      list(
-        nrow_factor = nrow_factor,
-        ncol_factor = ncol_factor,
-        size_factor = size_factor,
-        lag = lag_factor,
-        shape = factor_spec$arsig$shape,
-        scale = factor_spec$arsig$scale
-      )
+      # list(
+      #   nrow_factor = nrow_factor,
+      #   ncol_factor = ncol_factor,
+      #   size_factor = size_factor,
+      #   lag = lag_factor,
+      #   factor_type = factor_spec$model,
+      #   shape = factor_spec$arsig$shape,
+      #   scale = factor_spec$arsig$scale
+      # )
+      factor_spec
     )
     param_init <- get_bmdfm_coef_init(param_init, size_factor, lag_factor)
   }

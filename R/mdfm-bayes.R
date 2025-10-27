@@ -91,14 +91,16 @@ mdfm_bayes <- function(y,
   )
   param_prior <- append(
     param_prior,
-    list(
-      nrow_factor = nrow_factor,
-      ncol_factor = ncol_factor,
-      size_factor = size_factor,
-      lag = lag_factor,
-      shape = factor_spec$arsig$shape,
-      scale = factor_spec$arsig$scale
-    )
+    # list(
+    #   nrow_factor = nrow_factor,
+    #   ncol_factor = ncol_factor,
+    #   size_factor = size_factor,
+    #   lag = lag_factor,
+    #   factor_type = factor_spec$model,
+    #   shape = factor_spec$arsig$shape,
+    #   scale = factor_spec$arsig$scale
+    # )
+    factor_spec
   )
   param_prior$row_prior_prec <- rep(1, nrow_factor)
   param_prior$col_prior_prec <- rep(1, ncol_factor)

@@ -60,6 +60,28 @@ validate_bmarx_rowspec <- function(param_prior, x, s, bayes_spec, nrow_exogen, n
 }
 
 #' @noRd
+validate_factor_row_spec <- function(bayes_spec, factor_lag, nrow_data, ncol_data, nrow_row_coef) {
+  if (!is.bmarspec(bayes_spec)) {
+    stop("Wrong 'row_spec'")
+  }
+  prior_nm <- bayes_spec$prior
+  A0 <- matrix(0L, nrow = nrow_row_coef, ncol = nrow_data)
+  S_r <- diag(nrow_data)
+  nu_r <- nrow_data + 2
+  if (prior_nm == "Minnesota" || prior_nm == "MN_Hierarchical") {
+    V_A <- kronecker(diag(1 / c(1:factor_lag)^2), S_r)
+  } else if (prior_nm == "Horseshoe") {
+    V_A <- diag(nrow_row_coef)
+  }
+  list(
+    row_prior_mean = A0,
+    row_prior_prec = 1 / diag(V_A),
+    row_iw_scl = S_r,
+    row_iw_df = nu_r
+  )
+}
+
+#' @noRd
 validate_bmar_col_spec <- function(y, p, bayes_spec, nrow_data, ncol_data, nrow_col_coef) {
   if (!is.bmarspec(bayes_spec)) {
     stop("Wrong 'col_spec'")
@@ -95,6 +117,29 @@ validate_bmar_col_spec <- function(y, p, bayes_spec, nrow_data, ncol_data, nrow_
 }
 
 #' @noRd
+validate_factor_col_spec <- function(factor_lag, bayes_spec, nrow_data, ncol_data, nrow_col_coef) {
+  if (!is.bmarspec(bayes_spec)) {
+    stop("Wrong 'col_spec'")
+  }
+  prior_nm <- bayes_spec$prior
+  # B0 <- kronecker(rep(1, lag), diag(ncol_data)) # kp x k
+  B0 <- matrix(0L, nrow = nrow_col_coef, ncol = ncol_data)
+  S_c <- diag(ncol_data)
+  nu_c <- ncol_data + 2
+  if (prior_nm == "Minnesota" || prior_nm == "MN_Hierarchical") {
+    V_B <- kronecker(diag(1 / c(1:factor_lag)^2), S_c)
+  } else if (prior_nm == "Horseshoe") {
+    V_B <- diag(nrow_col_coef)
+  }
+  list(
+    col_prior_mean = B0,
+    col_prior_prec = 1 / diag(V_B),
+    col_iw_scl = S_c,
+    col_iw_df = nu_c
+  )
+}
+
+#' @noRd
 validate_bmarx_colspec <- function(param_prior, x, s, bayes_spec, nrow_exogen, ncol_exogen, nrow_exogen_col_coef) {
   exogen_prior <- validate_bmar_col_spec(x, s + 1, bayes_spec, nrow_exogen, ncol_exogen, nrow_exogen_col_coef)
   exogen_prior$col_prior_mean <- matrix(0L, nrow = nrow_exogen_col_coef, ncol = ncol(param_prior$col_prior_mean))
@@ -112,11 +157,17 @@ validate_factor_spec <- function(bayes_spec) {
   #   stop("Wrong 'factor_spec'")
   # }
   size_factor <- bayes_spec$nrow_factor * bayes_spec$ncol_factor
-  if (length(bayes_spec$arsig$shape) == 1) {
-    bayes_spec$arsig$shape <- rep(bayes_spec$arsig$shape, size_factor)
+  # if (length(bayes_spec$arsig$shape) == 1) {
+  #   bayes_spec$arsig$shape <- rep(bayes_spec$arsig$shape, size_factor)
+  # }
+  # if (length(bayes_spec$arsig$scale) == 1) {
+  #   bayes_spec$arsig$scale <- rep(bayes_spec$arsig$scale, size_factor)
+  # }
+  if (length(bayes_spec$shape) == 1) {
+    bayes_spec$shape <- rep(bayes_spec$shape, size_factor)
   }
-  if (length(bayes_spec$arsig$scale) == 1) {
-    bayes_spec$arsig$scale <- rep(bayes_spec$arsig$scale, size_factor)
+  if (length(bayes_spec$scale) == 1) {
+    bayes_spec$scale <- rep(bayes_spec$scale, size_factor)
   }
   bayes_spec
 }

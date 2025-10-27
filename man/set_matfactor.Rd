@@ -9,6 +9,8 @@ set_matfactor(
   nrow_factor = 0,
   ncol_factor = 0,
   factor_lag = 1,
+  row_spec = NULL,
+  col_spec = NULL,
   factor_arsig = set_ldlt()
 )
 
@@ -22,6 +24,10 @@ By default, \code{0} which will does not use factor term.}
 By default, \code{0} which will does not use factor term.}
 
 \item{factor_lag}{Lag of factor autoregressions.}
+
+\item{row_spec}{Row coefficient specification in factor MAR}
+
+\item{col_spec}{Column coefficient specification in factor MAR}
 
 \item{factor_arsig}{Inverse-Gamma prior for factor AR covariance.
 \code{\link[bvhar:set_ldlt]{bvhar::set_ldlt()}} can specify the IG shape and scale.}
