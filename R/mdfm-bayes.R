@@ -111,8 +111,7 @@ mdfm_bayes <- function(y,
     nrow_row_coef = nrow_row_coef,
     nrow_col_coef = nrow_col_coef
   )
-  param_init <- get_bmdfm_coef_init(param_init, size_factor, lag_factor)
-  # param_init <- get_bmdfm_coef_init(
+  # param_init <- get_fac_var_coef_init(
   #   num_chains = num_chains,
   #   nrow_data = nrow_data,
   #   ncol_data = ncol_data,
@@ -127,6 +126,26 @@ mdfm_bayes <- function(y,
   col_init <- get_bmar_init(col_spec, num_chains, nrow_col_coef)
   row_prior_type <- get_prior_id(row_spec$prior)
   col_prior_type <- get_prior_id(col_spec$prior)
+  if (factor_spec$factor_type == "var") {
+    param_init <- get_fac_var_coef_init(param_init, size_factor, lag_factor)
+  } else if (factor_spec$factor_type == "mar") {
+    param_prior <- append(
+      param_prior,
+      append(
+        validate_factor_row_spec(factor_spec),
+        validate_factor_col_spec(factor_spec)
+      )
+    )
+    param_init <- get_fac_mar_coef_init(param_init, nrow_factor, ncol_factor, lag_factor)
+    for (i in seq_len(num_chains)) {
+      marfactor_row_init <- get_bmar_init(factor_spec$row_spec, 1, nrow_factor * lag_factor)[[1]]
+      names(marfactor_row_init) <- paste("factor", names(marfactor_row_init), sep = "_")
+      row_init[[i]] <- append(row_init[[i]], marfactor_row_init)
+      marfactor_col_init <- get_bmar_init(factor_spec$col_spec, 1, ncol_factor * lag_factor)[[1]]
+      names(marfactor_col_init) <- paste("factor", names(marfactor_col_init), sep = "_")
+      col_init[[i]] <- append(col_init[[i]], marfactor_col_init)
+    }
+  }
   res <- estimate_bmdfm(
     num_chains = num_chains, num_iter = num_iter, num_burn = num_burn, thin = thinning,
     y = response,

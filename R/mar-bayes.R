@@ -270,7 +270,26 @@ mar_bayes <- function(y,
       # )
       factor_spec
     )
-    param_init <- get_bmdfm_coef_init(param_init, size_factor, lag_factor)
+    if (factor_spec$factor_type == "var") {
+      param_init <- get_fac_var_coef_init(param_init, size_factor, lag_factor)
+    } else if (factor_spec$factor_type == "mar") {
+      param_prior <- append(
+        param_prior,
+        append(
+          validate_factor_row_spec(factor_spec),
+          validate_factor_col_spec(factor_spec)
+        )
+      )
+      param_init <- get_fac_mar_coef_init(param_init, nrow_factor, ncol_factor, lag_factor)
+      for (i in seq_len(num_chains)) {
+        marfactor_row_init <- get_bmar_init(factor_spec$row_spec, 1, nrow_factor * lag_factor)[[1]]
+        names(marfactor_row_init) <- paste("factor", names(marfactor_row_init), sep = "_")
+        row_init[[i]] <- append(row_init[[i]], marfactor_row_init)
+        marfactor_col_init <- get_bmar_init(factor_spec$col_spec, 1, ncol_factor * lag_factor)[[1]]
+        names(marfactor_col_init) <- paste("factor", names(marfactor_col_init), sep = "_")
+        col_init[[i]] <- append(col_init[[i]], marfactor_col_init)
+      }
+    }
   }
   res <- estimate_bmar_mniw(
     num_chains = num_chains, num_iter = num_iter, num_burn = num_burn, thin = thinning,

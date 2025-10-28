@@ -401,7 +401,9 @@ private:
 
 inline std::unique_ptr<MatFactorAugmenter> initialize_factoraugmenter(
 	int num_iter, int num_design,
-	BVHAR_LIST& param_prior, BVHAR_LIST& param_init
+	BVHAR_LIST& param_prior, BVHAR_LIST& param_init,
+	BVHAR_OPTIONAL<BVHAR_LIST> row_prior = BVHAR_NULLOPT, BVHAR_OPTIONAL<BVHAR_LIST> row_init_spec = BVHAR_NULLOPT,
+	BVHAR_OPTIONAL<BVHAR_LIST> col_prior = BVHAR_NULLOPT, BVHAR_OPTIONAL<BVHAR_LIST> col_init_spec = BVHAR_NULLOPT
 ) {
 	std::unique_ptr<MatFactorAugmenter> augmenter_ptr;
 	// // MatDfmVarParams dfm_params(*factor_lag, *nrow_factor, *ncol_factor);
@@ -442,15 +444,20 @@ inline std::unique_ptr<MatFactorAugmenter> initialize_factoraugmenter(
 			return augmenter_ptr;
 		}
 		case 3: {
-			MatDfmParams params(param_prior);
-			// MatDfmMarParams params(param_prior);
-			// MatDfmMarInits inits(param_init);
+			MatDfmMarParams params(param_prior);
+			MatDfmMarInits inits(param_init);
 			// int row_prior_type = BVHAR_CAST_INT(row_prior["factor_type"]);
 			// int col_prior_type = BVHAR_CAST_INT(col_prior["factor_type"]);
 			// Or *_prior_type = 0 and choose inside initialize_matshrinkageupdater
-			// auto row_updater = initialize_matshrinkageupdater(num_iter, row_prior, row_init_spec, 0, "factor_");
-			// auto col_updater = initialize_matshrinkageupdater(num_iter, col_prior, col_init_spec, 0, "factor_");
-			augmenter_ptr = std::make_unique<MatFactorMarAugmenter>(num_iter, num_design, params);
+			auto row_updater = initialize_matshrinkageupdater(num_iter, *row_prior, *row_init_spec, 0, "factor_");
+			auto col_updater = initialize_matshrinkageupdater(num_iter, *col_prior, *col_init_spec, 0, "factor_");
+			augmenter_ptr = std::make_unique<MatFactorMarAugmenter>(
+				num_iter, num_design,
+				params, inits,
+				row_updater, col_updater
+			);
+			// MatDfmParams params(param_prior);
+			// augmenter_ptr = std::make_unique<MatFactorMarAugmenter>(num_iter, num_design, params);
 			return augmenter_ptr;
 		}
 		default: {

@@ -59,7 +59,7 @@ struct MatDfmMarParams : public MatDfmParams {
 	MatMniwParams mniw_params;
 
 	MatDfmMarParams(BVHAR_LIST& priors)
-	: MatDfmParams(priors), empty_y(),
+	: MatDfmParams(priors), empty_y(1), // empty empty_y() gives aborts -> check this
 		mniw_params(0, empty_y, priors, "factor_") {}
 };
 

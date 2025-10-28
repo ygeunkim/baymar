@@ -169,9 +169,10 @@ private:
 inline std::unique_ptr<MatShrinkageUpdater> initialize_matshrinkageupdater(int num_iter, BVHAR_LIST& param_prior, BVHAR_LIST& param_init, int prior_type, const BVHAR_STRING& prefix = "") {
 	std::unique_ptr<MatShrinkageUpdater> shrinkage_ptr;
 	if (prior_type == 0) {
-		if (BVHAR_CONTAINS(param_init, "local_sparsity")) {
+		// Should check when using pybind11: BVHAR_STRING is py::str -> change this to std::string?
+		if (BVHAR_CONTAINS(param_init, (prefix + "local_sparsity").c_str())) {
 			prior_type = 3;
-		} else if (BVHAR_CONTAINS(param_init, "kappa")) {
+		} else if (BVHAR_CONTAINS(param_init, (prefix + "kappa").c_str())) {
 			prior_type = 4;
 		}
 	}
