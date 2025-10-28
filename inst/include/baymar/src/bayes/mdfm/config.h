@@ -60,7 +60,7 @@ struct MatDfmMarParams : public MatDfmParams {
 
 	MatDfmMarParams(BVHAR_LIST& priors)
 	: MatDfmParams(priors), empty_y(),
-		mniw_params(0, empty_y, priors) {}
+		mniw_params(0, empty_y, priors, "factor_") {}
 };
 
 struct MatDfmInits {
@@ -84,7 +84,7 @@ struct MatDfmMarInits : public MatDfmInits {
 	MatMniwInits mniw_init;
 
 	MatDfmMarInits(BVHAR_LIST& init)
-	: mniw_init(init) {}
+	: mniw_init(init, "factor_") {}
 };
 
 struct MatDfmRecords {

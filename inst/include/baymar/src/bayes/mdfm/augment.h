@@ -445,6 +445,11 @@ inline std::unique_ptr<MatFactorAugmenter> initialize_factoraugmenter(
 			MatDfmParams params(param_prior);
 			// MatDfmMarParams params(param_prior);
 			// MatDfmMarInits inits(param_init);
+			// int row_prior_type = BVHAR_CAST_INT(row_prior["factor_type"]);
+			// int col_prior_type = BVHAR_CAST_INT(col_prior["factor_type"]);
+			// Or *_prior_type = 0 and choose inside initialize_matshrinkageupdater
+			// auto row_updater = initialize_matshrinkageupdater(num_iter, row_prior, row_init_spec, 0, "factor_");
+			// auto col_updater = initialize_matshrinkageupdater(num_iter, col_prior, col_init_spec, 0, "factor_");
 			augmenter_ptr = std::make_unique<MatFactorMarAugmenter>(num_iter, num_design, params);
 			return augmenter_ptr;
 		}
