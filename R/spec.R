@@ -96,7 +96,7 @@ is.mathsspec <- function(x) {
 set_matfactor <- function(nrow_factor = 0, ncol_factor = 0,
                           factor_lag = 1,
                           row_spec = NULL,
-                          col_spec = NULL,
+                          col_spec = row_spec,
                           factor_arsig = set_ldlt()) {
   if (factor_lag < 0 || factor_lag %% 1 != 0) {
     stop("'factor_lag' should be non-negative integer.")

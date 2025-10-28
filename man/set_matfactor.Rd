@@ -10,7 +10,7 @@ set_matfactor(
   ncol_factor = 0,
   factor_lag = 1,
   row_spec = NULL,
-  col_spec = NULL,
+  col_spec = row_spec,
   factor_arsig = set_ldlt()
 )
 
