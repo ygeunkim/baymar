@@ -262,18 +262,26 @@ public:
 		row_updater = std::make_unique<MatHsUpdater>(num_iter, shrinkage_param, row_shrinkage_inits);
 		col_updater = std::make_unique<MatHsUpdater>(num_iter, shrinkage_param, fac_nrow_col_coef);
 	}
-	// MatFactorMarAugmenter(int num_iter, int num_design, const MatDfmMarParams& params, const MatDfmMarInits& inits)
-	// : MatFactorAugmenter(num_iter, num_design, params),
-	// 	fac_nrow_row_coef(nrow_factor * lag), fac_nrow_col_coef(ncol_factor * lag),
-	// 	fac_row_coef(inits.mniw_init._init_row_coef), fac_row_sig_lower(inits.mniw_init._init_row_lower),
-	// 	fac_col_coef(inits.mniw_init._init_col_coef), fac_col_sig_lower(inits.mniw_init._init_col_lower),
-	// 	fac_row_mean(params.mniw_params._row_mean), fac_row_iw(params.mniw_params._row_iw_scl),
-	// 	fac_col_mean(params.mniw_params._col_mean), fac_col_iw(params.mniw_params._col_iw_scl),
-	// 	fac_row_prec(params.mniw_params._row_prec), fac_col_prec(params.mniw_params._col_prec),
-	// 	fac_row_df(params.mniw_params._row_iw_df), fac_col_df(params.mniw_params._col_iw_df) {
-	// 	mdfm_record = std::make_unique<MatDfmMarRecords>(num_iter, num_design, nrow_factor, ncol_factor, lag);
-	// 	need_restrict = true;
-	// }
+
+	// Should use this later
+	MatFactorMarAugmenter(
+		int num_iter, int num_design,
+		const MatDfmMarParams& params, const MatDfmMarInits& inits,
+		std::unique_ptr<MatShrinkageUpdater>& row_updater, std::unique_ptr<MatShrinkageUpdater>& col_updater
+	)
+	: MatFactorAugmenter(num_iter, num_design, params),
+		fac_nrow_row_coef(nrow_factor * lag), fac_nrow_col_coef(ncol_factor * lag),
+		fac_row_coef(inits.mniw_init._init_row_coef), fac_row_sig_lower(inits.mniw_init._init_row_lower),
+		fac_col_coef(inits.mniw_init._init_col_coef), fac_col_sig_lower(inits.mniw_init._init_col_lower),
+		fac_row_mean(params.mniw_params._row_mean), fac_row_iw(params.mniw_params._row_iw_scl),
+		fac_col_mean(params.mniw_params._col_mean), fac_col_iw(params.mniw_params._col_iw_scl),
+		fac_row_prec(params.mniw_params._row_prec), fac_col_prec(params.mniw_params._col_prec),
+		fac_row_df(params.mniw_params._row_iw_df), fac_col_df(params.mniw_params._col_iw_df),
+		row_updater(std::move(row_updater)), col_updater(std::move(col_updater)) {
+		mdfm_record = std::make_unique<MatDfmMarRecords>(num_iter, num_design, nrow_factor, ncol_factor, lag);
+		need_restrict = true;
+	}
+	
 	virtual ~MatFactorMarAugmenter() = default;
 
 	void updateFactor(
