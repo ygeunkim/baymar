@@ -254,6 +254,13 @@ public:
 		fac_row_df(nrow_factor + 2), fac_col_df(ncol_factor + 2) {
 		mdfm_record = std::make_unique<MatDfmMarRecords>(num_iter, num_design, nrow_factor, ncol_factor, lag);
 		need_restrict = true;
+		// Temporarily initialize Horseshoe updater inside constructor
+		// -> Should move into initialize_factoraugmenter later to choose priors
+		MatShrinkageParams shrinkage_param;
+		MatGlInits row_shrinkage_inits(fac_nrow_row_coef);
+		MatGlInits col_shrinkage_inits(fac_nrow_col_coef);
+		row_updater = std::make_unique<MatHsUpdater>(num_iter, shrinkage_param, row_shrinkage_inits);
+		col_updater = std::make_unique<MatHsUpdater>(num_iter, shrinkage_param, fac_nrow_col_coef);
 	}
 	// MatFactorMarAugmenter(int num_iter, int num_design, const MatDfmMarParams& params, const MatDfmMarInits& inits)
 	// : MatFactorAugmenter(num_iter, num_design, params),
@@ -274,18 +281,18 @@ public:
 		Eigen::Ref<const Eigen::MatrixXd> col_coef, Eigen::Ref<const Eigen::MatrixXd> col_sig_lower,
 		BVHAR_BHRNG& rng
 	) override {
-		// row_updater->updatePrec(
-		// 	fac_row_prec,
-		// 	fac_row_coef, fac_row_sig_lower,
-		// 	fac_row_mean,
-		// 	rng
-		// );
-		// col_updater->updatePrec(
-		// 	fac_col_prec,
-		// 	fac_col_coef, fac_col_sig_lower,
-		// 	fac_col_mean,
-		// 	rng
-		// );
+		row_updater->updatePrec(
+			fac_row_prec,
+			fac_row_coef, fac_row_sig_lower,
+			fac_row_mean,
+			rng
+		);
+		col_updater->updatePrec(
+			fac_col_prec,
+			fac_col_coef, fac_col_sig_lower,
+			fac_col_mean,
+			rng
+		);
 		draw_mar_factor(
 			factor_mat, lag, nrow_factor, ncol_factor,
 			fac_row_coef, fac_row_sig_lower,
@@ -322,18 +329,18 @@ public:
 		std::vector<Eigen::MatrixXd>& y,
 		BVHAR_BHRNG& rng
 	) override {
-		// row_updater->updatePrec(
-		// 	fac_row_prec,
-		// 	fac_row_coef, fac_row_sig_lower,
-		// 	fac_row_mean,
-		// 	rng
-		// );
-		// col_updater->updatePrec(
-		// 	fac_col_prec,
-		// 	fac_col_coef, fac_col_sig_lower,
-		// 	fac_col_mean,
-		// 	rng
-		// );
+		row_updater->updatePrec(
+			fac_row_prec,
+			fac_row_coef, fac_row_sig_lower,
+			fac_row_mean,
+			rng
+		);
+		col_updater->updatePrec(
+			fac_col_prec,
+			fac_col_coef, fac_col_sig_lower,
+			fac_col_mean,
+			rng
+		);
 		draw_mar_factor(
 			factor_mat, lag, nrow_factor, ncol_factor,
 			fac_row_coef, fac_row_sig_lower,
@@ -380,8 +387,8 @@ private:
 	Eigen::MatrixXd fac_row_mean, fac_row_iw, fac_col_mean, fac_col_iw;
 	Eigen::VectorXd fac_row_prec, fac_col_prec;
 	double fac_row_df, fac_col_df;
-	// std::unique_ptr<MatShrinkageUpdater> row_updater;
-	// std::unique_ptr<MatShrinkageUpdater> col_updater;
+	std::unique_ptr<MatShrinkageUpdater> row_updater;
+	std::unique_ptr<MatShrinkageUpdater> col_updater;
 };
 
 inline std::unique_ptr<MatFactorAugmenter> initialize_factoraugmenter(

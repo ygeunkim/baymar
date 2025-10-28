@@ -61,6 +61,9 @@ struct MatGlInits : public MatShrinkageInits {
 	: MatShrinkageInits(init),
 		_local(BVHAR_CAST<Eigen::VectorXd>(init["local_sparsity"])),
 		_global(BVHAR_CAST_DOUBLE(init["global_sparsity"])) {}
+	
+	MatGlInits(int dim)
+	: _local(Eigen::VectorXd::Constant(dim, 1.0)), _global(1.0) {}
 };
 
 } // namespace baymar
