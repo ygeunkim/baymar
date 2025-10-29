@@ -321,6 +321,15 @@ forecast_roll.marbayes <- function(object, n_ahead, y_test,
       # )
       object$spec$factor
     )
+    if (object$spec$factor$factor_type == "mar") {
+      param_prior <- append(
+        param_prior,
+        append(
+          validate_factor_row_spec(object$spec$factor),
+          validate_factor_col_spec(object$spec$factor)
+        )
+      )
+    }
   }
   is_exogen <- !is.null(eval.parent(object$call$exogen))
   if (is_exogen) {
@@ -540,6 +549,15 @@ forecast_roll.mdfmbayes <- function(object, n_ahead, y_test,
     # )
     object$spec$factor
   )
+  if (object$spec$factor$factor_type == "mar") {
+    param_prior <- append(
+      param_prior,
+      append(
+        validate_factor_row_spec(object$spec$factor),
+        validate_factor_col_spec(object$spec$factor)
+      )
+    )
+  }
   param_prior$row_prior_prec <- rep(1, nrow_factor)
   param_prior$col_prior_prec <- rep(1, ncol_factor)
   row_prior <- validate_bmar_prior(object$spec$row)
@@ -730,6 +748,15 @@ forecast_expand.marbayes <- function(object, n_ahead, y_test,
       # )
       object$spec$factor
     )
+    if (object$spec$factor$factor_type == "mar") {
+      param_prior <- append(
+        param_prior,
+        append(
+          validate_factor_row_spec(object$spec$factor),
+          validate_factor_col_spec(object$spec$factor)
+        )
+      )
+    }
   }
   is_exogen <- !is.null(eval.parent(object$call$exogen))
   if (is_exogen) {
@@ -949,6 +976,15 @@ forecast_expand.mdfmbayes <- function(object, n_ahead, y_test,
     # )
     object$spec$factor
   )
+  if (object$spec$factor$factor_type == "mar") {
+    param_prior <- append(
+      param_prior,
+      append(
+        validate_factor_row_spec(object$spec$factor),
+        validate_factor_col_spec(object$spec$factor)
+      )
+    )
+  }
   param_prior$row_prior_prec <- rep(1, nrow_factor)
   param_prior$col_prior_prec <- rep(1, ncol_factor)
   row_prior <- validate_bmar_prior(object$spec$row)
