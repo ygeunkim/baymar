@@ -310,15 +310,26 @@ forecast_roll.marbayes <- function(object, n_ahead, y_test,
     param_prior$col_prior_prec <- c(param_prior$col_prior_prec, rep(1, ncol_factor))
     param_prior <- append(
       param_prior,
-      list(
-        nrow_factor = nrow_factor,
-        ncol_factor = ncol_factor,
-        size_factor = nrow_factor * ncol_factor,
-        lag = factor_lag,
-        shape = object$spec$factor$arsig$shape,
-        scale = object$spec$factor$arsig$scale
-      )
+      # list(
+      #   nrow_factor = nrow_factor,
+      #   ncol_factor = ncol_factor,
+      #   size_factor = nrow_factor * ncol_factor,
+      #   lag = factor_lag,
+      #   factor_type = object$spec$factor$model,
+      #   shape = object$spec$factor$arsig$shape,
+      #   scale = object$spec$factor$arsig$scale
+      # )
+      object$spec$factor
     )
+    if (object$spec$factor$factor_type == "mar") {
+      param_prior <- append(
+        param_prior,
+        append(
+          validate_factor_row_spec(object$spec$factor),
+          validate_factor_col_spec(object$spec$factor)
+        )
+      )
+    }
   }
   is_exogen <- !is.null(eval.parent(object$call$exogen))
   if (is_exogen) {
@@ -527,15 +538,26 @@ forecast_roll.mdfmbayes <- function(object, n_ahead, y_test,
   )
   param_prior <- append(
     param_prior,
-    list(
-      nrow_factor = nrow_factor,
-      ncol_factor = ncol_factor,
-      size_factor = nrow_factor * ncol_factor,
-      lag = factor_lag,
-      shape = object$spec$factor$arsig$shape,
-      scale = object$spec$factor$arsig$scale
-    )
+    # list(
+    #   nrow_factor = nrow_factor,
+    #   ncol_factor = ncol_factor,
+    #   size_factor = nrow_factor * ncol_factor,
+    #   lag = factor_lag,
+    #   factor_type = object$spec$factor$model,
+    #   shape = object$spec$factor$arsig$shape,
+    #   scale = object$spec$factor$arsig$scale
+    # )
+    object$spec$factor
   )
+  if (object$spec$factor$factor_type == "mar") {
+    param_prior <- append(
+      param_prior,
+      append(
+        validate_factor_row_spec(object$spec$factor),
+        validate_factor_col_spec(object$spec$factor)
+      )
+    )
+  }
   param_prior$row_prior_prec <- rep(1, nrow_factor)
   param_prior$col_prior_prec <- rep(1, ncol_factor)
   row_prior <- validate_bmar_prior(object$spec$row)
@@ -715,15 +737,26 @@ forecast_expand.marbayes <- function(object, n_ahead, y_test,
     param_prior$col_prior_prec <- c(param_prior$col_prior_prec, rep(1, ncol_factor))
     param_prior <- append(
       param_prior,
-      list(
-        nrow_factor = nrow_factor,
-        ncol_factor = ncol_factor,
-        size_factor = nrow_factor * ncol_factor,
-        lag = factor_lag,
-        shape = object$spec$factor$arsig$shape,
-        scale = object$spec$factor$arsig$scale
-      )
+      # list(
+      #   nrow_factor = nrow_factor,
+      #   ncol_factor = ncol_factor,
+      #   size_factor = nrow_factor * ncol_factor,
+      #   lag = factor_lag,
+      #   factor_type = object$spec$factor$model,
+      #   shape = object$spec$factor$arsig$shape,
+      #   scale = object$spec$factor$arsig$scale
+      # )
+      object$spec$factor
     )
+    if (object$spec$factor$factor_type == "mar") {
+      param_prior <- append(
+        param_prior,
+        append(
+          validate_factor_row_spec(object$spec$factor),
+          validate_factor_col_spec(object$spec$factor)
+        )
+      )
+    }
   }
   is_exogen <- !is.null(eval.parent(object$call$exogen))
   if (is_exogen) {
@@ -932,15 +965,26 @@ forecast_expand.mdfmbayes <- function(object, n_ahead, y_test,
   )
   param_prior <- append(
     param_prior,
-    list(
-      nrow_factor = nrow_factor,
-      ncol_factor = ncol_factor,
-      size_factor = nrow_factor * ncol_factor,
-      lag = factor_lag,
-      shape = object$spec$factor$arsig$shape,
-      scale = object$spec$factor$arsig$scale
-    )
+    # list(
+    #   nrow_factor = nrow_factor,
+    #   ncol_factor = ncol_factor,
+    #   size_factor = nrow_factor * ncol_factor,
+    #   lag = factor_lag,
+    #   factor_type = object$spec$factor$model,
+    #   shape = object$spec$factor$arsig$shape,
+    #   scale = object$spec$factor$arsig$scale
+    # )
+    object$spec$factor
   )
+  if (object$spec$factor$factor_type == "mar") {
+    param_prior <- append(
+      param_prior,
+      append(
+        validate_factor_row_spec(object$spec$factor),
+        validate_factor_col_spec(object$spec$factor)
+      )
+    )
+  }
   param_prior$row_prior_prec <- rep(1, nrow_factor)
   param_prior$col_prior_prec <- rep(1, ncol_factor)
   row_prior <- validate_bmar_prior(object$spec$row)

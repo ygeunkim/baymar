@@ -2,6 +2,7 @@
 #define BAYMAR_BAYES_MISC_DFM_HELPER_H
 
 #include <bvhar/utils>
+#include "../../math/design.h"
 
 namespace baymar {
 
@@ -268,6 +269,94 @@ inline void draw_dfm_coef(Eigen::Ref<Eigen::MatrixXd> fac_coef_diag, Eigen::Ref<
 		denom = compute_dfmcoef_logdens(fac_coef_diag.row(i), fac_lambda[i], factor_design.row(0));
 		if (log(bvhar::unif_rand(rng)) < std::min(numerator - denom, 0.0)) {
 			fac_coef_diag.row(i) = cand_rho.transpose();
+		}
+	}
+}
+
+inline void draw_mar_factor(std::vector<Eigen::MatrixXd>& factor_mat, int factor_lag, int rows_factor, int cols_factor,
+													  // Eigen::Ref<Eigen::MatrixXd> fac_coef_diag, Eigen::Ref<Eigen::VectorXd> fac_lambda,
+														Eigen::Ref<Eigen::MatrixXd> fac_row_coef, Eigen::Ref<Eigen::MatrixXd> fac_row_sig_lower,
+														Eigen::Ref<Eigen::MatrixXd> fac_col_coef, Eigen::Ref<Eigen::MatrixXd> fac_col_sig_lower,
+													  Eigen::Ref<const Eigen::MatrixXd> row_coef, Eigen::Ref<const Eigen::MatrixXd> row_sig_lower,
+													  Eigen::Ref<const Eigen::MatrixXd> col_coef, Eigen::Ref<const Eigen::MatrixXd> col_sig_lower,
+													  std::vector<Eigen::MatrixXd>& y, BVHAR_BHRNG& rng) {
+	Eigen::MatrixXd col_inv_sig_coef = col_sig_lower.triangularView<Eigen::Lower>().solve<Eigen::OnTheRight>(
+		col_sig_lower.triangularView<Eigen::Lower>().solve(col_coef).transpose()
+	);
+	Eigen::MatrixXd row_inv_sig_coef = row_sig_lower.triangularView<Eigen::Lower>().solve<Eigen::OnTheRight>(
+		row_sig_lower.triangularView<Eigen::Lower>().solve(row_coef).transpose()
+	);
+	Eigen::MatrixXd post_solve = bvhar::kronecker_eigen(col_inv_sig_coef, row_inv_sig_coef);
+	Eigen::MatrixXd post_cov = post_solve * bvhar::kronecker_eigen(col_coef, row_coef);
+	Eigen::LLT<Eigen::MatrixXd> llt_of_prec;
+	int len_factor = rows_factor * cols_factor;
+	Eigen::VectorXd vec_normal(len_factor);
+	Eigen::VectorXd post_mean(len_factor);
+	// Eigen::VectorXd prec_t(len_factor);
+	// 1) t = p + 1, ..., p + s with F_t ~ MN(0, I, I)
+	Eigen::MatrixXd prec_t = Eigen::MatrixXd::Identity(len_factor, len_factor);
+	double temp_penalty = 0;
+	do {
+		llt_of_prec.compute((
+			post_cov + prec_t + temp_penalty * Eigen::MatrixXd::Identity(len_factor, len_factor)
+		).selfadjointView<Eigen::Lower>());
+		temp_penalty += .01;
+	} while (llt_of_prec.info() != Eigen::Success && temp_penalty < .1);
+	if (llt_of_prec.info() != Eigen::Success) {
+		eigen_assert("LLT failed in precision sampler.");
+	}
+	for (int i = 0; i < factor_lag; ++i) {
+		post_mean = llt_of_prec.solve(post_solve * y[i].reshaped());
+		for (int j = 0; j < len_factor; ++j) {
+			vec_normal[j] = bvhar::normal_rand(rng);
+		}
+		factor_mat[i] = bvhar::unvectorize(post_mean + llt_of_prec.matrixU().solve(vec_normal), cols_factor);
+	}
+	// std::vector<Eigen::MatrixXd> init_factor(factor_lag);
+	// for (int i = 0; i < factor_lag; ++i) {
+	// 	init_factor[i] = factor_mat[i];
+	// }
+	Eigen::SparseMatrix<double> factor_x = build_blk_design(factor_mat, factor_lag); // diag(F_s, ..., F_1)
+	// 2) t = p + s + 1, ..., T with F_t = G^T diag(F_{t - 1}, ..., F_{t - s}) H + V_t
+	// V_t ~ MN(0, Omega_r, Omega_c)
+	// Eigen::MatrixXd llt_kron = bvhar::kronecker_eigen(
+	// 	fac_col_sig_lower.triangularView<Eigen::Lower>().solve(Eigen::MatrixXd::Identity(cols_factor, cols_factor)),
+	// 	fac_row_sig_lower.triangularView<Eigen::Lower>().solve(Eigen::MatrixXd::Identity(rows_factor, rows_factor))
+	// );
+	// prec_t = llt_kron.transpose() * llt_kron;
+	Eigen::MatrixXd inv_col_sig = fac_col_sig_lower.triangularView<Eigen::Lower>().solve(Eigen::MatrixXd::Identity(cols_factor, cols_factor));
+	Eigen::MatrixXd inv_row_sig = fac_row_sig_lower.triangularView<Eigen::Lower>().solve(Eigen::MatrixXd::Identity(rows_factor, rows_factor));
+	prec_t = bvhar::kronecker_eigen(
+		(inv_col_sig.transpose() * inv_col_sig).eval(),
+		(inv_row_sig.transpose() * inv_row_sig).eval()
+	);
+	temp_penalty = 0;
+	do {
+		llt_of_prec.compute((
+			post_cov + prec_t + temp_penalty * Eigen::MatrixXd::Identity(len_factor, len_factor)
+		).selfadjointView<Eigen::Lower>());
+		temp_penalty += .01;
+	} while (llt_of_prec.info() != Eigen::Success && temp_penalty < .1);
+	if (llt_of_prec.info() != Eigen::Success) {
+		eigen_assert("LLT failed in precision sampler.");
+	}
+	Eigen::MatrixXd fac_ar(rows_factor, cols_factor);
+	Eigen::MatrixXd left_ar = fac_row_sig_lower.transpose().triangularView<Eigen::Upper>().solve(
+		fac_row_sig_lower.triangularView<Eigen::Lower>().solve(fac_row_coef.transpose())
+	);
+	Eigen::MatrixXd right_ar = fac_col_sig_lower.triangularView<Eigen::Lower>().solve<Eigen::OnTheRight>(
+		fac_col_sig_lower.triangularView<Eigen::Lower>().solve(fac_col_coef.transpose()).transpose()
+	);
+	int num_design = y.size();
+	for (int i = factor_lag; i < num_design; ++i) {
+		fac_ar = left_ar * factor_x * right_ar;
+		post_mean = llt_of_prec.solve(post_solve * y[i].reshaped() + fac_ar.reshaped());
+		for (int j = 0; j < len_factor; ++j) {
+			vec_normal[j] = bvhar::normal_rand(rng);
+		}
+		factor_mat[i] = bvhar::unvectorize(post_mean + llt_of_prec.matrixU().solve(vec_normal), cols_factor);
+		if (i < num_design - 1) {
+			update_x(factor_x, factor_mat[i], rows_factor, cols_factor);
 		}
 	}
 }

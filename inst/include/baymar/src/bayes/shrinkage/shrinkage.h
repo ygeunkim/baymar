@@ -166,8 +166,16 @@ private:
 	Eigen::MatrixXd local_record;
 };
 
-inline std::unique_ptr<MatShrinkageUpdater> initialize_matshrinkageupdater(int num_iter, BVHAR_LIST& param_prior, BVHAR_LIST& param_init, int prior_type) {
+inline std::unique_ptr<MatShrinkageUpdater> initialize_matshrinkageupdater(int num_iter, BVHAR_LIST& param_prior, BVHAR_LIST& param_init, int prior_type, const BVHAR_STRING& prefix = "") {
 	std::unique_ptr<MatShrinkageUpdater> shrinkage_ptr;
+	if (prior_type == 0) {
+		// Should check when using pybind11: BVHAR_STRING is py::str -> change this to std::string?
+		if (BVHAR_CONTAINS(param_init, (prefix + "local_sparsity").c_str())) {
+			prior_type = 3;
+		} else if (BVHAR_CONTAINS(param_init, (prefix + "kappa").c_str())) {
+			prior_type = 4;
+		}
+	}
 	switch (prior_type) {
 		case 1: {
 			MatMinnParams params(param_prior);
@@ -177,13 +185,13 @@ inline std::unique_ptr<MatShrinkageUpdater> initialize_matshrinkageupdater(int n
 		}
 		case 3: {
 			MatShrinkageParams params(param_prior);
-			MatGlInits inits(param_init);
+			MatGlInits inits(param_init, prefix);
 			shrinkage_ptr = std::make_unique<MatHsUpdater>(num_iter, params, inits);
 			return shrinkage_ptr;
 		}
 		case 4: {
-			MatHierMinnParams params(param_prior);
-			MatHierMinnInits inits(param_init);
+			MatHierMinnParams params(param_prior, prefix);
+			MatHierMinnInits inits(param_init, prefix);
 			shrinkage_ptr = std::make_unique<MatHierMinnUpdater>(num_iter, params, inits);
 			return shrinkage_ptr;
 		}

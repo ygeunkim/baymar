@@ -21,13 +21,13 @@ struct MatMniwParams : public bvhar::McmcParams {
 	double _row_iw_df, _col_iw_df;
 	int _row_row_coef, _row_col_coef;
 
-	MatMniwParams(int num_iter, std::vector<Eigen::MatrixXd>& y, BVHAR_LIST& priors)
+	MatMniwParams(int num_iter, std::vector<Eigen::MatrixXd>& y, BVHAR_LIST& priors, const BVHAR_STRING& prefix = "")
 	: bvhar::McmcParams(num_iter),
 		_y(y), _row(y[0].rows()), _col(y[0].cols()), _design(y.size()),
-		_row_mean(BVHAR_CAST<Eigen::MatrixXd>(priors["row_prior_mean"])), _row_iw_scl(BVHAR_CAST<Eigen::MatrixXd>(priors["row_iw_scl"])),
-		_col_mean(BVHAR_CAST<Eigen::MatrixXd>(priors["col_prior_mean"])), _col_iw_scl(BVHAR_CAST<Eigen::MatrixXd>(priors["col_iw_scl"])),
-		_row_prec(BVHAR_CAST<Eigen::VectorXd>(priors["row_prior_prec"])), _col_prec(BVHAR_CAST<Eigen::VectorXd>(priors["col_prior_prec"])),
-		_row_iw_df(BVHAR_CAST_DOUBLE(priors["row_iw_df"])), _col_iw_df(BVHAR_CAST_DOUBLE(priors["col_iw_df"])),
+		_row_mean(BVHAR_CAST<Eigen::MatrixXd>(priors[prefix + "row_prior_mean"])), _row_iw_scl(BVHAR_CAST<Eigen::MatrixXd>(priors[prefix + "row_iw_scl"])),
+		_col_mean(BVHAR_CAST<Eigen::MatrixXd>(priors[prefix + "col_prior_mean"])), _col_iw_scl(BVHAR_CAST<Eigen::MatrixXd>(priors[prefix + "col_iw_scl"])),
+		_row_prec(BVHAR_CAST<Eigen::VectorXd>(priors[prefix + "row_prior_prec"])), _col_prec(BVHAR_CAST<Eigen::VectorXd>(priors[prefix + "col_prior_prec"])),
+		_row_iw_df(BVHAR_CAST_DOUBLE(priors[prefix + "row_iw_df"])), _col_iw_df(BVHAR_CAST_DOUBLE(priors[prefix + "col_iw_df"])),
 		_row_row_coef(_row_mean.rows()), _row_col_coef(_col_mean.rows()) {}
 };
 
@@ -42,7 +42,7 @@ struct MatMniwRegParams : public MatMniwParams {
 		BVHAR_OPTIONAL<int> exogen_rows = BVHAR_NULLOPT, BVHAR_OPTIONAL<int> exogen_cols = BVHAR_NULLOPT, BVHAR_OPTIONAL<int> exogen_lag = BVHAR_NULLOPT,
 		BVHAR_OPTIONAL<int> factor_rows = BVHAR_NULLOPT, BVHAR_OPTIONAL<int> factor_cols = BVHAR_NULLOPT
 	)
-	: MatMniwParams(num_iter, y, priors),
+	: MatMniwParams(num_iter, y, priors, ""),
 		_x(x),
 		_row_exogen(exogen_rows ? *exogen_rows : 0), _col_exogen(exogen_cols ? *exogen_cols : 0), _lag_exogen(exogen_lag ? *exogen_lag : 0),
 		_row_factor(factor_rows ? *factor_rows : 0), _col_factor(factor_cols ? *factor_cols : 0) {
@@ -54,11 +54,11 @@ struct MatMniwRegParams : public MatMniwParams {
 struct MatMniwInits {
 	Eigen::MatrixXd _init_row_coef, _init_row_lower, _init_col_coef, _init_col_lower;
 
-	MatMniwInits(BVHAR_LIST& init)
-	: _init_row_coef(BVHAR_CAST<Eigen::MatrixXd>(init["row_init_coef"])),
-		_init_row_lower(BVHAR_CAST<Eigen::MatrixXd>(init["row_init_lower"])),
-		_init_col_coef(BVHAR_CAST<Eigen::MatrixXd>(init["col_init_coef"])),
-		_init_col_lower(BVHAR_CAST<Eigen::MatrixXd>(init["col_init_lower"])) {}
+	MatMniwInits(BVHAR_LIST& init, const BVHAR_STRING& prefix = "")
+	: _init_row_coef(BVHAR_CAST<Eigen::MatrixXd>(init[prefix + "row_init_coef"])),
+		_init_row_lower(BVHAR_CAST<Eigen::MatrixXd>(init[prefix + "row_init_lower"])),
+		_init_col_coef(BVHAR_CAST<Eigen::MatrixXd>(init[prefix + "col_init_coef"])),
+		_init_col_lower(BVHAR_CAST<Eigen::MatrixXd>(init[prefix + "col_init_lower"])) {}
 };
 
 struct MatMniwRecords {
@@ -66,6 +66,9 @@ struct MatMniwRecords {
 	Eigen::MatrixXd row_sigma_record;
 	Eigen::MatrixXd col_coef_record;
 	Eigen::MatrixXd col_sigma_record;
+
+	MatMniwRecords()
+	: row_coef_record(), row_sigma_record(), col_coef_record(), col_sigma_record() {}
 
 	MatMniwRecords(int num_iter, int num_row, int num_col, int nrow_row_coef, int nrow_col_coef)
 	: row_coef_record(num_iter + 1, nrow_row_coef * num_row),
@@ -144,6 +147,19 @@ struct MatMniwRecords {
 				col_sigma_record(id, lower_id++) = col_sig_lower.row(i).head(j + 1).dot(col_sig_lower.row(j).head(j + 1));
 			}
 		}
+	}
+
+	void updateParams(
+		const int id,
+		Eigen::Ref<Eigen::MatrixXd> row_coef, Eigen::Ref<Eigen::MatrixXd> row_sig_lower,
+		Eigen::Ref<Eigen::MatrixXd> col_coef, Eigen::Ref<Eigen::MatrixXd> col_sig_lower,
+		int nrow_row_coef, int num_row,
+		int nrow_col_coef, int num_col
+	) {
+		row_coef = bvhar::unvectorize(row_coef_record.row(id).head(nrow_row_coef * num_row).transpose(), num_row);
+		col_coef = bvhar::unvectorize(col_coef_record.row(id).head(nrow_col_coef * num_col).transpose(), num_col);
+		fill_lower(row_sig_lower, row_sigma_record.row(id).transpose());
+		fill_lower(col_sig_lower, col_sigma_record.row(id).transpose());
 	}
 
 	BVHAR_LIST returnListRecords(
