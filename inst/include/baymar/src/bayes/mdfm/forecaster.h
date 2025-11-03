@@ -127,7 +127,7 @@ protected:
 		BVHAR_DEBUG_LOG(debug_logger, "updateLpl(h={}, valid_vec) called", h);
 		lpl[h] -= col_sig_lower.transpose().triangularView<Eigen::Upper>().solve<Eigen::OnTheRight>(
 			row_sig_lower.triangularView<Eigen::Lower>().solve(valid_vec - point_forecast)
-		).squaredNorm() / 2 + num_row * num_col * log(2 * M_PI) / 2 + 4 * row_sig_lower.diagonal().array().log().sum() + 4 * col_sig_lower.diagonal().array().log().sum();
+		).squaredNorm() / 2 + num_row * num_col * log(2 * M_PI) / 2 + num_col * row_sig_lower.diagonal().array().log().sum() + num_row * col_sig_lower.diagonal().array().log().sum();
 	}
 
 	Eigen::MatrixXd getDesign() override {
