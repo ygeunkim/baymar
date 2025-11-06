@@ -92,19 +92,25 @@ public:
 		if (famar_updater) {
 			famar_updater->appendRecords(res);
 		}
-		row_updater->appendRowRecords(res);
-		col_updater->appendColRecords(res);
+		// row_updater->appendRowRecords(res);
+		// col_updater->appendColRecords(res);
+		row_updater->appendRecords(res, "R");
+		col_updater->appendRecords(res, "C");
 		if (exogen_row_updater) {
-			exogen_row_updater->appendExogenRowRecords(res);
+			// exogen_row_updater->appendExogenRowRecords(res);
+			exogen_row_updater->appendRecords(res, "Xr");
 		}
 		if (exogen_col_updater) {
-			exogen_col_updater->appendExogenColRecords(res);
+			// exogen_col_updater->appendExogenColRecords(res);
+			exogen_col_updater->appendRecords(res, "Xc");
 		}
 		if (factor_row_updater) {
-			factor_row_updater->appendFactorRowRecords(res);
+			// factor_row_updater->appendFactorRowRecords(res);
+			factor_row_updater->appendRecords(res, "Fr");
 		}
 		if (factor_col_updater) {
-			factor_col_updater->appendFactorColRecords(res);
+			// factor_col_updater->appendFactorColRecords(res);
+			factor_col_updater->appendRecords(res, "Fc");
 		}
 		for (auto& record : res) {
 			if (BVHAR_IS_MATRIX(BVHAR_ACCESS_LIST(record, res))) {

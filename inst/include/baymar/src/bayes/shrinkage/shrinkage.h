@@ -21,12 +21,13 @@ public:
 		BVHAR_BHRNG& rng
 	) {}
 	virtual void updateRecords(int id) {}
-	virtual void appendRowRecords(BVHAR_LIST& list) {}
-	virtual void appendColRecords(BVHAR_LIST& list) {}
-	virtual void appendExogenRowRecords(BVHAR_LIST& list) {}
-	virtual void appendExogenColRecords(BVHAR_LIST& list) {}
-	virtual void appendFactorRowRecords(BVHAR_LIST& list) {}
-	virtual void appendFactorColRecords(BVHAR_LIST& list) {}
+	virtual void appendRecords(BVHAR_LIST& list, const BVHAR_STRING& prefix = "") {}
+	// virtual void appendRowRecords(BVHAR_LIST& list) {}
+	// virtual void appendColRecords(BVHAR_LIST& list) {}
+	// virtual void appendExogenRowRecords(BVHAR_LIST& list) {}
+	// virtual void appendExogenColRecords(BVHAR_LIST& list) {}
+	// virtual void appendFactorRowRecords(BVHAR_LIST& list) {}
+	// virtual void appendFactorColRecords(BVHAR_LIST& list) {}
 };
 
 class MatMinnUpdater : public MatShrinkageUpdater {
@@ -66,29 +67,33 @@ class MatHierMinnUpdater : public MatShrinkageUpdater {
 			kappa_record[id] = kappa;
 		}
 
-		void appendRowRecords(BVHAR_LIST& list) override {
-			list["kappaR_record"] = kappa_record;
+		void appendRecords(BVHAR_LIST& list, const BVHAR_STRING& prefix = "") override {
+			list["kappa" + prefix + "_record"] = kappa_record;
 		}
 
-		void appendColRecords(BVHAR_LIST& list) override {
-			list["kappaC_record"] = kappa_record;
-		}
+		// void appendRowRecords(BVHAR_LIST& list) override {
+		// 	list["kappaR_record"] = kappa_record;
+		// }
 
-		void appendExogenRowRecords(BVHAR_LIST& list) override {
-			list["kappaXr_record"] = kappa_record;
-		}
+		// void appendColRecords(BVHAR_LIST& list) override {
+		// 	list["kappaC_record"] = kappa_record;
+		// }
 
-		void appendExogenColRecords(BVHAR_LIST& list) override {
-			list["kappaXc_record"] = kappa_record;
-		}
+		// void appendExogenRowRecords(BVHAR_LIST& list) override {
+		// 	list["kappaXr_record"] = kappa_record;
+		// }
 
-		void appendFactorRowRecords(BVHAR_LIST& list) override {
-			list["kappaFr_record"] = kappa_record;
-		}
+		// void appendExogenColRecords(BVHAR_LIST& list) override {
+		// 	list["kappaXc_record"] = kappa_record;
+		// }
 
-		void appendFactorColRecords(BVHAR_LIST& list) override {
-			list["kappaFc_record"] = kappa_record;
-		}
+		// void appendFactorRowRecords(BVHAR_LIST& list) override {
+		// 	list["kappaFr_record"] = kappa_record;
+		// }
+
+		// void appendFactorColRecords(BVHAR_LIST& list) override {
+		// 	list["kappaFc_record"] = kappa_record;
+		// }
 	
 	private:
 		double shp, rate, kappa;
@@ -127,35 +132,40 @@ public:
 		global_record[id] = global_lev;
 	}
 
-	void appendRowRecords(BVHAR_LIST& list) override {
-		list["lambdaR_record"] = local_record;
-		list["tauR_record"] = global_record;
-	}
+	void appendRecords(BVHAR_LIST& list, const BVHAR_STRING& prefix = "") override {
+			list["lambda" + prefix + "_record"] = local_record;
+			list["tau" + prefix + "_record"] = global_record;
+		}
 
-	void appendColRecords(BVHAR_LIST& list) override {
-		list["lambdaC_record"] = local_record;
-		list["tauC_record"] = global_record;
-	}
+	// void appendRowRecords(BVHAR_LIST& list) override {
+	// 	list["lambdaR_record"] = local_record;
+	// 	list["tauR_record"] = global_record;
+	// }
 
-	void appendExogenRowRecords(BVHAR_LIST& list) override {
-		list["lambdaXr_record"] = local_record;
-		list["tauXr_record"] = global_record;
-	}
+	// void appendColRecords(BVHAR_LIST& list) override {
+	// 	list["lambdaC_record"] = local_record;
+	// 	list["tauC_record"] = global_record;
+	// }
 
-	void appendExogenColRecords(BVHAR_LIST& list) override {
-		list["lambdaXc_record"] = local_record;
-		list["tauXc_record"] = global_record;
-	}
+	// void appendExogenRowRecords(BVHAR_LIST& list) override {
+	// 	list["lambdaXr_record"] = local_record;
+	// 	list["tauXr_record"] = global_record;
+	// }
 
-	void appendFactorRowRecords(BVHAR_LIST& list) override {
-		list["lambdaFr_record"] = local_record;
-		list["tauFr_record"] = global_record;
-	}
+	// void appendExogenColRecords(BVHAR_LIST& list) override {
+	// 	list["lambdaXc_record"] = local_record;
+	// 	list["tauXc_record"] = global_record;
+	// }
+
+	// void appendFactorRowRecords(BVHAR_LIST& list) override {
+	// 	list["lambdaFr_record"] = local_record;
+	// 	list["tauFr_record"] = global_record;
+	// }
 	
-	void appendFactorColRecords(BVHAR_LIST& list) override {
-		list["lambdaFc_record"] = local_record;
-		list["tauFc_record"] = global_record;
-	}
+	// void appendFactorColRecords(BVHAR_LIST& list) override {
+	// 	list["lambdaFc_record"] = local_record;
+	// 	list["tauFc_record"] = global_record;
+	// }
 
 private:
 	Eigen::VectorXd local_lev;

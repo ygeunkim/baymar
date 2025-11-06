@@ -99,8 +99,10 @@ public:
 		BVHAR_LIST res = mniw_record->returnListRecords(nrow_row_coef, num_row, 0, 0, nrow_col_coef, num_col, 0, 0);
 		factor_updater->appendRecords(res);
 		// mdfm_record->appendRecords(res);
-		row_updater->appendRowRecords(res);
-		col_updater->appendColRecords(res);
+		// row_updater->appendRowRecords(res);
+		// col_updater->appendColRecords(res);
+		row_updater->appendRecords(res, "R");
+		col_updater->appendRecords(res, "C");
 		for (auto& record : res) {
 			if (BVHAR_IS_MATRIX(BVHAR_ACCESS_LIST(record, res))) {
 				BVHAR_ACCESS_LIST(record, res) = bvhar::thin_record(BVHAR_CAST<Eigen::MatrixXd>(BVHAR_ACCESS_LIST(record, res)), num_iter, num_burn, thin);
