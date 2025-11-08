@@ -21,13 +21,13 @@ struct MatMniwParams : public bvhar::McmcParams {
 	double _row_iw_df, _col_iw_df;
 	int _row_row_coef, _row_col_coef;
 
-	MatMniwParams(int num_iter, std::vector<Eigen::MatrixXd>& y, BVHAR_LIST& priors, const BVHAR_STRING& prefix = "")
+	MatMniwParams(int num_iter, std::vector<Eigen::MatrixXd>& y, BVHAR_LIST& priors, const BVHAR_STRING& prefix = "", const BVHAR_STRING& suffix = "")
 	: bvhar::McmcParams(num_iter),
 		_y(y), _row(y[0].rows()), _col(y[0].cols()), _design(y.size()),
-		_row_mean(BVHAR_CAST<Eigen::MatrixXd>(priors[prefix + "row_prior_mean"])), _row_iw_scl(BVHAR_CAST<Eigen::MatrixXd>(priors[prefix + "row_iw_scl"])),
-		_col_mean(BVHAR_CAST<Eigen::MatrixXd>(priors[prefix + "col_prior_mean"])), _col_iw_scl(BVHAR_CAST<Eigen::MatrixXd>(priors[prefix + "col_iw_scl"])),
-		_row_prec(BVHAR_CAST<Eigen::VectorXd>(priors[prefix + "row_prior_prec"])), _col_prec(BVHAR_CAST<Eigen::VectorXd>(priors[prefix + "col_prior_prec"])),
-		_row_iw_df(BVHAR_CAST_DOUBLE(priors[prefix + "row_iw_df"])), _col_iw_df(BVHAR_CAST_DOUBLE(priors[prefix + "col_iw_df"])),
+		_row_mean(BVHAR_CAST<Eigen::MatrixXd>(priors[prefix + "row_prior_mean" + suffix])), _row_iw_scl(BVHAR_CAST<Eigen::MatrixXd>(priors[prefix + "row_iw_scl" + suffix])),
+		_col_mean(BVHAR_CAST<Eigen::MatrixXd>(priors[prefix + "col_prior_mean" + suffix])), _col_iw_scl(BVHAR_CAST<Eigen::MatrixXd>(priors[prefix + "col_iw_scl" + suffix])),
+		_row_prec(BVHAR_CAST<Eigen::VectorXd>(priors[prefix + "row_prior_prec" + suffix])), _col_prec(BVHAR_CAST<Eigen::VectorXd>(priors[prefix + "col_prior_prec" + suffix])),
+		_row_iw_df(BVHAR_CAST_DOUBLE(priors[prefix + "row_iw_df" + suffix])), _col_iw_df(BVHAR_CAST_DOUBLE(priors[prefix + "col_iw_df" + suffix])),
 		_row_row_coef(_row_mean.rows()), _row_col_coef(_col_mean.rows()) {}
 };
 
@@ -49,16 +49,23 @@ struct MatMniwRegParams : public MatMniwParams {
 		_row_row_coef -= (_row_exogen + _row_factor);
 		_row_col_coef -= (_col_exogen + _col_factor);
 	}
+
+	MatMniwRegParams(
+		int num_iter, std::vector<Eigen::SparseMatrix<double>>& x, std::vector<Eigen::MatrixXd>& y,
+		BVHAR_LIST& priors, const BVHAR_STRING& prefix, const BVHAR_STRING& suffix
+	)
+	: MatMniwParams(num_iter, y, priors, prefix, suffix),
+		_x(x), _row_exogen(0), _col_exogen(0), _lag_exogen(0), _row_factor(0), _col_factor(0) {}
 };
 
 struct MatMniwInits {
 	Eigen::MatrixXd _init_row_coef, _init_row_lower, _init_col_coef, _init_col_lower;
 
-	MatMniwInits(BVHAR_LIST& init, const BVHAR_STRING& prefix = "")
-	: _init_row_coef(BVHAR_CAST<Eigen::MatrixXd>(init[prefix + "row_init_coef"])),
-		_init_row_lower(BVHAR_CAST<Eigen::MatrixXd>(init[prefix + "row_init_lower"])),
-		_init_col_coef(BVHAR_CAST<Eigen::MatrixXd>(init[prefix + "col_init_coef"])),
-		_init_col_lower(BVHAR_CAST<Eigen::MatrixXd>(init[prefix + "col_init_lower"])) {}
+	MatMniwInits(BVHAR_LIST& init, const BVHAR_STRING& prefix = "", const BVHAR_STRING& suffix = "")
+	: _init_row_coef(BVHAR_CAST<Eigen::MatrixXd>(init[prefix + "row_init_coef" + suffix])),
+		_init_row_lower(BVHAR_CAST<Eigen::MatrixXd>(init[prefix + "row_init_lower" + suffix])),
+		_init_col_coef(BVHAR_CAST<Eigen::MatrixXd>(init[prefix + "col_init_coef" + suffix])),
+		_init_col_lower(BVHAR_CAST<Eigen::MatrixXd>(init[prefix + "col_init_lower" + suffix])) {}
 };
 
 struct MatMniwRecords {
