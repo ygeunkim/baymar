@@ -24,9 +24,10 @@ Imports:
     utils
 LinkingTo: 
     BH (>= 1.87.0-0),
-    bvhar (>= 2.3.0.9010),
+    bvhar (>= 2.3.0.9013),
     Rcpp (>= 0.10.0),
     RcppEigen (>= 0.3.4.0.0),
+    RcppNumerical,
     RcppSpdlog,
     RcppThread
 Remotes:
