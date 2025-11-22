@@ -4,6 +4,7 @@
 #include <bvhar/utils>
 #include <type_traits>
 
+namespace baecon {
 namespace baymar {
 
 inline void minnesota_kappa(
@@ -23,5 +24,6 @@ inline void minnesota_kappa(
 }
 
 } // namespace baymar
+} // namespace baecon
 
 #endif // BAYMAR_BAYES_MISC_MINN_HELPER_H

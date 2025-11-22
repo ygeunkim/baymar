@@ -6,6 +6,7 @@
 #include "../../math/design.h"
 #include "../mniw/config.h"
 
+namespace baecon {
 namespace baymar {
 
 struct MatDfmParams;
@@ -340,5 +341,6 @@ inline void initialize_matdfm_record(
 }
 
 } // namespace baymar
+} // namespace baecon
 
 #endif // BAYMAR_BAYES_MDFM_CONFIG_H

@@ -5,6 +5,7 @@
 #include "../../core/forecaster.h"
 #include "../mniw/forecaster.h"
 
+namespace baecon {
 namespace baymar {
 
 class MatDfmForecaster;
@@ -544,5 +545,6 @@ inline std::unique_ptr<bvhar::McmcOutforecastInterface> initialize_matdfmoutfore
 }
 
 } // namespace baymar
+} // namespace baecon
 
 #endif // BAYMAR_BAYES_MDFM_FORECASTER_H

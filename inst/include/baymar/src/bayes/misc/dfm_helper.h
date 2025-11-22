@@ -4,6 +4,7 @@
 #include <bvhar/utils>
 #include "../../math/design.h"
 
+namespace baecon {
 namespace baymar {
 
 inline void draw_wn_factor(std::vector<Eigen::MatrixXd>& factor_mat, int rows_factor, int cols_factor,
@@ -362,5 +363,6 @@ inline void draw_mar_factor(std::vector<Eigen::MatrixXd>& factor_mat, int factor
 }
 
 } // namespace baymar
+} // namespace baecon
 
 #endif // BAYMAR_BAYES_MISC_DFM_HELPER_H

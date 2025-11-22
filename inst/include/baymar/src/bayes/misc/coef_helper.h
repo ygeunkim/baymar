@@ -5,6 +5,7 @@
 #include "../../math/random.h"
 #include <type_traits>
 
+namespace baecon {
 namespace baymar {
 
 // MAR Indentifiability restriction
@@ -243,5 +244,6 @@ inline void draw_coef_sig(
 // }
 
 } // namespace baymar
+} // namespace baecon
 
 #endif // BAYMAR_BAYES_MISC_COEF_HELPER_H

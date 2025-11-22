@@ -3,6 +3,7 @@
 
 #include "./config.h"
 
+namespace baecon {
 namespace baymar {
 
 class MatShrinkageUpdater;
@@ -216,5 +217,6 @@ inline std::unique_ptr<MatShrinkageUpdater> initialize_matshrinkageupdater(
 }
 
 } // namespace baymar
+} // namespace baecon
 
 #endif // BAYMAR_BAYES_SHRINKAGE_SHRINKAGE_H

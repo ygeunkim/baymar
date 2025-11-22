@@ -6,6 +6,7 @@
 #include "../../core/forecaster.h"
 // #include <bvhar/ols>
 
+namespace baecon {
 namespace baymar {
 
 class MatMniwExogenForecaster;
@@ -961,5 +962,6 @@ inline std::unique_ptr<bvhar::McmcOutforecastInterface> initialize_matmniwoutfor
 }
 
 } // namespace baymar
+} // namespace baecon
 
 #endif // BAYMAR_BAYES_MNIW_FORECASTER_H

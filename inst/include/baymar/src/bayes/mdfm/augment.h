@@ -6,6 +6,7 @@
 // #include "../misc/draw.h"
 // #include "../../math/design.h"
 
+namespace baecon {
 namespace baymar {
 
 class MatAugmenter;
@@ -468,5 +469,6 @@ inline std::unique_ptr<MatFactorAugmenter> initialize_factoraugmenter(
 }
 
 } // namespace baymar
+} // namespace baecon
 
 #endif // BAYMAR_BAYES_MDFM_AUGMENT_H

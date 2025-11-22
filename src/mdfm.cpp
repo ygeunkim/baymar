@@ -9,7 +9,7 @@ Rcpp::List estimate_bmdfm(int num_chains, int num_iter, int num_burn, int thin,
 													Rcpp::List col_prior, Rcpp::List col_init, int col_prior_type,
 													Eigen::VectorXi seed_chain, bool display_progress, int nthreads) {
 	// auto mcmc_run = [&]() -> std::unique_ptr<bvhar::McmcRun> {
-	// 	return std::make_unique<baymar::MatDfmRun<baymar::McmcMatDfmVar>>(
+	// 	return std::make_unique<baecon::baymar::MatDfmRun<baecon::baymar::McmcMatDfmVar>>(
 	// 		num_chains, num_iter, num_burn, thin,
 	// 		y, factor_lag, param_dfm, dfm_init,
 	// 		row_prior, row_init, row_prior_type,
@@ -17,7 +17,7 @@ Rcpp::List estimate_bmdfm(int num_chains, int num_iter, int num_burn, int thin,
 	// 		seed_chain, display_progress, nthreads
 	// 	);
 	// }();
-	auto mcmc_run = std::make_unique<baymar::MatDfmRun>(
+	auto mcmc_run = std::make_unique<baecon::baymar::MatDfmRun>(
 		num_chains, num_iter, num_burn, thin,
 		y, factor_lag, param_dfm, dfm_init,
 		row_prior, row_init, row_prior_type,
@@ -33,7 +33,7 @@ Rcpp::List forecast_bdfm_mniw(int num_chains, int step,
 															int nrow_factor, int ncol_factor, int factor_lag,
 													 	 	Rcpp::List fit_record, Eigen::VectorXi seed_chain, int nthreads,
 															bool insample) {
-	auto forecaster = std::make_unique<baymar::MatDfmForecastRun>(
+	auto forecaster = std::make_unique<baecon::baymar::MatDfmForecastRun>(
 		num_chains, step, nrow_factor, ncol_factor, factor_lag,
 		fit_record, seed_chain, nthreads, insample
 	);
@@ -54,7 +54,7 @@ Rcpp::List roll_bdfm_mniw(Eigen::MatrixXd y, int num_data, int num_chains, int n
 													int step, Eigen::MatrixXd y_test, bool get_lpl, bool use_fit,
 													Eigen::MatrixXi seed_chain, Eigen::VectorXi seed_forecast,
 													bool display_progress, int nthreads) {
-	auto forecaster = baymar::initialize_matdfmoutforecaster<baymar::MatDfmRollForecastRun>(
+	auto forecaster = baecon::baymar::initialize_matdfmoutforecaster<baecon::baymar::MatDfmRollForecastRun>(
 		y, num_data, num_chains, num_iter, num_burn, thin, fit_record, run_mcmc,
 		param_coef_sig, coef_sig_init, row_prior, row_init, row_prior_type, col_prior, col_init, col_prior_type,
 		factor_rows, factor_cols, factor_lag,
@@ -74,7 +74,7 @@ Rcpp::List expand_bdfm_mniw(Eigen::MatrixXd y, int num_data, int num_chains, int
 													  int step, Eigen::MatrixXd y_test, bool get_lpl, bool use_fit,
 													  Eigen::MatrixXi seed_chain, Eigen::VectorXi seed_forecast,
 													  bool display_progress, int nthreads) {
-	auto forecaster = baymar::initialize_matdfmoutforecaster<baymar::MatDfmExpandForecastRun>(
+	auto forecaster = baecon::baymar::initialize_matdfmoutforecaster<baecon::baymar::MatDfmExpandForecastRun>(
 		y, num_data, num_chains, num_iter, num_burn, thin, fit_record, run_mcmc,
 		param_coef_sig, coef_sig_init, row_prior, row_init, row_prior_type, col_prior, col_init, col_prior_type,
 		factor_rows, factor_cols, factor_lag,

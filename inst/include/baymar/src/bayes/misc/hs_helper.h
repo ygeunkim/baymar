@@ -3,6 +3,7 @@
 
 #include <bvhar/utils>
 
+namespace baecon {
 namespace baymar {
 
 // inline void horseshoe_latent(Eigen::VectorXd& latent, Eigen::VectorXd& hyperparam, BVHAR_BHRNG& rng) {
@@ -44,5 +45,6 @@ inline void horseshoe_sparsity(
 }
 
 } // namespace baymar
+} // namespace baecon
 
 #endif // BAYMAR_BAYES_MISC_HS_HELPER_H

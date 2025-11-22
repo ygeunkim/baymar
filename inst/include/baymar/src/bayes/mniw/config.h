@@ -5,6 +5,7 @@
 #include "../shrinkage/shrinkage.h"
 // #include "../mdfm/augment.h"
 
+namespace baecon {
 namespace baymar {
 
 struct MatMniwParams;
@@ -261,5 +262,6 @@ inline void initialize_matmniw_record(
 }
 
 } // namespace baymar
+} // namespace baecon
 
 #endif // BAYMAR_BAYES_MNIW_CONFIG_H

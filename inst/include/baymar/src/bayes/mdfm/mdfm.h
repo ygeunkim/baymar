@@ -5,6 +5,7 @@
 #include "./augment.h"
 // #include "../shrinkage/shrinkage.h"
 
+namespace baecon {
 namespace baymar {
 
 class McmcMatDfm;
@@ -326,5 +327,6 @@ public:
 };
 
 } // namespace baymar
+} // namespace baecon
 
 #endif // BAYMAR_BAYES_MDFM_MDFM_H

@@ -4,6 +4,7 @@
 #include "./forecaster.h"
 #include <bvhar/ols>
 
+namespace baecon {
 namespace baymar {
 
 class MarSimulator;
@@ -251,5 +252,6 @@ private:
 };
 
 } // namespace baymar
+} // namespace baecon
 
 #endif // BAYMAR_OLS_SIMULATOR_H

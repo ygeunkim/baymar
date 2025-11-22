@@ -7,7 +7,7 @@ std::vector<Eigen::MatrixXd> sim_mar_process(int num_sim, int num_burn, int lag,
 																		 				 Eigen::MatrixXd row_coef, Eigen::MatrixXd col_coef,
 																		 				 Eigen::MatrixXd row_sig, Eigen::MatrixXd col_sig,
 																						 unsigned int seed) {
-	auto dgp_run = std::make_unique<baymar::MarSimulator>(num_sim, num_burn, lag, init, row_coef, col_coef, row_sig, col_sig, seed);
+	auto dgp_run = std::make_unique<baecon::baymar::MarSimulator>(num_sim, num_burn, lag, init, row_coef, col_coef, row_sig, col_sig, seed);
 	return dgp_run->returnDgp();
 }
 
@@ -18,7 +18,7 @@ std::vector<Eigen::MatrixXd> sim_mar_t_process(int num_sim, int num_burn, int la
 																		 				   Eigen::MatrixXd row_coef, Eigen::MatrixXd col_coef,
 																		 				   Eigen::MatrixXd sigma, Eigen::MatrixXd omega, double nu,
 																						   unsigned int seed) {
-	auto dgp_run = std::make_unique<baymar::MarSimulator>(num_sim, num_burn, lag, init, row_coef, col_coef, sigma, omega, nu, seed);
+	auto dgp_run = std::make_unique<baecon::baymar::MarSimulator>(num_sim, num_burn, lag, init, row_coef, col_coef, sigma, omega, nu, seed);
 	return dgp_run->returnDgp();
 }
 
@@ -31,7 +31,7 @@ Rcpp::List sim_mdfm_process(int num_sim, int num_burn, int lag,
 													  Eigen::MatrixXd factor_row_coef, Eigen::MatrixXd factor_col_coef,
 													  Eigen::MatrixXd factor_row_sig, Eigen::MatrixXd factor_col_sig,
 													  unsigned int seed) {
-	auto dgp_run = std::make_unique<baymar::FactorMarSimulator>(
+	auto dgp_run = std::make_unique<baecon::baymar::FactorMarSimulator>(
 		num_sim, num_burn, lag,
 		row_coef, col_coef, row_sig, col_sig,
 		factor_init, factor_row_coef, factor_col_coef, factor_row_sig, factor_col_sig,
@@ -48,7 +48,7 @@ Rcpp::List sim_mdfm_vec_process(int num_sim, int num_burn, int lag,
 														    Eigen::MatrixXd factor_init,
 													      Eigen::MatrixXd factor_coef, Eigen::MatrixXd factor_sig,
 													      unsigned int seed) {
-	auto dgp_run = std::make_unique<baymar::FactorVecSimulator>(
+	auto dgp_run = std::make_unique<baecon::baymar::FactorVecSimulator>(
 		num_sim, num_burn, lag,
 		row_coef, col_coef, row_sig, col_sig,
 		factor_init,
@@ -66,7 +66,7 @@ Rcpp::List sim_mdfm_vec_t_process(int num_sim, int num_burn, int lag,
 														      Eigen::MatrixXd factor_init,
 													        Eigen::MatrixXd factor_coef, Eigen::MatrixXd factor_sig,
 													        unsigned int seed) {
-	auto dgp_run = std::make_unique<baymar::FactorVecSimulator>(
+	auto dgp_run = std::make_unique<baecon::baymar::FactorVecSimulator>(
 		num_sim, num_burn, lag,
 		row_coef, col_coef, sigma, omega, nu,
 		factor_init,
@@ -85,7 +85,7 @@ Rcpp::List sim_famar_vec_process(int num_sim, int num_burn, int lag, Eigen::Matr
 														 		 Eigen::MatrixXd factor_row_coef, Eigen::MatrixXd factor_col_coef,
 																 Eigen::MatrixXd factor_coef, Eigen::MatrixXd factor_sig,
 														 		 unsigned int seed) {
-	auto dgp_run = std::make_unique<baymar::FactorVecSimulator>(
+	auto dgp_run = std::make_unique<baecon::baymar::FactorVecSimulator>(
 		num_sim, num_burn, factor_lag,
 		factor_row_coef, factor_col_coef, row_sig, col_sig,
 		factor_init, factor_coef, factor_sig,
@@ -104,7 +104,7 @@ Rcpp::List sim_famar_vec_t_process(int num_sim, int num_burn, int lag, Eigen::Ma
 														 		   Eigen::MatrixXd factor_row_coef, Eigen::MatrixXd factor_col_coef,
 																   Eigen::MatrixXd factor_coef, Eigen::MatrixXd factor_sig,
 														 		   unsigned int seed) {
-	auto dgp_run = std::make_unique<baymar::FactorVecSimulator>(
+	auto dgp_run = std::make_unique<baecon::baymar::FactorVecSimulator>(
 		num_sim, num_burn, factor_lag,
 		factor_row_coef, factor_col_coef, sigma, omega, nu,
 		factor_init, factor_coef, factor_sig,

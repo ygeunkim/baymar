@@ -3,6 +3,7 @@
 
 #include "../misc/draw.h"
 
+namespace baecon {
 namespace baymar {
 
 struct MatShrinkageParams;
@@ -67,5 +68,6 @@ struct MatGlInits : public MatShrinkageInits {
 };
 
 } // namespace baymar
+} // namespace baecon
 
 #endif // BAYMAR_BAYES_SHRINKAGE_CONFIG_H

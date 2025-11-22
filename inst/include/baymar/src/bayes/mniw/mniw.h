@@ -4,6 +4,7 @@
 // #include "./config.h"
 #include "../mdfm/augment.h" // <- mdfm/config.h includes ./config.h
 
+namespace baecon {
 namespace baymar {
 
 class McmcMatMniw;
@@ -430,5 +431,6 @@ public:
 };
 
 } // namespace baymar
+} // namespace baecon
 
 #endif // BAYMAR_BAYES_MNIW_MNIW_H

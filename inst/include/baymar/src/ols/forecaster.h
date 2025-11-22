@@ -4,6 +4,7 @@
 #include "../core/forecaster.h"
 #include "../math/design.h"
 
+namespace baecon {
 namespace baymar {
 
 class MatForecaster;
@@ -99,5 +100,6 @@ protected:
 };
 
 } // namespace baymar
+} // namespace baecon
 
 #endif // BAYMAR_OLS_FORECASTER_H

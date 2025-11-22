@@ -4,6 +4,7 @@
 #include <bvhar/base>
 #include "../math/design.h"
 
+namespace baecon {
 namespace baymar {
 
 class MatExogenForecaster;
@@ -123,5 +124,6 @@ inline std::unique_ptr<MatErrorGenerator> initialize_materrorgenerator(
 }
 
 } // namespace baymar
+} // namespace baecon
 
 #endif // BAYMAR_CORE_FORECASTER_H

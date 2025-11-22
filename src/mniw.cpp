@@ -14,10 +14,10 @@ Rcpp::List estimate_bmar_mniw(int num_chains, int num_iter, int num_burn, int th
 															Rcpp::List factor_col_prior, Rcpp::List factor_col_init, int factor_col_prior_type, int factor_cols,
 															int factor_lag,
 															Eigen::VectorXi seed_chain, bool display_progress, int nthreads) {
-	auto mcmc_run = [&]() -> std::unique_ptr<baymar::MatMcmcRun> {
+	auto mcmc_run = [&]() -> std::unique_ptr<baecon::baymar::MatMcmcRun> {
 		if (factor_row_prior_type != 0 && factor_col_prior_type != 0) {
 			if (exogen_row_prior_type != 0 && exogen_col_prior_type != 0) {
-				return std::make_unique<baymar::MatMcmcRun>(
+				return std::make_unique<baecon::baymar::MatMcmcRun>(
 					num_chains, num_iter, num_burn, thin,
 					x, y,
 					param_coef_sig, coef_sig_init,
@@ -32,7 +32,7 @@ Rcpp::List estimate_bmar_mniw(int num_chains, int num_iter, int num_burn, int th
 					factor_lag
 				);
 			} if (exogen_row_prior_type != 0 && exogen_col_prior_type == 0) {
-				return std::make_unique<baymar::MatMcmcRun>(
+				return std::make_unique<baecon::baymar::MatMcmcRun>(
 					num_chains, num_iter, num_burn, thin,
 					x, y,
 					param_coef_sig, coef_sig_init,
@@ -47,7 +47,7 @@ Rcpp::List estimate_bmar_mniw(int num_chains, int num_iter, int num_burn, int th
 					factor_lag
 				); 
 			} else if (exogen_row_prior_type == 0 && exogen_col_prior_type != 0) {
-				return std::make_unique<baymar::MatMcmcRun>(
+				return std::make_unique<baecon::baymar::MatMcmcRun>(
 					num_chains, num_iter, num_burn, thin,
 					x, y,
 					param_coef_sig, coef_sig_init,
@@ -62,7 +62,7 @@ Rcpp::List estimate_bmar_mniw(int num_chains, int num_iter, int num_burn, int th
 					factor_lag
 				);
 			}
-			return std::make_unique<baymar::MatMcmcRun>(
+			return std::make_unique<baecon::baymar::MatMcmcRun>(
 				num_chains, num_iter, num_burn, thin,
 				x, y,
 				param_coef_sig, coef_sig_init,
@@ -78,7 +78,7 @@ Rcpp::List estimate_bmar_mniw(int num_chains, int num_iter, int num_burn, int th
 			);
 		}
 		if (exogen_row_prior_type != 0 && exogen_col_prior_type != 0) {
-			return std::make_unique<baymar::MatMcmcRun>(
+			return std::make_unique<baecon::baymar::MatMcmcRun>(
 				num_chains, num_iter, num_burn, thin,
 				x, y,
 				param_coef_sig, coef_sig_init,
@@ -90,7 +90,7 @@ Rcpp::List estimate_bmar_mniw(int num_chains, int num_iter, int num_burn, int th
 				exogen_lag
 			);
 		} if (exogen_row_prior_type != 0 && exogen_col_prior_type == 0) {
-			return std::make_unique<baymar::MatMcmcRun>(
+			return std::make_unique<baecon::baymar::MatMcmcRun>(
 				num_chains, num_iter, num_burn, thin,
 				x, y,
 				param_coef_sig, coef_sig_init,
@@ -102,7 +102,7 @@ Rcpp::List estimate_bmar_mniw(int num_chains, int num_iter, int num_burn, int th
 				exogen_lag
 			); 
 		} else if (exogen_row_prior_type == 0 && exogen_col_prior_type != 0) {
-			return std::make_unique<baymar::MatMcmcRun>(
+			return std::make_unique<baecon::baymar::MatMcmcRun>(
 				num_chains, num_iter, num_burn, thin,
 				x, y,
 				param_coef_sig, coef_sig_init,
@@ -114,7 +114,7 @@ Rcpp::List estimate_bmar_mniw(int num_chains, int num_iter, int num_burn, int th
 				exogen_lag
 			);
 		}
-		return std::make_unique<baymar::MatMcmcRun>(
+		return std::make_unique<baecon::baymar::MatMcmcRun>(
 			num_chains, num_iter, num_burn, thin,
 			x, y,
 			param_coef_sig, coef_sig_init,
@@ -132,15 +132,15 @@ Rcpp::List forecast_bmar_mniw(int num_chains, int lag, int step, Eigen::MatrixXd
 															int nrow_factor, int ncol_factor, int factor_lag,
 													 	 	Rcpp::List fit_record, Eigen::VectorXi seed_chain, int nthreads,
 															bool insample) {
-	auto forecaster = [&]() -> std::unique_ptr<baymar::MatMniwForecastRun> {
+	auto forecaster = [&]() -> std::unique_ptr<baecon::baymar::MatMniwForecastRun> {
 		if (nrow_factor > 0 && ncol_factor > 0) {
-			return std::make_unique<baymar::MatMniwForecastRun>(
+			return std::make_unique<baecon::baymar::MatMniwForecastRun>(
 				num_chains, lag, step, response_mat, num_data, fit_record, seed_chain, nthreads,
 				BVHAR_NULLOPT, BVHAR_NULLOPT,
 				nrow_factor, ncol_factor, factor_lag, insample
 			);
 		}
-		return std::make_unique<baymar::MatMniwForecastRun>(num_chains, lag, step, response_mat, num_data, fit_record, seed_chain, nthreads);
+		return std::make_unique<baecon::baymar::MatMniwForecastRun>(num_chains, lag, step, response_mat, num_data, fit_record, seed_chain, nthreads);
 	}();
 	if (insample) {
 		return Rcpp::wrap(forecaster->returnPredict());
@@ -155,15 +155,15 @@ Rcpp::List forecast_bmarx_mniw(int num_chains, int lag, int step, Eigen::MatrixX
 													 	 	 Rcpp::List fit_record, Eigen::VectorXi seed_chain,
 															 Eigen::MatrixXd exogen, int exogen_lag, int nthreads,
 															 bool insample) {
-	auto forecaster = [&]() -> std::unique_ptr<baymar::MatMniwForecastRun> {
+	auto forecaster = [&]() -> std::unique_ptr<baecon::baymar::MatMniwForecastRun> {
 		if (nrow_factor > 0 && ncol_factor > 0) {
-			return std::make_unique<baymar::MatMniwForecastRun>(
+			return std::make_unique<baecon::baymar::MatMniwForecastRun>(
 				num_chains, lag, step, response_mat, num_data, fit_record, seed_chain, nthreads,
 				exogen, exogen_lag,
 				nrow_factor, ncol_factor, factor_lag, insample
 			);
 		}
-		return std::make_unique<baymar::MatMniwForecastRun>(
+		return std::make_unique<baecon::baymar::MatMniwForecastRun>(
 			num_chains, lag, step, response_mat, num_data, fit_record, seed_chain, nthreads,
 			exogen, exogen_lag
 		);
@@ -187,14 +187,14 @@ Rcpp::List roll_bmar_mniw(Eigen::MatrixXd y, int lag, int num_data, int num_chai
 													int step, Eigen::MatrixXd y_test, bool get_lpl, bool use_fit,
 													Eigen::MatrixXi seed_chain, Eigen::VectorXi seed_forecast,
 													bool display_progress, int nthreads) {
-	// auto forecaster = baymar::initialize_matmniwoutforecaster<baymar::MatMniwRollForecastRun>(
+	// auto forecaster = baecon::baymar::initialize_matmniwoutforecaster<baecon::baymar::MatMniwRollForecastRun>(
 	// 	y, num_data, lag, num_chains, num_iter, num_burn, thin, fit_record, run_mcmc,
 	// 	param_coef_sig, coef_sig_init, row_prior, row_init, row_prior_type, col_prior, col_init, col_prior_type,
 	// 	step, y_test, seed_chain, seed_forecast, display_progress, nthreads
 	// );
-	auto forecaster = [&]() -> std::unique_ptr<bvhar::McmcOutforecastInterface> {
+	auto forecaster = [&]() -> std::unique_ptr<baecon::bvhar::McmcOutforecastInterface> {
 		if (factor_rows > 0 && factor_cols > 0) {
-			return baymar::initialize_matmniwoutforecaster<baymar::MatMniwRollForecastRun>(
+			return baecon::baymar::initialize_matmniwoutforecaster<baecon::baymar::MatMniwRollForecastRun>(
 				y, num_data, lag, num_chains, num_iter, num_burn, thin, fit_record, run_mcmc,
 				param_coef_sig, coef_sig_init, row_prior, row_init, row_prior_type, col_prior, col_init, col_prior_type,
 				step, y_test, get_lpl, use_fit, seed_chain, seed_forecast, display_progress, nthreads,
@@ -206,7 +206,7 @@ Rcpp::List roll_bmar_mniw(Eigen::MatrixXd y, int lag, int num_data, int num_chai
 				factor_lag
 			);
 		}
-		return baymar::initialize_matmniwoutforecaster<baymar::MatMniwRollForecastRun>(
+		return baecon::baymar::initialize_matmniwoutforecaster<baecon::baymar::MatMniwRollForecastRun>(
 			y, num_data, lag, num_chains, num_iter, num_burn, thin, fit_record, run_mcmc,
 			param_coef_sig, coef_sig_init, row_prior, row_init, row_prior_type, col_prior, col_init, col_prior_type,
 			step, y_test, get_lpl, use_fit, seed_chain, seed_forecast, display_progress, nthreads
@@ -231,7 +231,7 @@ Rcpp::List roll_bmarx_mniw(Eigen::MatrixXd y, int lag, int num_data, int num_cha
 													 Eigen::MatrixXd exogen, int exogen_lag,
 													 Rcpp::List exogen_row_prior, Rcpp::List exogen_row_init, int exogen_row_prior_type,
 													 Rcpp::List exogen_col_prior, Rcpp::List exogen_col_init, int exogen_col_prior_type) {
-	// auto forecaster = baymar::initialize_matmniwoutforecaster<baymar::MatMniwRollForecastRun>(
+	// auto forecaster = baecon::baymar::initialize_matmniwoutforecaster<baecon::baymar::MatMniwRollForecastRun>(
 	// 	y, num_data, lag, num_chains, num_iter, num_burn, thin, fit_record, run_mcmc,
 	// 	param_coef_sig, coef_sig_init, row_prior, row_init, row_prior_type, col_prior, col_init, col_prior_type,
 	// 	step, y_test, seed_chain, seed_forecast, display_progress, nthreads,
@@ -239,9 +239,9 @@ Rcpp::List roll_bmarx_mniw(Eigen::MatrixXd y, int lag, int num_data, int num_cha
 	// 	exogen_col_prior, exogen_col_init, exogen_col_prior_type,
 	// 	exogen, exogen_lag
 	// );
-	auto forecaster = [&]() -> std::unique_ptr<bvhar::McmcOutforecastInterface> {
+	auto forecaster = [&]() -> std::unique_ptr<baecon::bvhar::McmcOutforecastInterface> {
 		if (factor_rows > 0 && factor_cols > 0) {
-			return baymar::initialize_matmniwoutforecaster<baymar::MatMniwRollForecastRun>(
+			return baecon::baymar::initialize_matmniwoutforecaster<baecon::baymar::MatMniwRollForecastRun>(
 				y, num_data, lag, num_chains, num_iter, num_burn, thin, fit_record, run_mcmc,
 				param_coef_sig, coef_sig_init, row_prior, row_init, row_prior_type, col_prior, col_init, col_prior_type,
 				step, y_test, get_lpl, use_fit, seed_chain, seed_forecast, display_progress, nthreads,
@@ -253,7 +253,7 @@ Rcpp::List roll_bmarx_mniw(Eigen::MatrixXd y, int lag, int num_data, int num_cha
 				factor_lag
 			);
 		}
-		return baymar::initialize_matmniwoutforecaster<baymar::MatMniwRollForecastRun>(
+		return baecon::baymar::initialize_matmniwoutforecaster<baecon::baymar::MatMniwRollForecastRun>(
 			y, num_data, lag, num_chains, num_iter, num_burn, thin, fit_record, run_mcmc,
 			param_coef_sig, coef_sig_init, row_prior, row_init, row_prior_type, col_prior, col_init, col_prior_type,
 			step, y_test, get_lpl, use_fit, seed_chain, seed_forecast, display_progress, nthreads,
@@ -278,14 +278,14 @@ Rcpp::List expand_bmar_mniw(Eigen::MatrixXd y, int lag, int num_data, int num_ch
 													  int step, Eigen::MatrixXd y_test, bool get_lpl, bool use_fit,
 													  Eigen::MatrixXi seed_chain, Eigen::VectorXi seed_forecast,
 													  bool display_progress, int nthreads) {
-	// auto forecaster = baymar::initialize_matmniwoutforecaster<baymar::MatMniwExpandForecastRun>(
+	// auto forecaster = baecon::baymar::initialize_matmniwoutforecaster<baecon::baymar::MatMniwExpandForecastRun>(
 	// 	y, num_data, lag, num_chains, num_iter, num_burn, thin, fit_record, run_mcmc,
 	// 	param_coef_sig, coef_sig_init, row_prior, row_init, row_prior_type, col_prior, col_init, col_prior_type,
 	// 	step, y_test, seed_chain, seed_forecast, display_progress, nthreads
 	// );
-	auto forecaster = [&]() -> std::unique_ptr<bvhar::McmcOutforecastInterface> {
+	auto forecaster = [&]() -> std::unique_ptr<baecon::bvhar::McmcOutforecastInterface> {
 		if (factor_rows > 0 && factor_cols > 0) {
-			return baymar::initialize_matmniwoutforecaster<baymar::MatMniwExpandForecastRun>(
+			return baecon::baymar::initialize_matmniwoutforecaster<baecon::baymar::MatMniwExpandForecastRun>(
 				y, num_data, lag, num_chains, num_iter, num_burn, thin, fit_record, run_mcmc,
 				param_coef_sig, coef_sig_init, row_prior, row_init, row_prior_type, col_prior, col_init, col_prior_type,
 				step, y_test, get_lpl, use_fit, seed_chain, seed_forecast, display_progress, nthreads,
@@ -297,7 +297,7 @@ Rcpp::List expand_bmar_mniw(Eigen::MatrixXd y, int lag, int num_data, int num_ch
 				factor_lag
 			);
 		}
-		return baymar::initialize_matmniwoutforecaster<baymar::MatMniwExpandForecastRun>(
+		return baecon::baymar::initialize_matmniwoutforecaster<baecon::baymar::MatMniwExpandForecastRun>(
 			y, num_data, lag, num_chains, num_iter, num_burn, thin, fit_record, run_mcmc,
 			param_coef_sig, coef_sig_init, row_prior, row_init, row_prior_type, col_prior, col_init, col_prior_type,
 			step, y_test, get_lpl, use_fit, seed_chain, seed_forecast, display_progress, nthreads
@@ -322,7 +322,7 @@ Rcpp::List expand_bmarx_mniw(Eigen::MatrixXd y, int lag, int num_data, int num_c
 														 Eigen::MatrixXd exogen, int exogen_lag,
 													   Rcpp::List exogen_row_prior, Rcpp::List exogen_row_init, int exogen_row_prior_type,
 													   Rcpp::List exogen_col_prior, Rcpp::List exogen_col_init, int exogen_col_prior_type) {
-	// auto forecaster = baymar::initialize_matmniwoutforecaster<baymar::MatMniwExpandForecastRun>(
+	// auto forecaster = baecon::baymar::initialize_matmniwoutforecaster<baecon::baymar::MatMniwExpandForecastRun>(
 	// 	y, num_data, lag, num_chains, num_iter, num_burn, thin, fit_record, run_mcmc,
 	// 	param_coef_sig, coef_sig_init, row_prior, row_init, row_prior_type, col_prior, col_init, col_prior_type,
 	// 	step, y_test, seed_chain, seed_forecast, display_progress, nthreads,
@@ -330,9 +330,9 @@ Rcpp::List expand_bmarx_mniw(Eigen::MatrixXd y, int lag, int num_data, int num_c
 	// 	exogen_col_prior, exogen_col_init, exogen_col_prior_type,
 	// 	exogen, exogen_lag
 	// );
-	auto forecaster = [&]() -> std::unique_ptr<bvhar::McmcOutforecastInterface> {
+	auto forecaster = [&]() -> std::unique_ptr<baecon::bvhar::McmcOutforecastInterface> {
 		if (factor_rows > 0 && factor_cols > 0) {
-			return baymar::initialize_matmniwoutforecaster<baymar::MatMniwExpandForecastRun>(
+			return baecon::baymar::initialize_matmniwoutforecaster<baecon::baymar::MatMniwExpandForecastRun>(
 				y, num_data, lag, num_chains, num_iter, num_burn, thin, fit_record, run_mcmc,
 				param_coef_sig, coef_sig_init, row_prior, row_init, row_prior_type, col_prior, col_init, col_prior_type,
 				step, y_test, get_lpl, use_fit, seed_chain, seed_forecast, display_progress, nthreads,
@@ -344,7 +344,7 @@ Rcpp::List expand_bmarx_mniw(Eigen::MatrixXd y, int lag, int num_data, int num_c
 				factor_lag
 			);
 		}
-		return baymar::initialize_matmniwoutforecaster<baymar::MatMniwExpandForecastRun>(
+		return baecon::baymar::initialize_matmniwoutforecaster<baecon::baymar::MatMniwExpandForecastRun>(
 			y, num_data, lag, num_chains, num_iter, num_burn, thin, fit_record, run_mcmc,
 			param_coef_sig, coef_sig_init, row_prior, row_init, row_prior_type, col_prior, col_init, col_prior_type,
 			step, y_test, get_lpl, use_fit, seed_chain, seed_forecast, display_progress, nthreads,

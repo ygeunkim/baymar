@@ -3,6 +3,7 @@
 
 #include <bvhar/utils>
 
+namespace baecon {
 namespace baymar {
 
 inline Eigen::SparseMatrix<double> build_blk_design(const std::vector<Eigen::MatrixXd>& y, int lag) {
@@ -166,5 +167,6 @@ inline void append_x(Eigen::SparseMatrix<double>& x, Eigen::Ref<Eigen::MatrixXd>
 }
 
 } // namespace baymar
+} // namespace baecon
 
 #endif // BAYMAR_MATH_DESIGN_H

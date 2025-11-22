@@ -3,6 +3,7 @@
 
 #include <bvhar/utils>
 
+namespace baecon {
 namespace baymar {
 
 // L of X ~ IW(S, nu)
@@ -32,5 +33,6 @@ inline Eigen::MatrixXd sim_iw_tri_restr(const Eigen::MatrixXd& mat_scale, double
 }
 
 } // namespace baymar
+} // namespace baecon
 
 #endif // BAYMAR_MATH_RANDOM_H
