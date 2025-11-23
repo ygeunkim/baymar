@@ -15,9 +15,9 @@ class MatFactorVarForecaster;
 class MatFactorMarForecaster;
 class MatMniwForecaster;
 class MatMniwForecastRun;
-template <bool isUpdate> class MatMniwOutForecastRun;
-template <bool isUpdate> class MatMniwRollForecastRun;
-template <bool isUpdate> class MatMniwExpandForecastRun;
+template <bool, bool> class MatMniwOutForecastRun;
+template <bool, bool> class MatMniwRollForecastRun;
+template <bool, bool> class MatMniwExpandForecastRun;
 
 class MatMniwExogenForecaster : public MatExogenForecaster {
 public:
@@ -499,8 +499,8 @@ public:
 	virtual ~MatMniwForecastRun() = default;
 };
 
-template <bool isUpdate = true>
-class MatMniwOutForecastRun : public bvhar::McmcOutForecastRun<Eigen::MatrixXd, Eigen::MatrixXd, isUpdate> {
+template <bool isPath = false, bool isUpdate = true>
+class MatMniwOutForecastRun : public bvhar::McmcOutForecastRun<Eigen::MatrixXd, Eigen::MatrixXd, isPath, isUpdate> {
 public:
 	MatMniwOutForecastRun(
 		const Eigen::MatrixXd& y, int num_data, int lag,
@@ -517,7 +517,7 @@ public:
 		BVHAR_OPTIONAL<BVHAR_LIST> col_factor_prior = BVHAR_NULLOPT, BVHAR_OPTIONAL<BVHAR_LIST_OF_LIST> col_factor_init = BVHAR_NULLOPT, BVHAR_OPTIONAL<int> col_factor_prior_type = BVHAR_NULLOPT, BVHAR_OPTIONAL<int> ncol_factor = BVHAR_NULLOPT,
 		BVHAR_OPTIONAL<int> factor_lag = BVHAR_NULLOPT
 	)
-	: bvhar::McmcOutForecastRun<Eigen::MatrixXd, Eigen::MatrixXd, isUpdate>(
+	: bvhar::McmcOutForecastRun<Eigen::MatrixXd, Eigen::MatrixXd, isPath, isUpdate>(
 			num_data, lag, num_chains, num_iter, num_burn, thin, step, y_test, y_test.rows(), get_lpl, use_fit,
 			seed_chain, seed_forecast, display_progress, nthreads,
 			exogen_lag
@@ -553,31 +553,31 @@ public:
 protected:
 	int num_row, num_col, nrow_row_coef, nrow_col_coef;
 	BVHAR_OPTIONAL<int> nrow_factor, ncol_factor, factor_lag, factor_type;
-	using bvhar::McmcOutForecastRun<Eigen::MatrixXd, Eigen::MatrixXd, isUpdate>::num_window;
-	using bvhar::McmcOutForecastRun<Eigen::MatrixXd, Eigen::MatrixXd, isUpdate>::num_test;
-	using bvhar::McmcOutForecastRun<Eigen::MatrixXd, Eigen::MatrixXd, isUpdate>::num_horizon;
-	using bvhar::McmcOutForecastRun<Eigen::MatrixXd, Eigen::MatrixXd, isUpdate>::step;
-	using bvhar::McmcOutForecastRun<Eigen::MatrixXd, Eigen::MatrixXd, isUpdate>::lag;
-	using bvhar::McmcOutForecastRun<Eigen::MatrixXd, Eigen::MatrixXd, isUpdate>::num_chains;
-	using bvhar::McmcOutForecastRun<Eigen::MatrixXd, Eigen::MatrixXd, isUpdate>::num_iter;
-	using bvhar::McmcOutForecastRun<Eigen::MatrixXd, Eigen::MatrixXd, isUpdate>::num_burn;
-	using bvhar::McmcOutForecastRun<Eigen::MatrixXd, Eigen::MatrixXd, isUpdate>::thin;
-	using bvhar::McmcOutForecastRun<Eigen::MatrixXd, Eigen::MatrixXd, isUpdate>::nthreads;
+	using bvhar::McmcOutForecastRun<Eigen::MatrixXd, Eigen::MatrixXd, isPath, isUpdate>::num_window;
+	using bvhar::McmcOutForecastRun<Eigen::MatrixXd, Eigen::MatrixXd, isPath, isUpdate>::num_test;
+	using bvhar::McmcOutForecastRun<Eigen::MatrixXd, Eigen::MatrixXd, isPath, isUpdate>::num_horizon;
+	using bvhar::McmcOutForecastRun<Eigen::MatrixXd, Eigen::MatrixXd, isPath, isUpdate>::step;
+	using bvhar::McmcOutForecastRun<Eigen::MatrixXd, Eigen::MatrixXd, isPath, isUpdate>::lag;
+	using bvhar::McmcOutForecastRun<Eigen::MatrixXd, Eigen::MatrixXd, isPath, isUpdate>::num_chains;
+	using bvhar::McmcOutForecastRun<Eigen::MatrixXd, Eigen::MatrixXd, isPath, isUpdate>::num_iter;
+	using bvhar::McmcOutForecastRun<Eigen::MatrixXd, Eigen::MatrixXd, isPath, isUpdate>::num_burn;
+	using bvhar::McmcOutForecastRun<Eigen::MatrixXd, Eigen::MatrixXd, isPath, isUpdate>::thin;
+	using bvhar::McmcOutForecastRun<Eigen::MatrixXd, Eigen::MatrixXd, isPath, isUpdate>::nthreads;
 	// using bvhar::McmcOutForecastRun<Eigen::MatrixXd, Eigen::MatrixXd, isUpdate>::get_lpl;
-	using bvhar::McmcOutForecastRun<Eigen::MatrixXd, Eigen::MatrixXd, isUpdate>::use_fit;
-	using bvhar::McmcOutForecastRun<Eigen::MatrixXd, Eigen::MatrixXd, isUpdate>::display_progress;
-	using bvhar::McmcOutForecastRun<Eigen::MatrixXd, Eigen::MatrixXd, isUpdate>::seed_forecast;
-	using bvhar::McmcOutForecastRun<Eigen::MatrixXd, Eigen::MatrixXd, isUpdate>::roll_mat;
+	using bvhar::McmcOutForecastRun<Eigen::MatrixXd, Eigen::MatrixXd, isPath, isUpdate>::use_fit;
+	using bvhar::McmcOutForecastRun<Eigen::MatrixXd, Eigen::MatrixXd, isPath, isUpdate>::display_progress;
+	using bvhar::McmcOutForecastRun<Eigen::MatrixXd, Eigen::MatrixXd, isPath, isUpdate>::seed_forecast;
+	using bvhar::McmcOutForecastRun<Eigen::MatrixXd, Eigen::MatrixXd, isPath, isUpdate>::roll_mat;
 	// using bvhar::McmcOutForecastRun<Eigen::MatrixXd, Eigen::MatrixXd, isUpdate>::roll_y0;
-	using bvhar::McmcOutForecastRun<Eigen::MatrixXd, Eigen::MatrixXd, isUpdate>::y_test;
-	using bvhar::McmcOutForecastRun<Eigen::MatrixXd, Eigen::MatrixXd, isUpdate>::model;
-	using bvhar::McmcOutForecastRun<Eigen::MatrixXd, Eigen::MatrixXd, isUpdate>::forecaster;
-	using bvhar::McmcOutForecastRun<Eigen::MatrixXd, Eigen::MatrixXd, isUpdate>::out_forecast;
-	using bvhar::McmcOutForecastRun<Eigen::MatrixXd, Eigen::MatrixXd, isUpdate>::lpl_record;
-	using bvhar::McmcOutForecastRun<Eigen::MatrixXd, Eigen::MatrixXd, isUpdate>::roll_exogen_mat;
-	using bvhar::McmcOutForecastRun<Eigen::MatrixXd, Eigen::MatrixXd, isUpdate>::roll_exogen;
-	using bvhar::McmcOutForecastRun<Eigen::MatrixXd, Eigen::MatrixXd, isUpdate>::lag_exogen;
-	using bvhar::McmcOutForecastRun<Eigen::MatrixXd, Eigen::MatrixXd, isUpdate>::debug_logger;
+	using bvhar::McmcOutForecastRun<Eigen::MatrixXd, Eigen::MatrixXd, isPath, isUpdate>::y_test;
+	using bvhar::McmcOutForecastRun<Eigen::MatrixXd, Eigen::MatrixXd, isPath, isUpdate>::model;
+	using bvhar::McmcOutForecastRun<Eigen::MatrixXd, Eigen::MatrixXd, isPath, isUpdate>::forecaster;
+	using bvhar::McmcOutForecastRun<Eigen::MatrixXd, Eigen::MatrixXd, isPath, isUpdate>::out_forecast;
+	using bvhar::McmcOutForecastRun<Eigen::MatrixXd, Eigen::MatrixXd, isPath, isUpdate>::lpl_record;
+	using bvhar::McmcOutForecastRun<Eigen::MatrixXd, Eigen::MatrixXd, isPath, isUpdate>::roll_exogen_mat;
+	using bvhar::McmcOutForecastRun<Eigen::MatrixXd, Eigen::MatrixXd, isPath, isUpdate>::roll_exogen;
+	using bvhar::McmcOutForecastRun<Eigen::MatrixXd, Eigen::MatrixXd, isPath, isUpdate>::lag_exogen;
+	using bvhar::McmcOutForecastRun<Eigen::MatrixXd, Eigen::MatrixXd, isPath, isUpdate>::debug_logger;
 
 	Eigen::MatrixXd getValid() override {
 		BVHAR_DEBUG_LOG(debug_logger, "getValid() called");
@@ -757,8 +757,8 @@ protected:
 	}
 };
 
-template <bool isUpdate = true>
-class MatMniwRollForecastRun : public MatMniwOutForecastRun<isUpdate> {
+template <bool isPath = false, bool isUpdate = true>
+class MatMniwRollForecastRun : public MatMniwOutForecastRun<isPath, isUpdate> {
 public:
 	MatMniwRollForecastRun(
 		const Eigen::MatrixXd& y, int num_data, int lag,
@@ -775,7 +775,7 @@ public:
 		BVHAR_OPTIONAL<BVHAR_LIST> col_factor_prior = BVHAR_NULLOPT, BVHAR_OPTIONAL<BVHAR_LIST_OF_LIST> col_factor_init = BVHAR_NULLOPT, BVHAR_OPTIONAL<int> col_factor_prior_type = BVHAR_NULLOPT, BVHAR_OPTIONAL<int> ncol_factor = BVHAR_NULLOPT,
 		BVHAR_OPTIONAL<int> factor_lag = BVHAR_NULLOPT
 	)
-	: MatMniwOutForecastRun<isUpdate>(
+	: MatMniwOutForecastRun<isPath, isUpdate>(
 			y, num_data, lag,
 			num_chains, num_iter, num_burn, thin, fit_record,
 			param_coef_sig, coef_sig_init, row_prior, row_init, row_prior_type, col_prior, col_init, col_prior_type,
@@ -803,19 +803,19 @@ public:
 	virtual ~MatMniwRollForecastRun() = default;
 
 protected:
-	using MatMniwOutForecastRun<isUpdate>::num_window;
-	using MatMniwOutForecastRun<isUpdate>::num_row;
-	using MatMniwOutForecastRun<isUpdate>::num_col;
-	using MatMniwOutForecastRun<isUpdate>::num_test;
-	using MatMniwOutForecastRun<isUpdate>::num_horizon;
-	using MatMniwOutForecastRun<isUpdate>::step;
-	using MatMniwOutForecastRun<isUpdate>::roll_mat;
-	using MatMniwOutForecastRun<isUpdate>::y_test;
-	using MatMniwOutForecastRun<isUpdate>::initialize;
-	using MatMniwOutForecastRun<isUpdate>::roll_exogen_mat;
-	using MatMniwOutForecastRun<isUpdate>::roll_exogen;
-	using MatMniwOutForecastRun<isUpdate>::lag_exogen;
-	using MatMniwOutForecastRun<isUpdate>::debug_logger;
+	using MatMniwOutForecastRun<isPath, isUpdate>::num_window;
+	using MatMniwOutForecastRun<isPath, isUpdate>::num_row;
+	using MatMniwOutForecastRun<isPath, isUpdate>::num_col;
+	using MatMniwOutForecastRun<isPath, isUpdate>::num_test;
+	using MatMniwOutForecastRun<isPath, isUpdate>::num_horizon;
+	using MatMniwOutForecastRun<isPath, isUpdate>::step;
+	using MatMniwOutForecastRun<isPath, isUpdate>::roll_mat;
+	using MatMniwOutForecastRun<isPath, isUpdate>::y_test;
+	using MatMniwOutForecastRun<isPath, isUpdate>::initialize;
+	using MatMniwOutForecastRun<isPath, isUpdate>::roll_exogen_mat;
+	using MatMniwOutForecastRun<isPath, isUpdate>::roll_exogen;
+	using MatMniwOutForecastRun<isPath, isUpdate>::lag_exogen;
+	using MatMniwOutForecastRun<isPath, isUpdate>::debug_logger;
 
 	void initData(const Eigen::MatrixXd& y, BVHAR_OPTIONAL<Eigen::MatrixXd> exogen = BVHAR_NULLOPT) override {
 		BVHAR_DEBUG_LOG(debug_logger, "initData(y, ...) called");
@@ -838,8 +838,8 @@ protected:
 	}
 };
 
-template <bool isUpdate = true>
-class MatMniwExpandForecastRun : public MatMniwOutForecastRun<isUpdate> {
+template <bool isPath = false, bool isUpdate = true>
+class MatMniwExpandForecastRun : public MatMniwOutForecastRun<isPath, isUpdate> {
 public:
 	MatMniwExpandForecastRun(
 		const Eigen::MatrixXd& y, int num_data, int lag,
@@ -856,7 +856,7 @@ public:
 		BVHAR_OPTIONAL<BVHAR_LIST> col_factor_prior = BVHAR_NULLOPT, BVHAR_OPTIONAL<BVHAR_LIST_OF_LIST> col_factor_init = BVHAR_NULLOPT, BVHAR_OPTIONAL<int> col_factor_prior_type = BVHAR_NULLOPT, BVHAR_OPTIONAL<int> ncol_factor = BVHAR_NULLOPT,
 		BVHAR_OPTIONAL<int> factor_lag = BVHAR_NULLOPT
 	)
-	: MatMniwOutForecastRun<isUpdate>(
+	: MatMniwOutForecastRun<isPath, isUpdate>(
 			y, num_data, lag,
 			num_chains, num_iter, num_burn, thin, fit_record,
 			param_coef_sig, coef_sig_init, row_prior, row_init, row_prior_type, col_prior, col_init, col_prior_type,
@@ -884,19 +884,19 @@ public:
 	virtual ~MatMniwExpandForecastRun() = default;
 
 protected:
-	using MatMniwOutForecastRun<isUpdate>::num_window;
-	using MatMniwOutForecastRun<isUpdate>::num_row;
-	using MatMniwOutForecastRun<isUpdate>::num_col;
-	using MatMniwOutForecastRun<isUpdate>::num_test;
-	using MatMniwOutForecastRun<isUpdate>::num_horizon;
-	using MatMniwOutForecastRun<isUpdate>::step;
-	using MatMniwOutForecastRun<isUpdate>::roll_mat;
-	using MatMniwOutForecastRun<isUpdate>::y_test;
-	using MatMniwOutForecastRun<isUpdate>::initialize;
-	using MatMniwOutForecastRun<isUpdate>::roll_exogen_mat;
-	using MatMniwOutForecastRun<isUpdate>::roll_exogen;
-	using MatMniwOutForecastRun<isUpdate>::lag_exogen;
-	using MatMniwOutForecastRun<isUpdate>::debug_logger;
+	using MatMniwOutForecastRun<isPath, isUpdate>::num_window;
+	using MatMniwOutForecastRun<isPath, isUpdate>::num_row;
+	using MatMniwOutForecastRun<isPath, isUpdate>::num_col;
+	using MatMniwOutForecastRun<isPath, isUpdate>::num_test;
+	using MatMniwOutForecastRun<isPath, isUpdate>::num_horizon;
+	using MatMniwOutForecastRun<isPath, isUpdate>::step;
+	using MatMniwOutForecastRun<isPath, isUpdate>::roll_mat;
+	using MatMniwOutForecastRun<isPath, isUpdate>::y_test;
+	using MatMniwOutForecastRun<isPath, isUpdate>::initialize;
+	using MatMniwOutForecastRun<isPath, isUpdate>::roll_exogen_mat;
+	using MatMniwOutForecastRun<isPath, isUpdate>::roll_exogen;
+	using MatMniwOutForecastRun<isPath, isUpdate>::lag_exogen;
+	using MatMniwOutForecastRun<isPath, isUpdate>::debug_logger;
 
 	void initData(const Eigen::MatrixXd& y, BVHAR_OPTIONAL<Eigen::MatrixXd> exogen = BVHAR_NULLOPT) override {
 		BVHAR_DEBUG_LOG(debug_logger, "initData(y, ...) called");
@@ -918,7 +918,7 @@ protected:
 	}
 };
 
-template <template <bool> class BaseOutForecast = MatMniwRollForecastRun>
+template <template <bool, bool> class BaseOutForecast = MatMniwRollForecastRun>
 inline std::unique_ptr<bvhar::McmcOutforecastInterface> initialize_matmniwoutforecaster(
 	const Eigen::MatrixXd& y, int num_data, int lag,
 	int num_chains, int num_iter, int num_burn, int thin, BVHAR_LIST& fit_record,
@@ -936,7 +936,7 @@ inline std::unique_ptr<bvhar::McmcOutforecastInterface> initialize_matmniwoutfor
 	BVHAR_OPTIONAL<int> factor_lag = BVHAR_NULLOPT
 ) {
 	if (run_mcmc) {
-		return std::make_unique<BaseOutForecast<true>>(
+		return std::make_unique<BaseOutForecast<true, true>>(
 			y, num_data, lag, num_chains, num_iter, num_burn, thin, fit_record,
 			param_coef_sig, coef_sig_init, row_prior, row_init, row_prior_type, col_prior, col_init, col_prior_type,
 			step, y_test, get_lpl, use_fit, seed_chain, seed_forecast, display_progress, nthreads,
@@ -948,7 +948,7 @@ inline std::unique_ptr<bvhar::McmcOutforecastInterface> initialize_matmniwoutfor
 			factor_lag
 		);
 	}
-	return std::make_unique<BaseOutForecast<false>>(
+	return std::make_unique<BaseOutForecast<true, false>>(
 		y, num_data, lag, num_chains, num_iter, num_burn, thin, fit_record,
 		param_coef_sig, coef_sig_init, row_prior, row_init, row_prior_type, col_prior, col_init, col_prior_type,
 		step, y_test, get_lpl, use_fit, seed_chain, seed_forecast, display_progress, nthreads,

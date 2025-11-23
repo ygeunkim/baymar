@@ -437,10 +437,82 @@ process_mar_forecast_draws <- function(x, n_ahead, nrow_data, ncol_data, num_dra
 }
 
 #' @noRd
-process_mar_ourforecast_draws <- function(x, n_ahead, ncol_data, num_draw) {
+process_mar_outforecast_draws <- function(x, n_ahead, ncol_data, num_draw) {
   do.call(cbind, x) |>
     t() |>
     split.data.frame(gl(num_draw, ncol_data)) |>
     lapply(t) |>
     simplify2array()
+}
+
+#' @noRd
+process_mar_pathforecast_draws <- function(draws, n_ahead, nrow_data, ncol_data, num_draw,
+                                           var_names, level = .05, med = FALSE) {
+  y_distn <-
+    lapply(
+      draws,
+      process_mar_forecast_draws,
+      n_ahead = n_ahead,
+      nrow_data = nrow_data,
+      ncol_data = ncol_data,
+      num_draw = num_draw
+    )
+  if (med) {
+    pred_mean <-
+      lapply(
+        y_distn,
+        function(y_draws) {
+          lapply(y_draws, function(x) apply(x, c(1, 2), median)) |>
+            simplify2array()
+        }
+      ) |>
+      simplify2array()
+  } else {
+    pred_mean <-
+      lapply(
+        y_distn,
+        function(y_draws) {
+          lapply(y_draws, function(x) apply(x, c(1, 2), mean)) |>
+            simplify2array()
+        }
+      ) |>
+        simplify2array()
+  }
+  lower_quantile <-
+    lapply(
+      y_distn,
+      function(y_draws) {
+        lapply(y_draws, function(x) apply(x, c(1, 2), quantile, probs = level / 2)) |>
+          simplify2array()
+      }
+    ) |>
+      simplify2array()
+  upper_quantile <-
+    lapply(
+      y_distn,
+      function(y_draws) {
+        lapply(y_draws, function(x) apply(x, c(1, 2), quantile, probs = 1 - level / 2)) |>
+          simplify2array()
+      }
+    ) |>
+    simplify2array()
+  est_se <-
+    lapply(
+      y_distn,
+      function(y_draws) {
+        lapply(y_draws, function(x) apply(x, c(1, 2), sd)) |>
+          simplify2array()
+      }
+    ) |>
+    simplify2array()
+  dimnames(pred_mean) <- var_names
+  dimnames(lower_quantile) <- var_names
+  dimnames(upper_quantile) <- var_names
+  dimnames(est_se) <- var_names
+  list(
+    mean = pred_mean,
+    sd = est_se,
+    lower = lower_quantile,
+    upper = upper_quantile
+  )
 }

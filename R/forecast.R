@@ -256,7 +256,9 @@ forecast_roll.marbayes <- function(object, n_ahead, y_test,
   y_list <- lapply(seq_len(num_data), function(x) object$y[, , x])
   y_test_list <- lapply(seq_len(num_test), function(x) y_test[, , x])
   var_names <- dimnames(object$y)
-  var_names[[3]] <- n_ahead:length(y_test_list)
+  # var_names[[3]] <- n_ahead:length(y_test_list)
+  var_names[[3]] <- 1:n_ahead
+  var_names[[4]] <- n_ahead:length(y_test_list)
   param_prior <- validate_bmar_row_spec(
     y = object$y,
     p = object$p,
@@ -421,43 +423,29 @@ forecast_roll.marbayes <- function(object, n_ahead, y_test,
     }
     pred_res$lpl <- NULL
   }
-  y_distn <-
-    lapply(
-      pred_res$forecast,
-      process_mar_ourforecast_draws,
-      n_ahead = n_ahead,
-      ncol_data = ncol_data,
-      num_draw = num_draw
-    )
-  if (med) {
-    pred_mean <-
-      lapply(y_distn, function(x) apply(x, c(1, 2), median)) |>
-      simplify2array()
-  } else {
-    pred_mean <-
-      lapply(y_distn, function(x) apply(x, c(1, 2), mean)) |>
-      simplify2array()
-  }
-  lower_quantile <-
-    lapply(y_distn, function(x) apply(x, c(1, 2), quantile, probs = level / 2)) |>
-    simplify2array()
-  upper_quantile <-
-    lapply(y_distn, function(x) apply(x, c(1, 2), quantile, probs = 1 - level / 2)) |>
-    simplify2array()
-  est_se <-
-    lapply(y_distn, function(x) apply(x, c(1, 2), sd)) |>
-    simplify2array()
-  dimnames(pred_mean) <- var_names
-  dimnames(lower_quantile) <- var_names
-  dimnames(upper_quantile) <- var_names
-  dimnames(est_se) <- var_names
+  y_distn <- process_mar_pathforecast_draws(
+    draws = pred_res$forecast,
+    n_ahead = n_ahead,
+    nrow_data = nrow_data,
+    ncol_data = ncol_data,
+    num_draw = num_draw,
+    var_names = var_names,
+    level = level,
+    med = med
+  )
+  # temporarily to match with the old result
+  y_distn <- lapply(
+    y_distn,
+    function(x) x[, , n_ahead,]
+  )
   res <- list(
-    forecast = pred_mean,
-    se = est_se,
-    lower = lower_quantile,
-    upper = upper_quantile,
-    lower_joint = lower_quantile,
-    upper_joint = upper_quantile,
+    draws = pred_res$forecast,
+    forecast = y_distn$mean,
+    se = y_distn$sd,
+    lower = y_distn$lower,
+    upper = y_distn$upper,
+    lower_joint = y_distn$lower,
+    upper_joint = y_distn$upper,
     eval_id = n_ahead:length(y_test_list),
     y = object$y
   )
@@ -516,7 +504,9 @@ forecast_roll.mdfmbayes <- function(object, n_ahead, y_test,
   y_list <- lapply(seq_len(num_data), function(x) object$y[, , x])
   y_test_list <- lapply(seq_len(num_test), function(x) y_test[, , x])
   var_names <- dimnames(object$y)
-  var_names[[3]] <- n_ahead:length(y_test_list)
+  # var_names[[3]] <- n_ahead:length(y_test_list)
+  var_names[[3]] <- 1:n_ahead
+  var_names[[4]] <- n_ahead:length(y_test_list)
   param_prior <- validate_bmar_row_spec(
     y = object$y,
     p = object$p,
@@ -591,43 +581,65 @@ forecast_roll.mdfmbayes <- function(object, n_ahead, y_test,
     }
     pred_res$lpl <- NULL
   }
-  y_distn <-
-    lapply(
-      pred_res$forecast,
-      process_mar_ourforecast_draws,
-      n_ahead = n_ahead,
-      ncol_data = ncol_data,
-      num_draw = num_draw
-    )
-  if (med) {
-    pred_mean <-
-      lapply(y_distn, function(x) apply(x, c(1, 2), median)) |>
-      simplify2array()
-  } else {
-    pred_mean <-
-      lapply(y_distn, function(x) apply(x, c(1, 2), mean)) |>
-      simplify2array()
-  }
-  lower_quantile <-
-    lapply(y_distn, function(x) apply(x, c(1, 2), quantile, probs = level / 2)) |>
-    simplify2array()
-  upper_quantile <-
-    lapply(y_distn, function(x) apply(x, c(1, 2), quantile, probs = 1 - level / 2)) |>
-    simplify2array()
-  est_se <-
-    lapply(y_distn, function(x) apply(x, c(1, 2), sd)) |>
-    simplify2array()
-  dimnames(pred_mean) <- var_names
-  dimnames(lower_quantile) <- var_names
-  dimnames(upper_quantile) <- var_names
-  dimnames(est_se) <- var_names
+  # y_distn <-
+  #   lapply(
+  #     pred_res$forecast,
+  #     process_mar_outforecast_draws,
+  #     n_ahead = n_ahead,
+  #     ncol_data = ncol_data,
+  #     num_draw = num_draw
+  #   )
+  # if (med) {
+  #   pred_mean <-
+  #     lapply(y_distn, function(x) apply(x, c(1, 2), median)) |>
+  #     simplify2array()
+  # } else {
+  #   pred_mean <-
+  #     lapply(y_distn, function(x) apply(x, c(1, 2), mean)) |>
+  #     simplify2array()
+  # }
+  # lower_quantile <-
+  #   lapply(y_distn, function(x) apply(x, c(1, 2), quantile, probs = level / 2)) |>
+  #   simplify2array()
+  # upper_quantile <-
+  #   lapply(y_distn, function(x) apply(x, c(1, 2), quantile, probs = 1 - level / 2)) |>
+  #   simplify2array()
+  # est_se <-
+  #   lapply(y_distn, function(x) apply(x, c(1, 2), sd)) |>
+  #   simplify2array()
+  # dimnames(pred_mean) <- var_names
+  # dimnames(lower_quantile) <- var_names
+  # dimnames(upper_quantile) <- var_names
+  # dimnames(est_se) <- var_names
+  y_distn <- process_mar_pathforecast_draws(
+    draws = pred_res$forecast,
+    n_ahead = n_ahead,
+    nrow_data = nrow_data,
+    ncol_data = ncol_data,
+    num_draw = num_draw,
+    var_names = var_names,
+    level = level,
+    med = med
+  )
+  # temporarily to match with the old result
+  y_distn <- lapply(
+    y_distn,
+    function(x) x[, , n_ahead, ]
+  )
   res <- list(
-    forecast = pred_mean,
-    se = est_se,
-    lower = lower_quantile,
-    upper = upper_quantile,
-    lower_joint = lower_quantile,
-    upper_joint = upper_quantile,
+    # forecast = pred_mean,
+    # se = est_se,
+    # lower = lower_quantile,
+    # upper = upper_quantile,
+    # lower_joint = lower_quantile,
+    # upper_joint = upper_quantile,
+    draws = pred_res$forecast,
+    forecast = y_distn$mean,
+    se = y_distn$sd,
+    lower = y_distn$lower,
+    upper = y_distn$upper,
+    lower_joint = y_distn$lower,
+    upper_joint = y_distn$upper,
     eval_id = n_ahead:length(y_test_list),
     y = object$y
   )
@@ -683,7 +695,9 @@ forecast_expand.marbayes <- function(object, n_ahead, y_test,
   y_list <- lapply(seq_len(num_data), function(x) object$y[, , x])
   y_test_list <- lapply(seq_len(num_test), function(x) y_test[, , x])
   var_names <- dimnames(object$y)
-  var_names[[3]] <- n_ahead:length(y_test_list)
+  # var_names[[3]] <- n_ahead:length(y_test_list)
+  var_names[[3]] <- 1:n_ahead
+  var_names[[4]] <- n_ahead:length(y_test_list)
   param_prior <- validate_bmar_row_spec(
     y = object$y,
     p = object$p,
@@ -848,43 +862,65 @@ forecast_expand.marbayes <- function(object, n_ahead, y_test,
     }
     pred_res$lpl <- NULL
   }
-  y_distn <-
-    lapply(
-      pred_res$forecast,
-      process_mar_ourforecast_draws,
-      n_ahead = n_ahead,
-      ncol_data = ncol_data,
-      num_draw = num_draw
-    )
-  if (med) {
-    pred_mean <-
-      lapply(y_distn, function(x) apply(x, c(1, 2), median)) |>
-      simplify2array()
-  } else {
-    pred_mean <-
-      lapply(y_distn, function(x) apply(x, c(1, 2), mean)) |>
-      simplify2array()
-  }
-  lower_quantile <-
-    lapply(y_distn, function(x) apply(x, c(1, 2), quantile, probs = level / 2)) |>
-    simplify2array()
-  upper_quantile <-
-    lapply(y_distn, function(x) apply(x, c(1, 2), quantile, probs = 1 - level / 2)) |>
-    simplify2array()
-  est_se <-
-    lapply(y_distn, function(x) apply(x, c(1, 2), sd)) |>
-    simplify2array()
-  dimnames(pred_mean) <- var_names
-  dimnames(lower_quantile) <- var_names
-  dimnames(upper_quantile) <- var_names
-  dimnames(est_se) <- var_names
+  # y_distn <-
+  #   lapply(
+  #     pred_res$forecast,
+  #     process_mar_outforecast_draws,
+  #     n_ahead = n_ahead,
+  #     ncol_data = ncol_data,
+  #     num_draw = num_draw
+  #   )
+  # if (med) {
+  #   pred_mean <-
+  #     lapply(y_distn, function(x) apply(x, c(1, 2), median)) |>
+  #     simplify2array()
+  # } else {
+  #   pred_mean <-
+  #     lapply(y_distn, function(x) apply(x, c(1, 2), mean)) |>
+  #     simplify2array()
+  # }
+  # lower_quantile <-
+  #   lapply(y_distn, function(x) apply(x, c(1, 2), quantile, probs = level / 2)) |>
+  #   simplify2array()
+  # upper_quantile <-
+  #   lapply(y_distn, function(x) apply(x, c(1, 2), quantile, probs = 1 - level / 2)) |>
+  #   simplify2array()
+  # est_se <-
+  #   lapply(y_distn, function(x) apply(x, c(1, 2), sd)) |>
+  #   simplify2array()
+  # dimnames(pred_mean) <- var_names
+  # dimnames(lower_quantile) <- var_names
+  # dimnames(upper_quantile) <- var_names
+  # dimnames(est_se) <- var_names
+  y_distn <- process_mar_pathforecast_draws(
+    draws = pred_res$forecast,
+    n_ahead = n_ahead,
+    nrow_data = nrow_data,
+    ncol_data = ncol_data,
+    num_draw = num_draw,
+    var_names = var_names,
+    level = level,
+    med = med
+  )
+  # temporarily to match with the old result
+  y_distn <- lapply(
+    y_distn,
+    function(x) x[, , n_ahead, ]
+  )
   res <- list(
-    forecast = pred_mean,
-    se = est_se,
-    lower = lower_quantile,
-    upper = upper_quantile,
-    lower_joint = lower_quantile,
-    upper_joint = upper_quantile,
+    # forecast = pred_mean,
+    # se = est_se,
+    # lower = lower_quantile,
+    # upper = upper_quantile,
+    # lower_joint = lower_quantile,
+    # upper_joint = upper_quantile,
+    draws = pred_res$forecast,
+    forecast = y_distn$mean,
+    se = y_distn$sd,
+    lower = y_distn$lower,
+    upper = y_distn$upper,
+    lower_joint = y_distn$lower,
+    upper_joint = y_distn$upper,
     eval_id = n_ahead:length(y_test_list),
     y = object$y
   )
@@ -943,7 +979,9 @@ forecast_expand.mdfmbayes <- function(object, n_ahead, y_test,
   y_list <- lapply(seq_len(num_data), function(x) object$y[, , x])
   y_test_list <- lapply(seq_len(num_test), function(x) y_test[, , x])
   var_names <- dimnames(object$y)
-  var_names[[3]] <- n_ahead:length(y_test_list)
+  # var_names[[3]] <- n_ahead:length(y_test_list)
+  var_names[[3]] <- 1:n_ahead
+  var_names[[4]] <- n_ahead:length(y_test_list)
   param_prior <- validate_bmar_row_spec(
     y = object$y,
     p = object$p,
@@ -1018,43 +1056,65 @@ forecast_expand.mdfmbayes <- function(object, n_ahead, y_test,
     }
     pred_res$lpl <- NULL
   }
-  y_distn <-
-    lapply(
-      pred_res$forecast,
-      process_mar_ourforecast_draws,
-      n_ahead = n_ahead,
-      ncol_data = ncol_data,
-      num_draw = num_draw
-    )
-  if (med) {
-    pred_mean <-
-      lapply(y_distn, function(x) apply(x, c(1, 2), median)) |>
-      simplify2array()
-  } else {
-    pred_mean <-
-      lapply(y_distn, function(x) apply(x, c(1, 2), mean)) |>
-      simplify2array()
-  }
-  lower_quantile <-
-    lapply(y_distn, function(x) apply(x, c(1, 2), quantile, probs = level / 2)) |>
-    simplify2array()
-  upper_quantile <-
-    lapply(y_distn, function(x) apply(x, c(1, 2), quantile, probs = 1 - level / 2)) |>
-    simplify2array()
-  est_se <-
-    lapply(y_distn, function(x) apply(x, c(1, 2), sd)) |>
-    simplify2array()
-  dimnames(pred_mean) <- var_names
-  dimnames(lower_quantile) <- var_names
-  dimnames(upper_quantile) <- var_names
-  dimnames(est_se) <- var_names
+  # y_distn <-
+  #   lapply(
+  #     pred_res$forecast,
+  #     process_mar_outforecast_draws,
+  #     n_ahead = n_ahead,
+  #     ncol_data = ncol_data,
+  #     num_draw = num_draw
+  #   )
+  # if (med) {
+  #   pred_mean <-
+  #     lapply(y_distn, function(x) apply(x, c(1, 2), median)) |>
+  #     simplify2array()
+  # } else {
+  #   pred_mean <-
+  #     lapply(y_distn, function(x) apply(x, c(1, 2), mean)) |>
+  #     simplify2array()
+  # }
+  # lower_quantile <-
+  #   lapply(y_distn, function(x) apply(x, c(1, 2), quantile, probs = level / 2)) |>
+  #   simplify2array()
+  # upper_quantile <-
+  #   lapply(y_distn, function(x) apply(x, c(1, 2), quantile, probs = 1 - level / 2)) |>
+  #   simplify2array()
+  # est_se <-
+  #   lapply(y_distn, function(x) apply(x, c(1, 2), sd)) |>
+  #   simplify2array()
+  # dimnames(pred_mean) <- var_names
+  # dimnames(lower_quantile) <- var_names
+  # dimnames(upper_quantile) <- var_names
+  # dimnames(est_se) <- var_names
+  y_distn <- process_mar_pathforecast_draws(
+    draws = pred_res$forecast,
+    n_ahead = n_ahead,
+    nrow_data = nrow_data,
+    ncol_data = ncol_data,
+    num_draw = num_draw,
+    var_names = var_names,
+    level = level,
+    med = med
+  )
+  # temporarily to match with the old result
+  y_distn <- lapply(
+    y_distn,
+    function(x) x[, , n_ahead, ]
+  )
   res <- list(
-    forecast = pred_mean,
-    se = est_se,
-    lower = lower_quantile,
-    upper = upper_quantile,
-    lower_joint = lower_quantile,
-    upper_joint = upper_quantile,
+    # forecast = pred_mean,
+    # se = est_se,
+    # lower = lower_quantile,
+    # upper = upper_quantile,
+    # lower_joint = lower_quantile,
+    # upper_joint = upper_quantile,
+    draws = pred_res$forecast,
+    forecast = y_distn$mean,
+    se = y_distn$sd,
+    lower = y_distn$lower,
+    upper = y_distn$upper,
+    lower_joint = y_distn$lower,
+    upper_joint = y_distn$upper,
     eval_id = n_ahead:length(y_test_list),
     y = object$y
   )
