@@ -433,11 +433,6 @@ forecast_roll.marbayes <- function(object, n_ahead, y_test,
     level = level,
     med = med
   )
-  # temporarily to match with the old result
-  y_distn <- lapply(
-    y_distn,
-    function(x) x[, , n_ahead,]
-  )
   res <- list(
     draws = pred_res$forecast,
     forecast = y_distn$mean,
@@ -620,11 +615,6 @@ forecast_roll.mdfmbayes <- function(object, n_ahead, y_test,
     var_names = var_names,
     level = level,
     med = med
-  )
-  # temporarily to match with the old result
-  y_distn <- lapply(
-    y_distn,
-    function(x) x[, , n_ahead, ]
   )
   res <- list(
     # forecast = pred_mean,
@@ -902,11 +892,6 @@ forecast_expand.marbayes <- function(object, n_ahead, y_test,
     level = level,
     med = med
   )
-  # temporarily to match with the old result
-  y_distn <- lapply(
-    y_distn,
-    function(x) x[, , n_ahead, ]
-  )
   res <- list(
     # forecast = pred_mean,
     # se = est_se,
@@ -1095,11 +1080,6 @@ forecast_expand.mdfmbayes <- function(object, n_ahead, y_test,
     var_names = var_names,
     level = level,
     med = med
-  )
-  # temporarily to match with the old result
-  y_distn <- lapply(
-    y_distn,
-    function(x) x[, , n_ahead, ]
   )
   res <- list(
     # forecast = pred_mean,
