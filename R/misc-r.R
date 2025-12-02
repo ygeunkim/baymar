@@ -80,12 +80,19 @@ validate_factor_row_spec <- function(factor_spec) {
   } else if (prior_nm == "Horseshoe") {
     V_A <- diag(nrow_row_coef)
   }
-  list(
+  res <- list(
     factor_row_prior_mean = A0,
     factor_row_prior_prec = 1 / diag(V_A),
     factor_row_iw_scl = S_r,
     factor_row_iw_df = nu_r
   )
+  if (prior_nm == "Minnesota") {
+    res$factor_kappa <- bayes_spec$kappa
+  } else if (prior_nm == "MN_Hierarchical") {
+    res$factor_shape <- bayes_spec$kappa$shape
+    res$factor_rate <- bayes_spec$kappa$rate
+  }
+  res
 }
 
 #' @noRd
@@ -145,12 +152,19 @@ validate_factor_col_spec <- function(factor_spec) {
   } else if (prior_nm == "Horseshoe") {
     V_B <- diag(nrow_col_coef)
   }
-  list(
+  res <- list(
     factor_col_prior_mean = B0,
     factor_col_prior_prec = 1 / diag(V_B),
     factor_col_iw_scl = S_c,
     factor_col_iw_df = nu_c
   )
+  if (prior_nm == "Minnesota") {
+    res$factor_kappa <- bayes_spec$kappa
+  } else if (prior_nm == "MN_Hierarchical") {
+    res$factor_shape <- bayes_spec$kappa$shape
+    res$factor_rate <- bayes_spec$kappa$rate
+  }
+  res
 }
 
 #' @noRd

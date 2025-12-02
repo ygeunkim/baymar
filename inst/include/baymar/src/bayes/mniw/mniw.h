@@ -379,8 +379,8 @@ inline std::vector<std::unique_ptr<McmcMatMniw>> initialize_matmcmc(
 			// BVHAR_LIST dfm_init_spec = coef_sig_init[i];
 			famar_updater = initialize_factoraugmenter(
 				num_iter, y.size(), param_coef_sig, init_spec,
-				row_prior, row_init_spec,
-				col_prior, col_init_spec
+				param_coef_sig, row_init_spec,
+				param_coef_sig, col_init_spec
 			);
 			// famar_updater = initialize_factoraugmenter(num_iter, y.size(), param_coef_sig, init_spec);
 		}

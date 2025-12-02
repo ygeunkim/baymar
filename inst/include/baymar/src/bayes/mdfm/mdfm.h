@@ -293,8 +293,8 @@ inline std::vector<std::unique_ptr<McmcMatDfm>> initialize_matdfm(
 		// factor_updater = std::make_unique<MatFactorVarAugmenter>(num_iter, y.size(), params, inits);
 		factor_updater = initialize_factoraugmenter(
 			num_iter, y.size(), param_dfm, init_spec,
-			row_prior, row_init_spec,
-			col_prior, col_init_spec
+			param_dfm, row_init_spec,
+			param_dfm, col_init_spec
 		);
 		// factor_updater = initialize_factoraugmenter(num_iter, y.size(), param_dfm, init_spec);
 		mcmc_ptr[i] = std::make_unique<McmcMatDfm>(mniw_params, mniw_inits, factor_updater, row_updater, col_updater, static_cast<unsigned int>(seed_chain[i]));
