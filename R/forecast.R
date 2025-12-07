@@ -117,6 +117,7 @@ predict.marbayes <- function(object, n_ahead, level = .05, newxreg, num_thread =
   dimnames(upper_quantile) <- var_names
   dimnames(est_se) <- var_names
   res <- list(
+    draws = pred_res,
     forecast = pred_mean,
     se = est_se,
     lower = lower_quantile,
@@ -199,6 +200,7 @@ predict.mdfmbayes <- function(object, n_ahead, level = .05, num_thread = 1, med 
   dimnames(upper_quantile) <- var_names
   dimnames(est_se) <- var_names
   res <- list(
+    draws = pred_res,
     forecast = pred_mean,
     se = est_se,
     lower = lower_quantile,
