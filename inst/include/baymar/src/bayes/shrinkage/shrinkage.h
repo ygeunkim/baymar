@@ -8,6 +8,8 @@ namespace baymar {
 
 class MatShrinkageUpdater;
 class MatMinnUpdater;
+class MatHierMinnUpdater;
+class MatSsvsUpdater;
 class MatHsUpdater;
 
 class MatShrinkageUpdater {
@@ -99,7 +101,56 @@ class MatHierMinnUpdater : public MatShrinkageUpdater {
 	private:
 		double shp, rate, kappa;
 		Eigen::VectorXd kappa_record;
-	};
+};
+
+class MatSsvsUpdater : public MatShrinkageUpdater {
+public:
+	MatSsvsUpdater(int num_iter, const MatSsvsParams& params, const MatSsvsInits& inits)
+	: MatShrinkageUpdater(num_iter, params, inits),
+		grid_size(params._grid_size),
+		ig_shape(params._slab_shape), ig_scl(params._slab_scl), s1(params._s1), s2(params._s2),
+		spike_scl(inits._spike_scl), dummy(inits._dummy), weight(inits._weight), slab(inits._slab),
+		slab_weight(Eigen::VectorXd::Ones(slab.size())),
+		dummy_record(Eigen::MatrixXd::Ones(num_iter + 1, dummy.size())),
+		weight_record(Eigen::MatrixXd::Zero(num_iter + 1, weight.size())) {}
+
+	virtual ~MatSsvsUpdater() = default;
+	
+	void initPrec(Eigen::Ref<Eigen::VectorXd> prior_prec) override {
+		// prior_prec = global_lev * local_lev;
+	}
+
+	void updatePrec(
+		Eigen::Ref<Eigen::VectorXd> prior_prec,
+		Eigen::Ref<Eigen::MatrixXd> coef, Eigen::Ref<Eigen::MatrixXd> sig_lower,
+		Eigen::Ref<Eigen::MatrixXd> prior_mean,
+		BVHAR_BHRNG& rng
+	) override {
+		// horseshoe_sparsity(local_lev, global_lev, prior_mean, coef, sig_lower, latent_local, latent_global, rng);
+		// prior_prec = global_lev * local_lev;
+	}
+
+	void updateRecords(int id) override {
+		// local_record.row(id) = local_lev;
+		// global_record[id] = global_lev;
+	}
+
+	void appendRecords(BVHAR_LIST& list, const BVHAR_STRING& prefix = "") override {
+		// list["lambda" + prefix + "_record"] = local_record;
+		// list["tau" + prefix + "_record"] = global_record;
+	}
+
+private:
+	int grid_size;
+	double ig_shape, ig_scl; // IG hyperparameter for spike sd
+	Eigen::VectorXd s1, s2; // Beta hyperparameter
+	double spike_scl; // scaling factor between 0 and 1: spike_sd = c * slab_sd
+	Eigen::VectorXd dummy;
+	Eigen::VectorXd weight;
+	Eigen::VectorXd slab;
+	Eigen::VectorXd slab_weight; // pij vector
+	Eigen::MatrixXd dummy_record, weight_record;
+};
 
 class MatHsUpdater : public MatShrinkageUpdater {
 public:
