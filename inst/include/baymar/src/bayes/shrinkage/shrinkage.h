@@ -253,6 +253,8 @@ inline std::unique_ptr<MatShrinkageUpdater> initialize_matshrinkageupdater(
 		// Should check when using pybind11: BVHAR_STRING is py::str -> change this to std::string?
 		if (BVHAR_CONTAINS(param_init, (prefix + "local_sparsity" + suffix).c_str())) {
 			prior_type = 3;
+		} else if (BVHAR_CONTAINS(param_init, (prefix + "slab" + suffix).c_str())) {
+			prior_type = 2;
 		} else if (BVHAR_CONTAINS(param_init, (prefix + "kappa" + suffix).c_str())) {
 			prior_type = 4;
 		}
@@ -262,6 +264,12 @@ inline std::unique_ptr<MatShrinkageUpdater> initialize_matshrinkageupdater(
 			MatMinnParams params(param_prior);
 			MatShrinkageInits inits(param_init);
 			shrinkage_ptr = std::make_unique<MatMinnUpdater>(num_iter, params, inits);
+			return shrinkage_ptr;
+		}
+		case 2: {
+			MatSsvsParams params(param_prior);
+			MatSsvsInits inits(param_init);
+			shrinkage_ptr = std::make_unique<MatSsvsUpdater>(num_iter, params, inits);
 			return shrinkage_ptr;
 		}
 		case 3: {

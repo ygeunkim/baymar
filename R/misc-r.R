@@ -39,7 +39,7 @@ validate_bmar_row_spec <- function(y, p, bayes_spec, nrow_data, ncol_data, nrow_
   nu_r <- nrow_data + 2
   if (prior_nm == "Minnesota" || prior_nm == "MN_Hierarchical") {
     V_A <- kronecker(diag(1 / c(1:p)^2), diag(1 / diag(S_r)))
-  } else if (prior_nm == "Horseshoe") {
+  } else {
     V_A <- diag(nrow_row_coef)
   }
   list(
@@ -119,7 +119,7 @@ validate_bmar_col_spec <- function(y, p, bayes_spec, nrow_data, ncol_data, nrow_
   nu_c <- ncol_data + 2
   if (prior_nm == "Minnesota" || prior_nm == "MN_Hierarchical") {
     V_B <- kronecker(diag(1 / c(1:p)^2), diag(1 / diag(S_c)))
-  } else if (prior_nm == "Horseshoe") {
+  } else {
     V_B <- diag(nrow_col_coef)
   }
   list(
@@ -212,6 +212,7 @@ validate_bmar_prior <- function(bayes_spec) {
       bayes_spec$rate <- bayes_spec$kappa$rate
       bayes_spec
     },
+    "SSVS" = bayes_spec,
     stop("Wrong prior")
   )
 }
@@ -221,6 +222,7 @@ get_prior_id <- function(prior_nm) {
   switch(
     prior_nm,
     "Minnesota" = 1,
+    "SSVS" = 2,
     "Horseshoe" = 3,
     "MN_Hierarchical" = 4,
     1
@@ -291,11 +293,37 @@ get_mat_hs_init <- function(num_chains, nrow_coef) {
   )
 }
 
+#' @importFrom stats rbinom
+#' @noRd
+get_mat_ssvs_init <- function(num_chains, nrow_coef) {
+  lapply(
+    seq_len(num_chains),
+    function(init) {
+      init_mixture <- runif(nrow_coef, -1, 1)
+      init_mixture <- exp(init_mixture) / (1 + exp(init_mixture))
+      init_dummy <- rbinom(nrow_coef, 1, .5)
+      init_slab <- exp(runif(nrow_coef, -1, 1))
+      list(
+        dummy = init_dummy,
+        mixture = init_mixture,
+        slab = init_slab,
+        spike_scl = runif(1, 0, 1)
+      )
+    }
+  )
+}
+
 #' @noRd
 get_bmar_init <- function(bayes_spec, num_chains, nrow_coef) {
   switch(
     bayes_spec$prior,
     "Minnesota" = get_empty_init(num_chains),
+    "SSVS" = {
+      get_mat_ssvs_init(
+        num_chains = num_chains,
+        nrow_coef = nrow_coef
+      )
+    },
     "Horseshoe" = {
       get_mat_hs_init(
         num_chains = num_chains,

@@ -72,7 +72,7 @@ inline void ssvs_sparsity(
 	weight /= weight.sum();
 	spike_scl = grid[bvhar::cat_rand(weight, rng)];
 	Eigen::VectorXd exp_u1 = prod.array() / (2 * local_slab.array());
-	Eigen::VectorXd exp_u2 = exp_u2 / spike_scl;
+	Eigen::VectorXd exp_u2 = exp_u1 / spike_scl;
 	Eigen::VectorXd max_exp = exp_u1.cwiseMax(exp_u2);
 	exp_u1 = slab_weight.array() * (exp_u1 - max_exp).array().exp() / local_slab.array();
 	exp_u2 = (1 - slab_weight.array()) * (exp_u2 - max_exp).array().exp() / (spike_scl * local_slab.array());

@@ -79,6 +79,34 @@ is.mathsspec <- function(x) {
   inherits(x, "mathsspec")
 }
 
+#' SSVS Prior Specification
+#' 
+#' @param spike_grid Griddy gibbs grid size for scaling factor (between 0 and 1) of spike sd which is Spike sd = c * slab sd
+#' @param slab_shape Inverse gamma shape for slab sd
+#' @param slab_scl Inverse gamma scale for slab sd
+#' @param s1 First shape of coefficients prior beta distribution
+#' @param s2 Second shape of coefficients prior beta distribution
+#' @param shape Gamma shape parameters for precision matrix (See Details).
+#' @param rate Gamma rate parameters for precision matrix (See Details).
+#'
+#' @order 1
+#' @export
+set_mar_ssvs <- function(spike_grid = 100L,
+                         slab_shape = .01,
+                         slab_scl = .01,
+                         s1 = 1, s2 = 1) {
+  res <- list(
+    grid_size = spike_grid,
+    slab_shape = slab_shape,
+    slab_scl = slab_scl,
+    s1 = s1,
+    s2 = s2,
+    prior = "SSVS"
+  )
+  class(res) <- c("matssvsspec", "bmarspec")
+  res
+}
+
 #' Factor prior specification
 #' 
 #' @param nrow_factor Number of rows of factor matrix.
