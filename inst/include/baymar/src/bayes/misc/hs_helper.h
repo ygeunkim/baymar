@@ -19,8 +19,8 @@ namespace baymar {
 
 inline void horseshoe_sparsity(
 	Eigen::Ref<Eigen::VectorXd> local_sparsity, double& global_sparsity,
-	Eigen::Ref<Eigen::MatrixXd> prior_mean,
-	Eigen::Ref<Eigen::MatrixXd> coef, Eigen::Ref<Eigen::MatrixXd> sig_lower,
+	Eigen::Ref<const Eigen::MatrixXd> prior_mean,
+	Eigen::Ref<const Eigen::MatrixXd> coef, Eigen::Ref<const Eigen::MatrixXd> sig_lower,
 	Eigen::Ref<Eigen::VectorXd> local_latent, double& global_latent,
 	BVHAR_BHRNG& rng
 ) {

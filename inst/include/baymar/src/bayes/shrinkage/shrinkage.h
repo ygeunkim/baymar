@@ -19,8 +19,8 @@ public:
 	virtual void initPrec(Eigen::Ref<Eigen::VectorXd> prior_prec) {}
 	virtual void updatePrec(
 		Eigen::Ref<Eigen::VectorXd> prior_prec,
-		Eigen::Ref<Eigen::MatrixXd> coef, Eigen::Ref<Eigen::MatrixXd> sig_lower,
-		Eigen::Ref<Eigen::MatrixXd> prior_mean,
+		Eigen::Ref<const Eigen::MatrixXd> coef, Eigen::Ref<const Eigen::MatrixXd> sig_lower,
+		Eigen::Ref<const Eigen::MatrixXd> prior_mean,
 		BVHAR_BHRNG& rng
 	) {}
 	virtual void updateRecords(int id) {}
@@ -59,8 +59,8 @@ class MatHierMinnUpdater : public MatShrinkageUpdater {
 
 		void updatePrec(
 			Eigen::Ref<Eigen::VectorXd> prior_prec,
-			Eigen::Ref<Eigen::MatrixXd> coef, Eigen::Ref<Eigen::MatrixXd> sig_lower,
-			Eigen::Ref<Eigen::MatrixXd> prior_mean,
+			Eigen::Ref<const Eigen::MatrixXd> coef, Eigen::Ref<const Eigen::MatrixXd> sig_lower,
+			Eigen::Ref<const Eigen::MatrixXd> prior_mean,
 			BVHAR_BHRNG& rng
 		) override {
 			minnesota_kappa(kappa, prior_mean, prior_prec, coef, sig_lower, shp, rate, rng);
@@ -115,7 +115,8 @@ public:
 		scl_record(Eigen::VectorXd::Ones(num_iter + 1)),
 		slab_record(Eigen::MatrixXd::Ones(num_iter + 1, slab.size())),
 		dummy_record(Eigen::MatrixXd::Ones(num_iter + 1, dummy.size())),
-		weight_record(Eigen::MatrixXd::Zero(num_iter + 1, weight.size())) {}
+		weight_record(Eigen::MatrixXd::Zero(num_iter + 1, weight.size())) {
+	}
 
 	virtual ~MatSsvsUpdater() = default;
 	
@@ -125,8 +126,8 @@ public:
 
 	void updatePrec(
 		Eigen::Ref<Eigen::VectorXd> prior_prec,
-		Eigen::Ref<Eigen::MatrixXd> coef, Eigen::Ref<Eigen::MatrixXd> sig_lower,
-		Eigen::Ref<Eigen::MatrixXd> prior_mean,
+		Eigen::Ref<const Eigen::MatrixXd> coef, Eigen::Ref<const Eigen::MatrixXd> sig_lower,
+		Eigen::Ref<const Eigen::MatrixXd> prior_mean,
 		BVHAR_BHRNG& rng
 	) override {
 		ssvs_sparsity(
@@ -185,8 +186,8 @@ public:
 
 	void updatePrec(
 		Eigen::Ref<Eigen::VectorXd> prior_prec,
-		Eigen::Ref<Eigen::MatrixXd> coef, Eigen::Ref<Eigen::MatrixXd> sig_lower,
-		Eigen::Ref<Eigen::MatrixXd> prior_mean,
+		Eigen::Ref<const Eigen::MatrixXd> coef, Eigen::Ref<const Eigen::MatrixXd> sig_lower,
+		Eigen::Ref<const Eigen::MatrixXd> prior_mean,
 		BVHAR_BHRNG& rng
 	) override {
 		// bvhar::horseshoe_latent(latent_local, local_lev, rng);

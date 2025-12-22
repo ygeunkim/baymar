@@ -77,7 +77,7 @@ validate_factor_row_spec <- function(factor_spec) {
   nu_r <- nrow_factor + 2
   if (prior_nm == "Minnesota" || prior_nm == "MN_Hierarchical") {
     V_A <- kronecker(diag(1 / c(1:factor_lag)^2), S_r)
-  } else if (prior_nm == "Horseshoe") {
+  } else {
     V_A <- diag(nrow_row_coef)
   }
   res <- list(
@@ -149,7 +149,7 @@ validate_factor_col_spec <- function(factor_spec) {
   nu_c <- ncol_data + 2
   if (prior_nm == "Minnesota" || prior_nm == "MN_Hierarchical") {
     V_B <- kronecker(diag(1 / c(1:factor_lag)^2), S_c)
-  } else if (prior_nm == "Horseshoe") {
+  } else {
     V_B <- diag(nrow_col_coef)
   }
   res <- list(

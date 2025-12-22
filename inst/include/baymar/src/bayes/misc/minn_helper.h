@@ -8,8 +8,8 @@ namespace baecon {
 namespace baymar {
 
 inline void minnesota_kappa(
-	double& kappa, Eigen::Ref<Eigen::MatrixXd> prior_mean, Eigen::Ref<Eigen::VectorXd> prec,
-	Eigen::Ref<Eigen::MatrixXd> coef, Eigen::Ref<Eigen::MatrixXd> sig_lower,
+	double& kappa, Eigen::Ref<const Eigen::MatrixXd> prior_mean, Eigen::Ref<Eigen::VectorXd> prec,
+	Eigen::Ref<const Eigen::MatrixXd> coef, Eigen::Ref<const Eigen::MatrixXd> sig_lower,
 	const double gamma_shp, const double gamma_rate, BVHAR_BHRNG& rng
 ) {
 	prec.array() *= kappa;

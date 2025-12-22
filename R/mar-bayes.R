@@ -404,7 +404,7 @@ mar_bayes <- function(y,
     num_col <- c(num_col, nrow_col_coef, 1)
     num_row <- c(num_row, rep(0, 2))
     num_matrix <- c(num_matrix, rep(0, 2))
-  } else if (inherits(row_spec, "matssvsspec")) {
+  } else if (inherits(col_spec, "matssvsspec")) {
     num_col <- c(num_col, nrow_col_coef, 1, rep(nrow_col_coef, 2))
     num_row <- c(num_row, rep(0, 4))
     num_matrix <- c(num_matrix, rep(0, 4))
@@ -418,7 +418,7 @@ mar_bayes <- function(y,
       num_col <- c(num_col, nrow_exogen_row_coef, 1)
       num_row <- c(num_row, rep(0, 2))
       num_matrix <- c(num_matrix, rep(0, 2))
-    } else if (inherits(row_spec, "matssvsspec")) {
+    } else if (inherits(exogen_row_spec, "matssvsspec")) {
       num_col <- c(num_col, nrow_exogen_row_coef, 1, rep(nrow_exogen_row_coef, 2))
       num_row <- c(num_row, rep(0, 4))
       num_matrix <- c(num_matrix, rep(0, 4))
@@ -431,7 +431,7 @@ mar_bayes <- function(y,
       num_col <- c(num_col, nrow_exogen_col_coef, 1)
       num_row <- c(num_row, rep(0, 2))
       num_matrix <- c(num_matrix, rep(0, 2))
-    } else if (inherits(row_spec, "matssvsspec")) {
+    } else if (inherits(exogen_col_spec, "matssvsspec")) {
       num_col <- c(num_col, nrow_exogen_col_coef, 1, rep(nrow_exogen_col_coef, 2))
       num_row <- c(num_row, rep(0, 4))
       num_matrix <- c(num_matrix, rep(0, 4))
@@ -446,7 +446,7 @@ mar_bayes <- function(y,
       num_col <- c(num_col, nrow_factor, 1)
       num_row <- c(num_row, rep(0, 2))
       num_matrix <- c(num_matrix, rep(0, 2))
-    } else if (inherits(row_spec, "matssvsspec")) {
+    } else if (inherits(factor_row_spec, "matssvsspec")) {
       num_col <- c(num_col, nrow_factor, 1, rep(nrow_factor, 2))
       num_row <- c(num_row, rep(0, 4))
       num_matrix <- c(num_matrix, rep(0, 4))
@@ -459,7 +459,7 @@ mar_bayes <- function(y,
       num_col <- c(num_col, ncol_factor, 1)
       num_row <- c(num_row, rep(0, 2))
       num_matrix <- c(num_matrix, rep(0, 2))
-    } else if (inherits(row_spec, "matssvsspec")) {
+    } else if (inherits(factor_col_spec, "matssvsspec")) {
       num_col <- c(num_col, ncol_factor, 1, rep(ncol_factor, 2))
       num_row <- c(num_row, rep(0, 4))
       num_matrix <- c(num_matrix, rep(0, 4))
