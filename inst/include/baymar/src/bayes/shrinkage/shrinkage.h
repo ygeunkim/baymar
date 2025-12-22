@@ -111,13 +111,16 @@ public:
 		ig_shape(params._slab_shape), ig_scl(params._slab_scl), s1(params._s1), s2(params._s2),
 		spike_scl(inits._spike_scl), dummy(inits._dummy), weight(inits._weight), slab(inits._slab),
 		slab_weight(Eigen::VectorXd::Ones(slab.size())),
+		// slab_weight(Eigen::VectorXd::Ones(weight.size())),
+		scl_record(Eigen::VectorXd::Ones(num_iter + 1)),
+		slab_record(Eigen::MatrixXd::Ones(num_iter + 1, slab.size())),
 		dummy_record(Eigen::MatrixXd::Ones(num_iter + 1, dummy.size())),
 		weight_record(Eigen::MatrixXd::Zero(num_iter + 1, weight.size())) {}
 
 	virtual ~MatSsvsUpdater() = default;
 	
 	void initPrec(Eigen::Ref<Eigen::VectorXd> prior_prec) override {
-		// prior_prec = global_lev * local_lev;
+		prior_prec = 1 / (dummy.array() * slab.array() + (1 - dummy.array()) * slab.array() * spike_scl);
 	}
 
 	void updatePrec(
@@ -126,30 +129,43 @@ public:
 		Eigen::Ref<Eigen::MatrixXd> prior_mean,
 		BVHAR_BHRNG& rng
 	) override {
-		// horseshoe_sparsity(local_lev, global_lev, prior_mean, coef, sig_lower, latent_local, latent_global, rng);
-		// prior_prec = global_lev * local_lev;
+		ssvs_sparsity(
+			slab, dummy, weight, prior_mean, coef, sig_lower,
+			ig_shape, ig_scl,
+			s1, s2,
+			spike_scl, grid_size,
+			rng
+		);
+		prior_prec = 1 / (dummy.array() * slab.array() + (1 - dummy.array()) * slab.array() * spike_scl);
 	}
 
 	void updateRecords(int id) override {
-		// local_record.row(id) = local_lev;
-		// global_record[id] = global_lev;
+		slab_record.row(id) = slab;
+		scl_record[id] = spike_scl;
+		dummy_record.row(id) = dummy;
+		weight_record.row(id) = weight;
 	}
 
 	void appendRecords(BVHAR_LIST& list, const BVHAR_STRING& prefix = "") override {
-		// list["lambda" + prefix + "_record"] = local_record;
-		// list["tau" + prefix + "_record"] = global_record;
+		list["tau" + prefix + "_record"] = slab_record;
+		list["ctau" + prefix + "_record"] = scl_record;
+		list["gamma" + prefix + "_record"] = dummy_record;
+		list["p" + prefix + "_record"] = weight_record;
 	}
 
 private:
 	int grid_size;
 	double ig_shape, ig_scl; // IG hyperparameter for spike sd
-	Eigen::VectorXd s1, s2; // Beta hyperparameter
+	// Eigen::VectorXd s1, s2; // Beta hyperparameter
+	double s1, s2;
 	double spike_scl; // scaling factor between 0 and 1: spike_sd = c * slab_sd
 	Eigen::VectorXd dummy;
 	Eigen::VectorXd weight;
 	Eigen::VectorXd slab;
+	// double slab;
 	Eigen::VectorXd slab_weight; // pij vector
-	Eigen::MatrixXd dummy_record, weight_record;
+	Eigen::VectorXd scl_record;
+	Eigen::MatrixXd slab_record, dummy_record, weight_record;
 };
 
 class MatHsUpdater : public MatShrinkageUpdater {
