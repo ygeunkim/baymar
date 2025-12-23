@@ -92,3 +92,15 @@ test_that("Hierarchical Minnesota Prior", {
     fit_famar_test <- help_bmar_fit(set_mar_minnesota(), set_mar_minnesota(), set_mar_minnesota(), set_mar_minnesota(), set_mar_minnesota(), set_mar_minnesota())
   )
 })
+
+test_that("SSVS Prior", {
+  expect_no_error(
+    fit_test <- help_bmar_fit(set_mar_ssvs(), set_mar_ssvs())
+  )
+  expect_no_error(
+    fit_x_test <- help_bmar_fit(set_mar_ssvs(), set_mar_ssvs(), set_mar_ssvs(), set_mar_ssvs())
+  )
+  expect_no_error(
+    fit_famar_test <- help_bmar_fit(set_mar_ssvs(), set_mar_ssvs(), set_mar_ssvs(), set_mar_ssvs(), set_mar_ssvs(), set_mar_ssvs())
+  )
+})
