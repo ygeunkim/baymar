@@ -86,8 +86,6 @@ is.mathsspec <- function(x) {
 #' @param slab_scl Inverse gamma scale for slab sd
 #' @param s1 First shape of coefficients prior beta distribution
 #' @param s2 Second shape of coefficients prior beta distribution
-#' @param shape Gamma shape parameters for precision matrix (See Details).
-#' @param rate Gamma rate parameters for precision matrix (See Details).
 #'
 #' @order 1
 #' @export

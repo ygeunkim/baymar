@@ -22,10 +22,6 @@ set_mar_ssvs(
 \item{s1}{First shape of coefficients prior beta distribution}
 
 \item{s2}{Second shape of coefficients prior beta distribution}
-
-\item{shape}{Gamma shape parameters for precision matrix (See Details).}
-
-\item{rate}{Gamma rate parameters for precision matrix (See Details).}
 }
 \description{
 SSVS Prior Specification
