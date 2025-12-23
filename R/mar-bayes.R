@@ -391,6 +391,10 @@ mar_bayes <- function(y,
     num_col <- c(num_col, nrow_row_coef, 1)
     num_row <- c(num_row, rep(0, 2))
     num_matrix <- c(num_matrix, rep(0, 2))
+  } else if (inherits(row_spec, "matssvsspec")) {
+    num_col <- c(num_col, nrow_row_coef, 1, rep(nrow_row_coef, 2))
+    num_row <- c(num_row, rep(0, 4))
+    num_matrix <- c(num_matrix, rep(0, 4))
   }
   if (is.matmnspec(col_spec)) {
     num_col <- c(num_col, 1)
@@ -400,6 +404,10 @@ mar_bayes <- function(y,
     num_col <- c(num_col, nrow_col_coef, 1)
     num_row <- c(num_row, rep(0, 2))
     num_matrix <- c(num_matrix, rep(0, 2))
+  } else if (inherits(col_spec, "matssvsspec")) {
+    num_col <- c(num_col, nrow_col_coef, 1, rep(nrow_col_coef, 2))
+    num_row <- c(num_row, rep(0, 4))
+    num_matrix <- c(num_matrix, rep(0, 4))
   }
   if (!is.null(exogen)) {
     if (is.matmnspec(exogen_row_spec)) {
@@ -410,6 +418,10 @@ mar_bayes <- function(y,
       num_col <- c(num_col, nrow_exogen_row_coef, 1)
       num_row <- c(num_row, rep(0, 2))
       num_matrix <- c(num_matrix, rep(0, 2))
+    } else if (inherits(exogen_row_spec, "matssvsspec")) {
+      num_col <- c(num_col, nrow_exogen_row_coef, 1, rep(nrow_exogen_row_coef, 2))
+      num_row <- c(num_row, rep(0, 4))
+      num_matrix <- c(num_matrix, rep(0, 4))
     }
     if (is.matmnspec(exogen_col_spec)) {
       num_col <- c(num_col, 1)
@@ -419,6 +431,10 @@ mar_bayes <- function(y,
       num_col <- c(num_col, nrow_exogen_col_coef, 1)
       num_row <- c(num_row, rep(0, 2))
       num_matrix <- c(num_matrix, rep(0, 2))
+    } else if (inherits(exogen_col_spec, "matssvsspec")) {
+      num_col <- c(num_col, nrow_exogen_col_coef, 1, rep(nrow_exogen_col_coef, 2))
+      num_row <- c(num_row, rep(0, 4))
+      num_matrix <- c(num_matrix, rep(0, 4))
     }
   }
   if (is_famar) {
@@ -430,6 +446,10 @@ mar_bayes <- function(y,
       num_col <- c(num_col, nrow_factor, 1)
       num_row <- c(num_row, rep(0, 2))
       num_matrix <- c(num_matrix, rep(0, 2))
+    } else if (inherits(factor_row_spec, "matssvsspec")) {
+      num_col <- c(num_col, nrow_factor, 1, rep(nrow_factor, 2))
+      num_row <- c(num_row, rep(0, 4))
+      num_matrix <- c(num_matrix, rep(0, 4))
     }
     if (is.matmnspec(factor_col_spec)) {
       num_col <- c(num_col, 1)
@@ -439,6 +459,10 @@ mar_bayes <- function(y,
       num_col <- c(num_col, ncol_factor, 1)
       num_row <- c(num_row, rep(0, 2))
       num_matrix <- c(num_matrix, rep(0, 2))
+    } else if (inherits(factor_col_spec, "matssvsspec")) {
+      num_col <- c(num_col, ncol_factor, 1, rep(ncol_factor, 2))
+      num_row <- c(num_row, rep(0, 4))
+      num_matrix <- c(num_matrix, rep(0, 4))
     }
   }
   # num_row <- c(nrow_row_coef + nrow_exogen_row_coef, nrow_data, nrow_col_coef + nrow_exogen_col_coef, ncol_data)

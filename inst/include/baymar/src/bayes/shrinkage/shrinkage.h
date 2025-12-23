@@ -8,6 +8,8 @@ namespace baymar {
 
 class MatShrinkageUpdater;
 class MatMinnUpdater;
+class MatHierMinnUpdater;
+class MatSsvsUpdater;
 class MatHsUpdater;
 
 class MatShrinkageUpdater {
@@ -17,8 +19,8 @@ public:
 	virtual void initPrec(Eigen::Ref<Eigen::VectorXd> prior_prec) {}
 	virtual void updatePrec(
 		Eigen::Ref<Eigen::VectorXd> prior_prec,
-		Eigen::Ref<Eigen::MatrixXd> coef, Eigen::Ref<Eigen::MatrixXd> sig_lower,
-		Eigen::Ref<Eigen::MatrixXd> prior_mean,
+		Eigen::Ref<const Eigen::MatrixXd> coef, Eigen::Ref<const Eigen::MatrixXd> sig_lower,
+		Eigen::Ref<const Eigen::MatrixXd> prior_mean,
 		BVHAR_BHRNG& rng
 	) {}
 	virtual void updateRecords(int id) {}
@@ -57,8 +59,8 @@ class MatHierMinnUpdater : public MatShrinkageUpdater {
 
 		void updatePrec(
 			Eigen::Ref<Eigen::VectorXd> prior_prec,
-			Eigen::Ref<Eigen::MatrixXd> coef, Eigen::Ref<Eigen::MatrixXd> sig_lower,
-			Eigen::Ref<Eigen::MatrixXd> prior_mean,
+			Eigen::Ref<const Eigen::MatrixXd> coef, Eigen::Ref<const Eigen::MatrixXd> sig_lower,
+			Eigen::Ref<const Eigen::MatrixXd> prior_mean,
 			BVHAR_BHRNG& rng
 		) override {
 			minnesota_kappa(kappa, prior_mean, prior_prec, coef, sig_lower, shp, rate, rng);
@@ -99,7 +101,73 @@ class MatHierMinnUpdater : public MatShrinkageUpdater {
 	private:
 		double shp, rate, kappa;
 		Eigen::VectorXd kappa_record;
-	};
+};
+
+class MatSsvsUpdater : public MatShrinkageUpdater {
+public:
+	MatSsvsUpdater(int num_iter, const MatSsvsParams& params, const MatSsvsInits& inits)
+	: MatShrinkageUpdater(num_iter, params, inits),
+		grid_size(params._grid_size),
+		ig_shape(params._slab_shape), ig_scl(params._slab_scl), s1(params._s1), s2(params._s2),
+		spike_scl(inits._spike_scl), dummy(inits._dummy), weight(inits._weight), slab(inits._slab),
+		slab_weight(Eigen::VectorXd::Ones(slab.size())),
+		// slab_weight(Eigen::VectorXd::Ones(weight.size())),
+		scl_record(Eigen::VectorXd::Ones(num_iter + 1)),
+		slab_record(Eigen::MatrixXd::Ones(num_iter + 1, slab.size())),
+		dummy_record(Eigen::MatrixXd::Ones(num_iter + 1, dummy.size())),
+		weight_record(Eigen::MatrixXd::Zero(num_iter + 1, weight.size())) {
+	}
+
+	virtual ~MatSsvsUpdater() = default;
+	
+	void initPrec(Eigen::Ref<Eigen::VectorXd> prior_prec) override {
+		prior_prec = 1 / (dummy.array() * slab.array() + (1 - dummy.array()) * slab.array() * spike_scl);
+	}
+
+	void updatePrec(
+		Eigen::Ref<Eigen::VectorXd> prior_prec,
+		Eigen::Ref<const Eigen::MatrixXd> coef, Eigen::Ref<const Eigen::MatrixXd> sig_lower,
+		Eigen::Ref<const Eigen::MatrixXd> prior_mean,
+		BVHAR_BHRNG& rng
+	) override {
+		ssvs_sparsity(
+			slab, dummy, weight, prior_mean, coef, sig_lower,
+			ig_shape, ig_scl,
+			s1, s2,
+			spike_scl, grid_size,
+			rng
+		);
+		prior_prec = 1 / (dummy.array() * slab.array() + (1 - dummy.array()) * slab.array() * spike_scl);
+	}
+
+	void updateRecords(int id) override {
+		slab_record.row(id) = slab;
+		scl_record[id] = spike_scl;
+		dummy_record.row(id) = dummy;
+		weight_record.row(id) = weight;
+	}
+
+	void appendRecords(BVHAR_LIST& list, const BVHAR_STRING& prefix = "") override {
+		list["tau" + prefix + "_record"] = slab_record;
+		list["ctau" + prefix + "_record"] = scl_record;
+		list["gamma" + prefix + "_record"] = dummy_record;
+		list["p" + prefix + "_record"] = weight_record;
+	}
+
+private:
+	int grid_size;
+	double ig_shape, ig_scl; // IG hyperparameter for spike sd
+	// Eigen::VectorXd s1, s2; // Beta hyperparameter
+	double s1, s2;
+	double spike_scl; // scaling factor between 0 and 1: spike_sd = c * slab_sd
+	Eigen::VectorXd dummy;
+	Eigen::VectorXd weight;
+	Eigen::VectorXd slab;
+	// double slab;
+	Eigen::VectorXd slab_weight; // pij vector
+	Eigen::VectorXd scl_record;
+	Eigen::MatrixXd slab_record, dummy_record, weight_record;
+};
 
 class MatHsUpdater : public MatShrinkageUpdater {
 public:
@@ -118,8 +186,8 @@ public:
 
 	void updatePrec(
 		Eigen::Ref<Eigen::VectorXd> prior_prec,
-		Eigen::Ref<Eigen::MatrixXd> coef, Eigen::Ref<Eigen::MatrixXd> sig_lower,
-		Eigen::Ref<Eigen::MatrixXd> prior_mean,
+		Eigen::Ref<const Eigen::MatrixXd> coef, Eigen::Ref<const Eigen::MatrixXd> sig_lower,
+		Eigen::Ref<const Eigen::MatrixXd> prior_mean,
 		BVHAR_BHRNG& rng
 	) override {
 		// bvhar::horseshoe_latent(latent_local, local_lev, rng);
@@ -186,6 +254,8 @@ inline std::unique_ptr<MatShrinkageUpdater> initialize_matshrinkageupdater(
 		// Should check when using pybind11: BVHAR_STRING is py::str -> change this to std::string?
 		if (BVHAR_CONTAINS(param_init, (prefix + "local_sparsity" + suffix).c_str())) {
 			prior_type = 3;
+		} else if (BVHAR_CONTAINS(param_init, (prefix + "slab" + suffix).c_str())) {
+			prior_type = 2;
 		} else if (BVHAR_CONTAINS(param_init, (prefix + "kappa" + suffix).c_str())) {
 			prior_type = 4;
 		}
@@ -195,6 +265,12 @@ inline std::unique_ptr<MatShrinkageUpdater> initialize_matshrinkageupdater(
 			MatMinnParams params(param_prior);
 			MatShrinkageInits inits(param_init);
 			shrinkage_ptr = std::make_unique<MatMinnUpdater>(num_iter, params, inits);
+			return shrinkage_ptr;
+		}
+		case 2: {
+			MatSsvsParams params(param_prior);
+			MatSsvsInits inits(param_init);
+			shrinkage_ptr = std::make_unique<MatSsvsUpdater>(num_iter, params, inits);
 			return shrinkage_ptr;
 		}
 		case 3: {
