@@ -67,6 +67,7 @@ public:
 			// ncol_factor = famar_updater->getCol();
 			// nrow_row_coef -= nrow_factor;
 			// nrow_col_coef -= ncol_factor;
+			// famar_updater->initFactor(rng);
 		}
 	}
 	virtual ~McmcMatMniw() = default;
@@ -220,7 +221,7 @@ protected:
 		// 	row_iw_scl, row_iw_df,
 		// 	num_design, num_col,
 		// 	nrow_row_exogen, exogen_lag,
-		// 	0,
+		// 	0, false,
 		// 	x, y, rng
 		// );
 		// draw_coef_sig<false>(
@@ -231,11 +232,38 @@ protected:
 		// 	col_iw_scl, col_iw_df,
 		// 	num_design, num_row,
 		// 	nrow_col_exogen, exogen_lag,
-		// 	0,
+		// 	0, false,
 		// 	x, y, rng
 		// );
 		bool factor_restrict = false;
 		if (famar_updater) {
+			// famar_updater->updateResponse(
+			// 	y,
+			// 	row_coef.bottomRows(nrow_factor),
+			// 	col_coef.bottomRows(ncol_factor)
+			// );
+			// draw_coef_sig<true>(
+			// 	row_coef.topRows(nrow_row_coef + nrow_row_exogen), row_sig_lower,
+			// 	col_coef.topRows(nrow_col_coef + nrow_col_exogen), col_sig_lower,
+			// 	row_prior_mean.topRows(nrow_row_coef + nrow_row_exogen),
+			// 	row_prior_prec.head(nrow_row_coef + nrow_row_exogen),
+			// 	row_iw_scl, row_iw_df,
+			// 	num_design, num_col,
+			// 	nrow_row_exogen, exogen_lag,
+			// 	0, false,
+			// 	x, famar_updater->getResid(), rng
+			// );
+			// draw_coef_sig<false>(
+			// 	col_coef.topRows(nrow_col_coef + nrow_col_exogen), col_sig_lower,
+			// 	row_coef.topRows(nrow_row_coef + nrow_row_exogen), row_sig_lower,
+			// 	col_prior_mean.topRows(nrow_col_coef + nrow_col_exogen),
+			// 	col_prior_prec.head(nrow_col_coef + nrow_col_exogen),
+			// 	col_iw_scl, col_iw_df,
+			// 	num_design, num_row,
+			// 	nrow_col_exogen, exogen_lag,
+			// 	0, false,
+			// 	x, famar_updater->getResid(), rng
+			// );
 			famar_updater->updateResid(
 				x, y,
 				row_coef.topRows(nrow_row_coef + nrow_row_exogen), col_coef.topRows(nrow_col_coef + nrow_col_exogen)
@@ -264,6 +292,26 @@ protected:
 			// 	num_row, rng
 			// );
 		}
+		//  else {
+		// 	draw_coef_sig<true>(
+		// 		row_coef, row_sig_lower,
+		// 		col_coef, col_sig_lower,
+		// 		row_prior_mean, row_prior_prec, row_iw_scl, row_iw_df,
+		// 		num_design, num_col,
+		// 		nrow_row_exogen, exogen_lag,
+		// 		nrow_factor, factor_restrict,
+		// 		x, y, rng
+		// 	);
+		// 	draw_coef_sig<false>(
+		// 		col_coef, col_sig_lower,
+		// 		row_coef, row_sig_lower,
+		// 		col_prior_mean, col_prior_prec, col_iw_scl, col_iw_df,
+		// 		num_design, num_row,
+		// 		nrow_col_exogen, exogen_lag,
+		// 		ncol_factor, factor_restrict,
+		// 		x, y, rng
+		// 	);
+		// }
 		draw_coef_sig<true>(
 			row_coef, row_sig_lower,
 			col_coef, col_sig_lower,

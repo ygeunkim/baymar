@@ -47,7 +47,7 @@ public:
 class MatFactorAugmenter : public MatAugmenter {
 public:
 	MatFactorAugmenter(int num_iter, int num_design, const MatDfmParams& params)
-	: need_restrict(false), num_iter(num_iter), nrow_factor(params._nrow_factor), ncol_factor(params._ncol_factor),
+	: need_restrict(true), num_iter(num_iter), nrow_factor(params._nrow_factor), ncol_factor(params._ncol_factor),
 		size_factor(params._size_factor), lag(params._lag), num_design(num_design),
 		resid(num_design), factor_mat(num_design) {
 		mdfm_record = std::make_unique<MatDfmRecords>(num_iter, num_design, size_factor);
@@ -103,6 +103,25 @@ public:
 		);
 	}
 
+	// void initFactor(BVHAR_BHRNG& rng) {
+	// 	init_factor(factor_mat, nrow_factor, ncol_factor, rng);
+	// }
+
+	// void updateResponse(
+	// 	std::vector<Eigen::MatrixXd>& y,
+	// 	Eigen::Ref<const Eigen::MatrixXd> row_coef, Eigen::Ref<const Eigen::MatrixXd> col_coef
+	// ) {
+	// 	for (int i = 0; i < num_design; ++i) {
+	// 		// resid[i] = y[i] - row_coef.topRows(row_coef.rows() - nrow_factor).transpose() * x[i].topLeftCorner(x[i].rows() - nrow_factor, x[i].cols() - ncol_factor) * col_coef.topRows(col_coef.rows() - ncol_factor);
+	// 		// resid[i] = y[i] - row_coef.transpose() * x[i].topLeftCorner(x[i].rows() - nrow_factor, x[i].cols() - ncol_factor) * col_coef;
+	// 		resid[i] = y[i] - row_coef.transpose() * factor_mat[i] * col_coef;
+	// 	}
+	// }
+
+	// const std::vector<Eigen::MatrixXd>& getResid() const {
+	// 	return resid;
+	// }
+
 	// template <bool isRow = true>
 	// void updateCoefCov(
 	// 	Eigen::Ref<Eigen::MatrixXd> coef, Eigen::Ref<Eigen::MatrixXd> sig_lower,
@@ -121,7 +140,7 @@ public:
 	// 		coef, sig_lower,
 	// 		other_coef, other_sig_lower,
 	// 		prior_mean, prior_prec, iw_scl, iw_df,
-	// 		num_design, other_dim, dim_factor,
+	// 		num_design, other_dim, dim_factor, need_restrict,
 	// 		factor_mat, resid, rng
 	// 	);
 	// }
