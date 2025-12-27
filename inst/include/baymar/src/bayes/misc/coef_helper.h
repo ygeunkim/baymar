@@ -86,6 +86,13 @@ inline void restrict_mat_loading(int num_col, int dim_factor,
 	// ));
 }
 
+inline void restrict_mat_loading2(int num_col, int dim_factor,
+																  Eigen::Ref<Eigen::MatrixXd> coef,
+																  Eigen::Ref<const Eigen::MatrixXd> sig_lower) {
+	int sign_11 = coef(0, 0) > 0 ? 1 : -1;
+	coef /= (sign_11 * coef.squaredNorm());
+}
+
 /**
  * @brief Generate MNIW coefficient and LLT decomposition of Sigma
  * 
@@ -175,16 +182,20 @@ inline void draw_coef_sig(
 			}
 		} else {
 			for (int i = 0; i < lag; ++i) {
-				if (coef.middleRows(i * ncol_coef, ncol_coef).trace() <= 0) { // tr(A_i) > 0
-					coef.middleRows(i * ncol_coef, ncol_coef) *= -1.0;
-					other_coef.middleRows(i * other_dim, other_dim) *= -1.0;
-				}
-				// if (coef(i * ncol_coef, 0) <= 0) {
+				// if (coef.middleRows(i * ncol_coef, ncol_coef).trace() <= 0) { // tr(A_i) > 0
 				// 	coef.middleRows(i * ncol_coef, ncol_coef) *= -1.0;
 				// 	other_coef.middleRows(i * other_dim, other_dim) *= -1.0;
 				// }
+				if (coef(i * ncol_coef, 0) <= 0) { // A_i(1,1) > 0
+					coef.middleRows(i * ncol_coef, ncol_coef) *= -1.0;
+					other_coef.middleRows(i * other_dim, other_dim) *= -1.0;
+				}
 			}
 			// Add trace > 0 for exogen part later
+			if (nrow_exogen_coef > 0) {
+				int sign_x = coef(nrow_coef, 0) > 0 ? 1 : -1;
+				coef.middleRows(nrow_coef, nrow_exogen_coef) *= sign_x;
+			}
 			// if (coef(0, 0) <= 0) {
 			// 	coef = -coef;
 			// 	other_coef = -other_coef;

@@ -47,7 +47,7 @@ public:
 class MatFactorAugmenter : public MatAugmenter {
 public:
 	MatFactorAugmenter(int num_iter, int num_design, const MatDfmParams& params)
-	: need_restrict(false), num_iter(num_iter), nrow_factor(params._nrow_factor), ncol_factor(params._ncol_factor),
+	: need_restrict(true), num_iter(num_iter), nrow_factor(params._nrow_factor), ncol_factor(params._ncol_factor),
 		size_factor(params._size_factor), lag(params._lag), num_design(num_design),
 		resid(num_design), factor_mat(num_design) {
 		mdfm_record = std::make_unique<MatDfmRecords>(num_iter, num_design, size_factor);
