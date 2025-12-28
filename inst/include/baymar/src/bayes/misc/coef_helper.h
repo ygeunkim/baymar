@@ -208,14 +208,14 @@ inline void draw_coef_sig(
 			}
 		} else {
 			for (int i = 0; i < lag; ++i) {
-				// if (coef.middleRows(i * ncol_coef, ncol_coef).trace() <= 0) { // tr(A_i) > 0
-				// 	coef.middleRows(i * ncol_coef, ncol_coef) *= -1.0;
-				// 	other_coef.middleRows(i * other_dim, other_dim) *= -1.0;
-				// }
-				if (coef(i * ncol_coef, 0) <= 0) { // A_i(1,1) > 0
+				if (coef.middleRows(i * ncol_coef, ncol_coef).trace() <= 0) { // tr(A_i) > 0
 					coef.middleRows(i * ncol_coef, ncol_coef) *= -1.0;
 					other_coef.middleRows(i * other_dim, other_dim) *= -1.0;
 				}
+				// if (coef(i * ncol_coef, 0) <= 0) { // A_i(1,1) > 0
+				// 	coef.middleRows(i * ncol_coef, ncol_coef) *= -1.0;
+				// 	other_coef.middleRows(i * other_dim, other_dim) *= -1.0;
+				// }
 			}
 			// Add trace > 0 for exogen part later
 			if (nrow_exogen_coef > 0) {
