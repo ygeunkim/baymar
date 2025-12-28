@@ -89,8 +89,34 @@ inline void restrict_mat_loading(int num_col, int dim_factor,
 inline void restrict_mat_loading2(int num_col, int dim_factor,
 																  Eigen::Ref<Eigen::MatrixXd> coef,
 																  Eigen::Ref<const Eigen::MatrixXd> sig_lower) {
-	int sign_11 = coef(0, 0) > 0 ? 1 : -1;
-	coef /= (sign_11 * coef.squaredNorm());
+	// int sign_11 = coef(0, 0) > 0 ? 1 : -1;
+	// coef /= (sign_11 * coef.squaredNorm());
+	int num_restr = dim_factor * (dim_factor + 1) / 2;
+	Eigen::SparseMatrix<double> project_restr(num_restr, dim_factor * num_col);
+	// Eigen::MatrixXd project_restr = Eigen::MatrixXd::Zero(num_restr, dim_factor * num_col);
+	Eigen::VectorXd restr_vec = Eigen::VectorXd::Zero(num_restr);
+	int row_id = 0;
+	int id = 0;
+	std::vector<Eigen::Triplet<double>> triplets;
+  triplets.reserve(num_restr);
+	for (int i = 0; i < dim_factor; ++i) {
+		for (int j = i; j < dim_factor; ++j) {
+			id = i * dim_factor + j;
+			triplets.push_back(Eigen::Triplet<double>(row_id, id, 1.0));
+			if (i == j) {
+				restr_vec[row_id] = 1.0;
+			}
+			++row_id;
+		}
+	}
+	project_restr.setFromTriplets(triplets.begin(), triplets.end());
+	Eigen::MatrixXd u_mat = project_restr.transpose();
+	sig_lower.triangularView<Eigen::Lower>().solveInPlace(u_mat);
+	sig_lower.triangularView<Eigen::Upper>().solveInPlace(u_mat);
+	Eigen::MatrixXd v_mat = (project_restr * u_mat).llt().solve(u_mat.transpose());
+	Eigen::VectorXd coef_vec = coef.reshaped();
+	coef_vec += v_mat.transpose() * (restr_vec - project_restr * coef_vec);
+	coef = bvhar::unvectorize(coef_vec, num_col);
 }
 
 /**
@@ -204,58 +230,60 @@ inline void draw_coef_sig(
 	}
 	if (dim_factor > 0 && factor_restrict) {
 		restrict_mat_loading(prior_mean.cols(), dim_factor, coef.bottomRows(dim_factor), sig_lower);
+		// Eigen::MatrixXd lower_sig_post = bvhar::kronecker_eigen(sig_lower.inverse().eval(), llt_of_prec.matrixL().toDenseMatrix());
+		// restrict_mat_loading2(prior_mean.cols(), dim_factor, coef.bottomRows(dim_factor), lower_sig_post);
 	}
 }
 
-// template <bool isRow = true, typename xType = Eigen::SparseMatrix<double>>
-// inline void draw_coef_only(
-// 	Eigen::Ref<Eigen::MatrixXd> coef, Eigen::Ref<const Eigen::MatrixXd> sig_lower,
-// 	Eigen::Ref<const Eigen::MatrixXd> other_coef, Eigen::Ref<const Eigen::MatrixXd> other_sig_lower,
-// 	Eigen::Ref<const Eigen::MatrixXd> prior_mean, Eigen::Ref<const Eigen::VectorXd> prior_prec,
-// 	Eigen::Ref<const Eigen::MatrixXd> iw_scl,
-// 	double iw_df, int num_mat, int other_dim, int dim_factor,
-// 	bool factor_restrict,
-// 	const std::vector<xType>& x, const std::vector<Eigen::MatrixXd>& y,
-// 	BVHAR_BHRNG& rng
-// ) {
-// 	using is_row = std::integral_constant<bool, isRow>;
-// 	Eigen::MatrixXd post_cov = prior_prec.asDiagonal();
-// 	Eigen::MatrixXd post_solve = prior_prec.asDiagonal() * prior_mean;
-// 	Eigen::MatrixXd inv_sig_coef_x, inv_sig_y;
-// 	for (int i = 0; i < num_mat; ++i) {
-// 		if (is_row::value) {
-// 			inv_sig_coef_x = other_sig_lower.triangularView<Eigen::Lower>().solve(other_coef.transpose() * x[i].transpose());
-// 			inv_sig_y = other_sig_lower.triangularView<Eigen::Lower>().solve(y[i].transpose());
-// 		} else {
-// 			inv_sig_coef_x = other_sig_lower.triangularView<Eigen::Lower>().solve(other_coef.transpose() * x[i]);
-// 			inv_sig_y = other_sig_lower.triangularView<Eigen::Lower>().solve(y[i]);
-// 		}
-// 		post_cov += inv_sig_coef_x.transpose() * inv_sig_coef_x;
-// 		post_solve += inv_sig_coef_x.transpose() * inv_sig_y;
-// 	}
-// 	Eigen::LLT<Eigen::MatrixXd> llt_of_prec;
-// 	double temp_penalty = 0;
-// 	do {
-// 		llt_of_prec.compute((
-// 			post_cov + temp_penalty * Eigen::MatrixXd::Identity(post_cov.rows(), post_cov.cols())
-// 		).selfadjointView<Eigen::Lower>());
-// 		temp_penalty += .01;
-// 	} while (llt_of_prec.info() == Eigen::NumericalIssue && temp_penalty < .1);
-// 	if (llt_of_prec.info() == Eigen::NumericalIssue) {
-// 		eigen_assert("LLT failed in precision sampler.");
-// 	}
-// 	Eigen::MatrixXd post_mean = llt_of_prec.solve(post_solve);
-// 	for (int i = 0; i < prior_mean.rows(); ++i) {
-// 		for (int j = 0; j < prior_mean.cols(); ++j) {
-// 			coef(i, j) = bvhar::normal_rand(rng); // MN(0, I_n, I_k)
-// 		}
-// 	}
-// 	coef = llt_of_prec.matrixU().solve(coef * sig_lower.transpose()) + post_mean;
-// 	// R^T Q_1 = I, C^T Q_2 = I
-// 	if (factor_restrict) {
-// 		restrict_mat_loading(prior_mean.cols(), dim_factor, coef, sig_lower);
-// 	}
-// }
+template <bool isRow = true, typename xType = Eigen::SparseMatrix<double>>
+inline void draw_coef_only(
+	Eigen::Ref<Eigen::MatrixXd> coef, Eigen::Ref<const Eigen::MatrixXd> sig_lower,
+	Eigen::Ref<const Eigen::MatrixXd> other_coef, Eigen::Ref<const Eigen::MatrixXd> other_sig_lower,
+	Eigen::Ref<const Eigen::MatrixXd> prior_mean, Eigen::Ref<const Eigen::VectorXd> prior_prec,
+	Eigen::Ref<const Eigen::MatrixXd> iw_scl,
+	double iw_df, int num_mat, int other_dim, int dim_factor,
+	bool factor_restrict,
+	const std::vector<xType>& x, const std::vector<Eigen::MatrixXd>& y,
+	BVHAR_BHRNG& rng
+) {
+	using is_row = std::integral_constant<bool, isRow>;
+	Eigen::MatrixXd post_cov = prior_prec.asDiagonal();
+	Eigen::MatrixXd post_solve = prior_prec.asDiagonal() * prior_mean;
+	Eigen::MatrixXd inv_sig_coef_x, inv_sig_y;
+	for (int i = 0; i < num_mat; ++i) {
+		if (is_row::value) {
+			inv_sig_coef_x = other_sig_lower.triangularView<Eigen::Lower>().solve(other_coef.transpose() * x[i].transpose());
+			inv_sig_y = other_sig_lower.triangularView<Eigen::Lower>().solve(y[i].transpose());
+		} else {
+			inv_sig_coef_x = other_sig_lower.triangularView<Eigen::Lower>().solve(other_coef.transpose() * x[i]);
+			inv_sig_y = other_sig_lower.triangularView<Eigen::Lower>().solve(y[i]);
+		}
+		post_cov += inv_sig_coef_x.transpose() * inv_sig_coef_x;
+		post_solve += inv_sig_coef_x.transpose() * inv_sig_y;
+	}
+	Eigen::LLT<Eigen::MatrixXd> llt_of_prec;
+	double temp_penalty = 0;
+	do {
+		llt_of_prec.compute((
+			post_cov + temp_penalty * Eigen::MatrixXd::Identity(post_cov.rows(), post_cov.cols())
+		).selfadjointView<Eigen::Lower>());
+		temp_penalty += .01;
+	} while (llt_of_prec.info() == Eigen::NumericalIssue && temp_penalty < .1);
+	if (llt_of_prec.info() == Eigen::NumericalIssue) {
+		eigen_assert("LLT failed in precision sampler.");
+	}
+	Eigen::MatrixXd post_mean = llt_of_prec.solve(post_solve);
+	for (int i = 0; i < prior_mean.rows(); ++i) {
+		for (int j = 0; j < prior_mean.cols(); ++j) {
+			coef(i, j) = bvhar::normal_rand(rng); // MN(0, I_n, I_k)
+		}
+	}
+	coef = llt_of_prec.matrixU().solve(coef * sig_lower.transpose()) + post_mean;
+	// R^T Q_1 = I, C^T Q_2 = I
+	if (factor_restrict) {
+		restrict_mat_loading(prior_mean.cols(), dim_factor, coef, sig_lower);
+	}
+}
 
 } // namespace baymar
 } // namespace baecon
