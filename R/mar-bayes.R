@@ -233,12 +233,12 @@ mar_bayes <- function(y,
     param_prior$col_prior_prec <- c(param_prior$col_prior_prec, rep(1, ncol_factor))
     row_factor_init <- get_bmar_init(factor_row_spec, num_chains, nrow_factor)
     col_factor_init <- get_bmar_init(factor_col_spec, num_chains, ncol_factor)
-    # for (i in (seq_along(response) + p)) {
-    #   design[[i - p]] <- bdiag(append(
-    #     design[[i - p]],
-    #     list(matrix(1L, nrow = nrow_factor, ncol = ncol_factor))
-    #   ))
-    # }
+    for (i in (seq_along(response) + p)) {
+      design[[i - p]] <- bdiag(append(
+        design[[i - p]],
+        list(matrix(1L, nrow = nrow_factor, ncol = ncol_factor))
+      ))
+    }
     name_factor_row <- paste("factor_row", seq_len(nrow_factor), sep = "_")
     name_factor_col <- paste("factor_col", seq_len(ncol_factor), sep = "_")
     name_row_lag <- c(name_row_lag, name_factor_row)
