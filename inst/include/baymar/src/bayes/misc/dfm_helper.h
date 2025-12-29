@@ -7,18 +7,18 @@
 namespace baecon {
 namespace baymar {
 
-inline void init_factor(std::vector<Eigen::MatrixXd>& factor_mat, int nrow_factor, int ncol_factor, BVHAR_BHRNG& rng) {
-	int num_design = factor_mat.size();
-	Eigen::MatrixXd mat_mn(nrow_factor, ncol_factor);
-	for (int i = 0; i < num_design; ++i) {
-		for (int j = 0; j < nrow_factor; ++j) {
-			for (int k = 0; k < ncol_factor; ++k) {
-				mat_mn(j, k) = bvhar::normal_rand(rng);
-			}
-		}
-		factor_mat[i] = mat_mn;
-	}
-}
+// inline void init_factor(std::vector<Eigen::MatrixXd>& factor_mat, int nrow_factor, int ncol_factor, BVHAR_BHRNG& rng) {
+// 	int num_design = factor_mat.size();
+// 	Eigen::MatrixXd mat_mn(nrow_factor, ncol_factor);
+// 	for (int i = 0; i < num_design; ++i) {
+// 		for (int j = 0; j < nrow_factor; ++j) {
+// 			for (int k = 0; k < ncol_factor; ++k) {
+// 				mat_mn(j, k) = bvhar::normal_rand(rng);
+// 			}
+// 		}
+// 		factor_mat[i] = mat_mn;
+// 	}
+// }
 
 inline void draw_wn_factor(std::vector<Eigen::MatrixXd>& factor_mat, int rows_factor, int cols_factor,
 													 Eigen::Ref<const Eigen::MatrixXd> row_coef, Eigen::Ref<const Eigen::MatrixXd> row_sig_lower,
