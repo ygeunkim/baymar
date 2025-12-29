@@ -193,48 +193,48 @@ inline void draw_coef_sig(
 		}
 	}
 	coef = llt_of_prec.matrixU().solve(coef * sig_lower.transpose()) + post_mean;
-	if (std::is_same<xType, Eigen::SparseMatrix<double>>::value) {
-		int ncol_coef = prior_mean.cols();
-		int nrow_coef = prior_mean.rows() - nrow_exogen_coef - dim_factor;
-		int lag = nrow_coef / ncol_coef;
-		if (!is_row::value) {
-			// int num_col = prior_mean.cols();
-			// int nrow_col_coef = prior_mean.rows() - nrow_exogen_coef - dim_factor;
-			// int lag = nrow_col_coef / num_col; // when B = (B_1, ..., B_p)^T
-			// restrict_mar_col(num_col, lag, coef.topRows(nrow_col_coef), sig_lower, llt_of_prec);
-			restrict_mar_col(ncol_coef, lag, coef.topRows(nrow_coef), sig_lower, post_cov.topLeftCorner(nrow_coef, nrow_coef));
-			if (nrow_exogen_coef > 0) {
-				restrict_mar_col(ncol_coef, exogen_lag + 1, coef.middleRows(nrow_coef, nrow_exogen_coef), sig_lower, post_cov.block(nrow_coef, nrow_coef, nrow_exogen_coef, nrow_exogen_coef));
-			}
-		} else {
-			for (int i = 0; i < lag; ++i) {
-				if (coef.middleRows(i * ncol_coef, ncol_coef).trace() <= 0) { // tr(A_i) > 0
-					coef.middleRows(i * ncol_coef, ncol_coef) *= -1.0;
-					other_coef.middleRows(i * other_dim, other_dim) *= -1.0;
-				}
-				// if (coef(i * ncol_coef, 0) <= 0) { // A_i(1,1) > 0
-				// 	coef.middleRows(i * ncol_coef, ncol_coef) *= -1.0;
-				// 	other_coef.middleRows(i * other_dim, other_dim) *= -1.0;
-				// }
-			}
-			// Add trace > 0 for exogen part later
-			if (nrow_exogen_coef > 0) {
-				int sign_x = coef(nrow_coef, 0) > 0 ? 1 : -1;
-				coef.middleRows(nrow_coef, nrow_exogen_coef) *= sign_x;
-			}
-			// if (coef(0, 0) <= 0) {
-			// 	coef = -coef;
-			// 	other_coef = -other_coef;
-			// }
-		}
-	}
-	if (dim_factor > 0 && factor_restrict) {
-		restrict_mat_loading(prior_mean.cols(), dim_factor, coef.bottomRows(dim_factor), sig_lower);
-		// int sign_11 = coef.bottomRows(dim_factor)(0, 0) > 0 ? 1 : -1;
-		// coef.bottomRows(dim_factor) /= (sign_11 * coef.bottomRows(dim_factor).squaredNorm());
-		// Eigen::MatrixXd lower_sig_post = bvhar::kronecker_eigen(sig_lower.inverse().eval(), llt_of_prec.matrixL().toDenseMatrix());
-		// restrict_mat_loading2(prior_mean.cols(), dim_factor, coef.bottomRows(dim_factor), lower_sig_post);
-	}
+	// if (std::is_same<xType, Eigen::SparseMatrix<double>>::value) {
+	// 	int ncol_coef = prior_mean.cols();
+	// 	int nrow_coef = prior_mean.rows() - nrow_exogen_coef - dim_factor;
+	// 	int lag = nrow_coef / ncol_coef;
+	// 	if (!is_row::value) {
+	// 		// int num_col = prior_mean.cols();
+	// 		// int nrow_col_coef = prior_mean.rows() - nrow_exogen_coef - dim_factor;
+	// 		// int lag = nrow_col_coef / num_col; // when B = (B_1, ..., B_p)^T
+	// 		// restrict_mar_col(num_col, lag, coef.topRows(nrow_col_coef), sig_lower, llt_of_prec);
+	// 		restrict_mar_col(ncol_coef, lag, coef.topRows(nrow_coef), sig_lower, post_cov.topLeftCorner(nrow_coef, nrow_coef));
+	// 		if (nrow_exogen_coef > 0) {
+	// 			restrict_mar_col(ncol_coef, exogen_lag + 1, coef.middleRows(nrow_coef, nrow_exogen_coef), sig_lower, post_cov.block(nrow_coef, nrow_coef, nrow_exogen_coef, nrow_exogen_coef));
+	// 		}
+	// 	} else {
+	// 		for (int i = 0; i < lag; ++i) {
+	// 			if (coef.middleRows(i * ncol_coef, ncol_coef).trace() <= 0) { // tr(A_i) > 0
+	// 				coef.middleRows(i * ncol_coef, ncol_coef) *= -1.0;
+	// 				other_coef.middleRows(i * other_dim, other_dim) *= -1.0;
+	// 			}
+	// 			// if (coef(i * ncol_coef, 0) <= 0) { // A_i(1,1) > 0
+	// 			// 	coef.middleRows(i * ncol_coef, ncol_coef) *= -1.0;
+	// 			// 	other_coef.middleRows(i * other_dim, other_dim) *= -1.0;
+	// 			// }
+	// 		}
+	// 		// Add trace > 0 for exogen part later
+	// 		if (nrow_exogen_coef > 0) {
+	// 			int sign_x = coef(nrow_coef, 0) > 0 ? 1 : -1;
+	// 			coef.middleRows(nrow_coef, nrow_exogen_coef) *= sign_x;
+	// 		}
+	// 		// if (coef(0, 0) <= 0) {
+	// 		// 	coef = -coef;
+	// 		// 	other_coef = -other_coef;
+	// 		// }
+	// 	}
+	// }
+	// if (dim_factor > 0 && factor_restrict) {
+	// 	restrict_mat_loading(prior_mean.cols(), dim_factor, coef.bottomRows(dim_factor), sig_lower);
+	// 	// int sign_11 = coef.bottomRows(dim_factor)(0, 0) > 0 ? 1 : -1;
+	// 	// coef.bottomRows(dim_factor) /= (sign_11 * coef.bottomRows(dim_factor).squaredNorm());
+	// 	// Eigen::MatrixXd lower_sig_post = bvhar::kronecker_eigen(sig_lower.inverse().eval(), llt_of_prec.matrixL().toDenseMatrix());
+	// 	// restrict_mat_loading2(prior_mean.cols(), dim_factor, coef.bottomRows(dim_factor), lower_sig_post);
+	// }
 }
 
 // template <bool isRow = true, typename xType = Eigen::SparseMatrix<double>>

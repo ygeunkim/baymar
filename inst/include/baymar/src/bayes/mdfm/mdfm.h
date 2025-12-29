@@ -201,8 +201,10 @@ protected:
 		BVHAR_DEBUG_LOG(debug_logger, "updateRecords() called");
 		mniw_record->assignRecords(
 			mcmc_step, row_coef, row_sig_lower, col_coef, col_sig_lower,
-			nrow_row_coef, num_row, 0, 0,
-			nrow_col_coef, num_col, 0, 0
+			// nrow_row_coef, num_row, 0, 0,
+			// nrow_col_coef, num_col, 0, 0
+			0, num_row, 0, nrow_row_coef,
+			0, num_col, 0, nrow_col_coef
 		);
 		factor_updater->updateRecords(mcmc_step);
 		row_updater->updateRecords(mcmc_step);
