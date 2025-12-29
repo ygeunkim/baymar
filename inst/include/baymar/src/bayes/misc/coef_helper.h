@@ -228,13 +228,13 @@ inline void draw_coef_sig(
 	// 		// }
 	// 	}
 	// }
-	// if (dim_factor > 0 && factor_restrict) {
-	// 	restrict_mat_loading(prior_mean.cols(), dim_factor, coef.bottomRows(dim_factor), sig_lower);
-	// 	// int sign_11 = coef.bottomRows(dim_factor)(0, 0) > 0 ? 1 : -1;
-	// 	// coef.bottomRows(dim_factor) /= (sign_11 * coef.bottomRows(dim_factor).squaredNorm());
-	// 	// Eigen::MatrixXd lower_sig_post = bvhar::kronecker_eigen(sig_lower.inverse().eval(), llt_of_prec.matrixL().toDenseMatrix());
-	// 	// restrict_mat_loading2(prior_mean.cols(), dim_factor, coef.bottomRows(dim_factor), lower_sig_post);
-	// }
+	if (dim_factor > 0 && factor_restrict) {
+		restrict_mat_loading(prior_mean.cols(), dim_factor, coef.bottomRows(dim_factor), sig_lower);
+		// int sign_11 = coef.bottomRows(dim_factor)(0, 0) > 0 ? 1 : -1;
+		// coef.bottomRows(dim_factor) /= (sign_11 * coef.bottomRows(dim_factor).squaredNorm());
+		// Eigen::MatrixXd lower_sig_post = bvhar::kronecker_eigen(sig_lower.inverse().eval(), llt_of_prec.matrixL().toDenseMatrix());
+		// restrict_mat_loading2(prior_mean.cols(), dim_factor, coef.bottomRows(dim_factor), lower_sig_post);
+	}
 }
 
 // template <bool isRow = true, typename xType = Eigen::SparseMatrix<double>>

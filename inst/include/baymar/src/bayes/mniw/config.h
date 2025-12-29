@@ -143,28 +143,24 @@ struct MatMniwRecords {
 		// row_coef_record.row(id).head(nrow_row_coef * num_row) = row_coef.topRows(nrow_row_coef).reshaped();
 		// col_coef_record.row(id).head(nrow_col_coef * num_col) = col_coef.topRows(nrow_col_coef).reshaped();
 		// Should add restriction to exogen part later
-		if (nrow_row_exogen > 0) {
+		if (nrow_row_exogen > 0 && nrow_col_exogen > 0) {
 			row_coef_record.row(id).segment(nrow_row_coef * num_row, nrow_row_exogen * num_row) = row_coef.middleRows(nrow_row_coef, nrow_row_exogen).reshaped();
-		}
-		if (nrow_col_exogen > 0) {
 			col_coef_record.row(id).segment(nrow_col_coef * num_col, nrow_col_exogen * num_col) = col_coef.middleRows(nrow_col_coef, nrow_col_exogen).reshaped();
 		}
+		// if (nrow_factor > 0 && ncol_factor > 0) {
+		// 	Eigen::MatrixXd row_factor_coef = row_coef.bottomRows(nrow_factor);
+		// 	Eigen::MatrixXd col_factor_coef = col_coef.bottomRows(ncol_factor);
+		// 	sign00 = row_factor_coef(0, 0) > 0 ? 1.0 : -1.0;
+		// 	fro_norm = row_factor_coef.norm();
+		// 	row_factor_coef /= sign00 * fro_norm;
+		// 	col_factor_coef *= sign00 * fro_norm;
+		// 	row_coef_record.row(id).tail(nrow_factor * num_row) = row_factor_coef.reshaped();
+		// 	col_coef_record.row(id).tail(ncol_factor * num_col) = col_factor_coef.reshaped();
+		// }
 		if (nrow_factor > 0 && ncol_factor > 0) {
-			Eigen::MatrixXd row_factor_coef = row_coef.bottomRows(nrow_factor);
-			Eigen::MatrixXd col_factor_coef = col_coef.bottomRows(ncol_factor);
-			sign00 = row_factor_coef(0, 0) > 0 ? 1.0 : -1.0;
-			fro_norm = row_factor_coef.norm();
-			row_factor_coef /= sign00 * fro_norm;
-			col_factor_coef *= sign00 * fro_norm;
-			row_coef_record.row(id).tail(nrow_factor * num_row) = row_factor_coef.reshaped();
-			col_coef_record.row(id).tail(ncol_factor * num_col) = col_factor_coef.reshaped();
+			row_coef_record.row(id).tail(nrow_factor * num_row) = row_coef.bottomRows(nrow_factor).reshaped();
+			col_coef_record.row(id).tail(ncol_factor * num_col) = col_coef.bottomRows(ncol_factor).reshaped();
 		}
-		// if (nrow_factor > 0) {
-		// 	row_coef_record.row(id).tail(nrow_factor * num_row) = row_coef.bottomRows(nrow_factor).reshaped();
-		// }
-		// if (ncol_factor > 0) {
-		// 	col_coef_record.row(id).tail(ncol_factor * num_col) = col_coef.bottomRows(ncol_factor).reshaped();
-		// }
 		fro_norm = (row_sig_lower * row_sig_lower.transpose()).norm();
 		int lower_id = 0;
 		for (int j = 0; j < row_sig_lower.cols(); ++j) {
