@@ -69,9 +69,12 @@ public:
 		std::vector<Eigen::SparseMatrix<double>>& x, std::vector<Eigen::MatrixXd>& y,
 		Eigen::Ref<const Eigen::MatrixXd> row_coef, Eigen::Ref<const Eigen::MatrixXd> col_coef
 	) override {
+		int nrow_row_coef = row_coef.rows();
+		int nrow_col_coef = col_coef.rows();
 		for (int i = 0; i < num_design; ++i) {
 			// resid[i] = y[i] - row_coef.topRows(row_coef.rows() - nrow_factor).transpose() * x[i].topLeftCorner(x[i].rows() - nrow_factor, x[i].cols() - ncol_factor) * col_coef.topRows(col_coef.rows() - ncol_factor);
-			resid[i] = y[i] - row_coef.transpose() * x[i].topLeftCorner(x[i].rows() - nrow_factor, x[i].cols() - ncol_factor) * col_coef;
+			// resid[i] = y[i] - row_coef.transpose() * x[i].topLeftCorner(x[i].rows() - nrow_factor, x[i].cols() - ncol_factor) * col_coef;
+			resid[i] = y[i] - row_coef.transpose() * x[i].topLeftCorner(nrow_row_coef, nrow_col_coef) * col_coef;
 			// resid[i] = y[i] - row_coef.transpose() * x[i] * col_coef;
 		}
 	}
