@@ -125,28 +125,28 @@ public:
 	// 	return resid;
 	// }
 
-	// template <bool isRow = true>
-	// void updateCoefCov(
-	// 	Eigen::Ref<Eigen::MatrixXd> coef, Eigen::Ref<Eigen::MatrixXd> sig_lower,
-	// 	Eigen::Ref<const Eigen::MatrixXd> other_coef, Eigen::Ref<const Eigen::MatrixXd> other_sig_lower,
-	// 	Eigen::Ref<const Eigen::MatrixXd> prior_mean, Eigen::Ref<const Eigen::VectorXd> prior_prec,
-	// 	Eigen::Ref<const Eigen::MatrixXd> iw_scl,
-	// 	double iw_df, int other_dim,
-	// 	BVHAR_BHRNG& rng
-	// ) {
-	// 	int dim_factor = ncol_factor;
-	// 	using is_row = std::integral_constant<bool, isRow>;
-	// 	if (is_row::value) {
-	// 		dim_factor = nrow_factor;
-	// 	}
-	// 	draw_coef_only<isRow, Eigen::MatrixXd>(
-	// 		coef, sig_lower,
-	// 		other_coef, other_sig_lower,
-	// 		prior_mean, prior_prec, iw_scl, iw_df,
-	// 		num_design, other_dim, dim_factor, need_restrict,
-	// 		factor_mat, resid, rng
-	// 	);
-	// }
+	template <bool isRow = true>
+	void updateCoefCov(
+		Eigen::Ref<Eigen::MatrixXd> coef, Eigen::Ref<Eigen::MatrixXd> sig_lower,
+		Eigen::Ref<const Eigen::MatrixXd> other_coef, Eigen::Ref<const Eigen::MatrixXd> other_sig_lower,
+		Eigen::Ref<const Eigen::MatrixXd> prior_mean, Eigen::Ref<const Eigen::VectorXd> prior_prec,
+		Eigen::Ref<const Eigen::MatrixXd> iw_scl,
+		double iw_df, int other_dim,
+		BVHAR_BHRNG& rng
+	) {
+		int dim_factor = ncol_factor;
+		using is_row = std::integral_constant<bool, isRow>;
+		if (is_row::value) {
+			dim_factor = nrow_factor;
+		}
+		draw_coef_only<isRow, Eigen::MatrixXd>(
+			coef, sig_lower,
+			other_coef, other_sig_lower,
+			prior_mean, prior_prec, iw_scl, iw_df,
+			num_design, other_dim, dim_factor, need_restrict,
+			factor_mat, resid, rng
+		);
+	}
 
 	template <bool isRow = true>
 	void updateCoefCov(
