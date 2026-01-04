@@ -125,23 +125,23 @@ struct MatMniwRecords {
 		int nrow_row_coef, int num_row, int nrow_row_exogen, int nrow_factor,
 		int nrow_col_coef, int num_col, int nrow_col_exogen, int ncol_factor
 	) {
-		double sign00, fro_norm;
-		if (nrow_row_coef > 0 && nrow_col_coef > 0) {
-			int lag = nrow_row_coef / num_row;
-			Eigen::MatrixXd mar_row_coef = row_coef.topRows(nrow_row_coef);
-			Eigen::MatrixXd mar_col_coef = col_coef.topRows(nrow_col_coef);
-			for (int i = 0; i < lag; ++i) {
-				// A_i / c_1 & B_i / c_1, c_1 = sign(A(0,0)) ||A||_F
-				sign00 = mar_row_coef(i * num_row, 0) > 0 ? 1.0 : -1.0;
-				fro_norm = mar_row_coef.middleRows(i * num_row, num_row).norm();
-				mar_row_coef.middleRows(i * num_row, num_row) /= sign00 * fro_norm;
-				mar_col_coef.middleRows(i * num_col, num_col) *= sign00 * fro_norm;
-			}
-			row_coef_record.row(id).head(nrow_row_coef * num_row) = mar_row_coef.reshaped();
-			col_coef_record.row(id).head(nrow_col_coef * num_col) = mar_col_coef.reshaped();
-		}
-		// row_coef_record.row(id).head(nrow_row_coef * num_row) = row_coef.topRows(nrow_row_coef).reshaped();
-		// col_coef_record.row(id).head(nrow_col_coef * num_col) = col_coef.topRows(nrow_col_coef).reshaped();
+		// double sign00, fro_norm;
+		// if (nrow_row_coef > 0 && nrow_col_coef > 0) {
+		// 	int lag = nrow_row_coef / num_row;
+		// 	Eigen::MatrixXd mar_row_coef = row_coef.topRows(nrow_row_coef);
+		// 	Eigen::MatrixXd mar_col_coef = col_coef.topRows(nrow_col_coef);
+		// 	for (int i = 0; i < lag; ++i) {
+		// 		// A_i / c_1 & B_i / c_1, c_1 = sign(A(0,0)) ||A||_F
+		// 		sign00 = mar_row_coef(i * num_row, 0) > 0 ? 1.0 : -1.0;
+		// 		fro_norm = mar_row_coef.middleRows(i * num_row, num_row).norm();
+		// 		mar_row_coef.middleRows(i * num_row, num_row) /= sign00 * fro_norm;
+		// 		mar_col_coef.middleRows(i * num_col, num_col) *= sign00 * fro_norm;
+		// 	}
+		// 	row_coef_record.row(id).head(nrow_row_coef * num_row) = mar_row_coef.reshaped();
+		// 	col_coef_record.row(id).head(nrow_col_coef * num_col) = mar_col_coef.reshaped();
+		// }
+		row_coef_record.row(id).head(nrow_row_coef * num_row) = row_coef.topRows(nrow_row_coef).reshaped();
+		col_coef_record.row(id).head(nrow_col_coef * num_col) = col_coef.topRows(nrow_col_coef).reshaped();
 		// Should add restriction to exogen part later
 		if (nrow_row_exogen > 0 && nrow_col_exogen > 0) {
 			row_coef_record.row(id).segment(nrow_row_coef * num_row, nrow_row_exogen * num_row) = row_coef.middleRows(nrow_row_coef, nrow_row_exogen).reshaped();
@@ -161,7 +161,7 @@ struct MatMniwRecords {
 			row_coef_record.row(id).tail(nrow_factor * num_row) = row_coef.bottomRows(nrow_factor).reshaped();
 			col_coef_record.row(id).tail(ncol_factor * num_col) = col_coef.bottomRows(ncol_factor).reshaped();
 		}
-		fro_norm = (row_sig_lower * row_sig_lower.transpose()).norm();
+		// fro_norm = (row_sig_lower * row_sig_lower.transpose()).norm();
 		int lower_id = 0;
 		for (int j = 0; j < row_sig_lower.cols(); ++j) {
 			for (int i = j; i < row_sig_lower.cols(); ++i) {
@@ -169,13 +169,15 @@ struct MatMniwRecords {
 				// Can be assigned in R:
 				// matrix[lower.tri(matrix, diag = TRUE)] <- row_vector
 				// matrix[upper.tri(matrix, diag = FALSE)] <- matrix[lower.tri(matrix, diag = FALSE)]
-				row_sigma_record(id, lower_id++) = row_sig_lower.row(i).head(j + 1).dot(row_sig_lower.row(j).head(j + 1)) / fro_norm;
+				row_sigma_record(id, lower_id++) = row_sig_lower.row(i).head(j + 1).dot(row_sig_lower.row(j).head(j + 1));
+				// row_sigma_record(id, lower_id++) = row_sig_lower.row(i).head(j + 1).dot(row_sig_lower.row(j).head(j + 1)) / fro_norm;
 			}
 		}
 		lower_id = 0;
 		for (int j = 0; j < col_sig_lower.cols(); ++j) {
 			for (int i = j; i < col_sig_lower.cols(); ++i) {
-				col_sigma_record(id, lower_id++) = col_sig_lower.row(i).head(j + 1).dot(col_sig_lower.row(j).head(j + 1)) * fro_norm;
+				col_sigma_record(id, lower_id++) = col_sig_lower.row(i).head(j + 1).dot(col_sig_lower.row(j).head(j + 1));
+				// col_sigma_record(id, lower_id++) = col_sig_lower.row(i).head(j + 1).dot(col_sig_lower.row(j).head(j + 1)) * fro_norm;
 			}
 		}
 	}
