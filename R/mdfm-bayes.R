@@ -126,7 +126,9 @@ mdfm_bayes <- function(y,
   col_init <- get_bmar_init(col_spec, num_chains, nrow_col_coef)
   row_prior_type <- get_prior_id(row_spec$prior)
   col_prior_type <- get_prior_id(col_spec$prior)
-  if (factor_spec$factor_type == "var") {
+  if (factor_spec$factor_type == "rw") {
+    param_init <- get_fac_rw_init(param_init, size_factor)
+  } else if (factor_spec$factor_type == "var") {
     param_init <- get_fac_var_coef_init(param_init, size_factor, lag_factor)
   } else if (factor_spec$factor_type == "mar") {
     param_prior <- append(
@@ -203,6 +205,10 @@ mdfm_bayes <- function(y,
     num_col <- c(nrow_data, nrow_data, ncol_data, ncol_data, ncol_factor, ncol_factor, ncol_factor)
     num_row <- c(nrow_row_coef, nrow_data, nrow_col_coef, ncol_data, nrow_factor, nrow_factor, nrow_factor)
     num_matrix <- c(rep(0, 4), length(y_list), lag_factor, 0)
+  } else if (factor_spec$factor_type == "rw") {
+    num_col <- c(nrow_data, nrow_data, ncol_data, ncol_data, ncol_factor, ncol_factor)
+    num_row <- c(nrow_row_coef, nrow_data, nrow_col_coef, ncol_data, nrow_factor, nrow_factor)
+    num_matrix <- c(rep(0, 4), length(y_list), 0)
   }
   if (is.matmnspec(row_spec)) {
     num_col <- c(num_col, 1)

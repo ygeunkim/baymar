@@ -270,7 +270,9 @@ mar_bayes <- function(y,
       # )
       factor_spec
     )
-    if (factor_spec$factor_type == "var") {
+    if (factor_spec$factor_type == "rw") {
+      param_init <- get_fac_rw_init(param_init, size_factor)
+    } else if (factor_spec$factor_type == "var") {
       param_init <- get_fac_var_coef_init(param_init, size_factor, lag_factor)
     } else if (factor_spec$factor_type == "mar") {
       param_prior <- append(
@@ -381,6 +383,11 @@ mar_bayes <- function(y,
       num_col <- c(num_col, nrow_data, ncol_data, ncol_factor, ncol_factor, ncol_factor)
       num_row <- c(num_row, nrow_factor, ncol_factor, nrow_factor, nrow_factor, nrow_factor)
       num_matrix <- c(num_matrix, rep(0, 2), length(y_list) - p, lag_factor, 0)
+    } else if (factor_spec$factor_type == "rw") {
+      # Factor ~ RW
+      num_col <- c(num_col, nrow_data, ncol_data, ncol_factor, ncol_factor)
+      num_row <- c(num_row, nrow_factor, ncol_factor, nrow_factor, nrow_factor)
+      num_matrix <- c(num_matrix, rep(0, 2), length(y_list) - p, 0)
     }
   }
   if (is.matmnspec(row_spec)) {

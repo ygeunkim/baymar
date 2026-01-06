@@ -336,6 +336,21 @@ get_bmar_init <- function(bayes_spec, num_chains, nrow_coef) {
 }
 
 #' @noRd
+get_fac_rw_init <- function(param_init, size_factor) {
+  lapply(
+    param_init,
+    function(init) {
+      append(
+        init,
+        list(
+          factor_arprec_init = exp(runif(size_factor, -1, 0))
+        )
+      )
+    }
+  )
+}
+
+#' @noRd
 get_fac_var_coef_init <- function(param_init, size_factor, factor_lag) {
   lapply(
     param_init,

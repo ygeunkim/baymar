@@ -8,6 +8,7 @@
 set_matfactor(
   nrow_factor = 0,
   ncol_factor = 0,
+  is_rw = FALSE,
   factor_lag = 1,
   row_spec = NULL,
   col_spec = row_spec,
@@ -22,6 +23,8 @@ By default, \code{0} which will does not use factor term.}
 
 \item{ncol_factor}{Number of columns of factor matrix.
 By default, \code{0} which will does not use factor term.}
+
+\item{is_rw}{If \code{TRUE}, factor follows random walk process.}
 
 \item{factor_lag}{Lag of factor autoregressions.}
 

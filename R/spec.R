@@ -111,6 +111,7 @@ set_mar_ssvs <- function(spike_grid = 100L,
 #' By default, `0` which will does not use factor term.
 #' @param ncol_factor Number of columns of factor matrix.
 #' By default, `0` which will does not use factor term.
+#' @param is_rw If `TRUE`, factor follows random walk process.
 #' @param factor_lag Lag of factor autoregressions.
 #' @param row_spec Row coefficient specification in factor MAR
 #' @param col_spec Column coefficient specification in factor MAR
@@ -120,6 +121,7 @@ set_mar_ssvs <- function(spike_grid = 100L,
 #' @order 1
 #' @export
 set_matfactor <- function(nrow_factor = 0, ncol_factor = 0,
+                          is_rw = FALSE,
                           factor_lag = 1,
                           row_spec = NULL,
                           col_spec = row_spec,
@@ -131,8 +133,15 @@ set_matfactor <- function(nrow_factor = 0, ncol_factor = 0,
     nrow_factor = nrow_factor,
     ncol_factor = ncol_factor,
     lag = factor_lag,
-    factor_type = "wn"
+    factor_type = ifelse(is_rw, "rw", "wn")
   )
+  if (is_rw && factor_lag == 0) {
+    if (!inherits(factor_arsig, "ldltspec")) {
+      stop("Use 'set_ldlt()' for 'factor_arsig'.")
+    }
+    res$shape <- factor_arsig$shape
+    res$scale <- factor_arsig$scale
+  }
   if (factor_lag > 0) {
     if (!is.null(row_spec) && !is.null(col_spec)) {
       if (!is.bmarspec(row_spec)) {
@@ -153,6 +162,10 @@ set_matfactor <- function(nrow_factor = 0, ncol_factor = 0,
       res$scale <- factor_arsig$scale
       res$factor_type <- "var"
     }
+  }
+  if (is_rw) {
+    res$factor_type <- "rw"
+    res$lag <- 1
   }
   # res <- list(
   #   nrow_factor = nrow_factor,
