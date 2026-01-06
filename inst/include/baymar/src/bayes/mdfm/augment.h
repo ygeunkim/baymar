@@ -238,7 +238,7 @@ public:
 			dfm_sig, ig_shp, ig_scl,
 			row_coef.transpose(), row_sig_lower,
 			col_coef.transpose(), col_sig_lower,
-			resid, rng
+			y, rng
 		);
 	}
 

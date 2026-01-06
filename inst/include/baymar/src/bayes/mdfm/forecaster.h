@@ -239,6 +239,8 @@ public:
 		BVHAR_STRING factor_model_nm = BVHAR_CAST<BVHAR_STRING>(param_coef_sig["factor_type"]);
 		if (factor_model_nm == "wn") {
 			factor_type = 1;
+		} else if (factor_model_nm == "rw") {
+			factor_type = 4;
 		} else if (factor_model_nm == "var") {
 			factor_type = 2;
 		} else if (factor_model_nm == "mar") {
@@ -391,6 +393,9 @@ protected:
 		} else if (factor_type == 3) {
 			MatDfmMarRecords mdfm_mar_record = mcmc_mdfm->returnStructRecords<MatDfmMarRecords>(0, thin);
 			factor_updater = std::make_unique<MatFactorMarForecaster>(mdfm_mar_record, step, factor_lag, num_row, num_col, nrow_factor, ncol_factor);
+		} else if (factor_type == 4) {
+			auto mdfm_rw_record = mcmc_mdfm->returnStructRecords<MatDfmRwRecords>(0, thin);
+			factor_updater = std::make_unique<MatFactorRwForecaster>(mdfm_rw_record, step, num_row, num_col, nrow_factor, ncol_factor);
 		} else {
 			BVHAR_STOP("Wrong factor type");
 		}
