@@ -8,6 +8,7 @@ help_bmar_fit <- function(row_spec, col_spec, exogen_row_spec = NULL, exogen_col
   if (!is.null(factor_row_spec)) {
     factor_spec <- list(
       set_matfactor(nrow_factor = 2, ncol_factor = 3, factor_lag = 0),
+      set_matfactor(nrow_factor = 2, ncol_factor = 3, factor_lag = 0, is_rw = TRUE),
       set_matfactor(nrow_factor = 2, ncol_factor = 3, factor_lag = 2),
       set_matfactor(nrow_factor = 2, ncol_factor = 3, factor_lag = 2, row_spec = set_mar_horseshoe())
     )
@@ -33,7 +34,7 @@ help_bmar_fit <- function(row_spec, col_spec, exogen_row_spec = NULL, exogen_col
       num_thread = 1
     )
   } else {
-    for (i in 1:3) {
+    for (i in 1:4) {
       set.seed(1)
       mar_bayes(
         toy_data,
