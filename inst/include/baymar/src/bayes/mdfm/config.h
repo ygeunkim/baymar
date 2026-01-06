@@ -10,12 +10,15 @@ namespace baecon {
 namespace baymar {
 
 struct MatDfmParams;
+struct MatDfmRwParams;
 struct MatDfmVarParams;
 struct MatDfmMarParams;
 struct MatDfmInits;
+struct MatDfmRwInits;
 struct MatDfmVarInits;
 struct MatDfmMarInits;
 struct MatDfmRecords;
+struct MatDfmRwRecords;
 struct MatDfmVarRecords;
 struct MatDfmMarRecords;
 
@@ -31,27 +34,46 @@ struct MatDfmParams {
 		_lag(BVHAR_CAST_INT(priors["lag"])) {}
 };
 
-struct MatDfmVarParams : public MatDfmParams {
+struct MatDfmRwParams : public MatDfmParams {
 	Eigen::VectorXd _sig_shp, _sig_scl;
-	Eigen::VectorXd _mean, _prec;
 
-	MatDfmVarParams(int lag, int nrow_factor, int ncol_factor)
+	MatDfmRwParams(int lag, int nrow_factor, int ncol_factor)
 	: MatDfmParams(lag, nrow_factor, ncol_factor),
 		_sig_shp(Eigen::VectorXd::Constant(_size_factor, 2.0)),
-		_sig_scl(Eigen::VectorXd::Ones(_size_factor)),
-		_mean(Eigen::VectorXd::Zero(_lag)), _prec(Eigen::VectorXd::Ones(_lag)) {}
+		_sig_scl(Eigen::VectorXd::Ones(_size_factor)) {}
 
-	MatDfmVarParams(BVHAR_LIST& priors)
-	: MatDfmParams(priors),
-		// _sig_shp(BVHAR_CAST<Eigen::VectorXd>(priors["shape"])),
-		// _sig_scl(BVHAR_CAST<Eigen::VectorXd>(priors["scale"])),
-		_mean(Eigen::VectorXd::Zero(_lag)), _prec(Eigen::VectorXd::Ones(_lag)) {
+	MatDfmRwParams(BVHAR_LIST& priors)
+	: MatDfmParams(priors) {
 		_sig_shp = BVHAR_CAST<Eigen::VectorXd>(priors["shape"]).size() == 1
 			? Eigen::VectorXd::Constant(_size_factor, BVHAR_CAST_INT(priors["shape"]))
 			: BVHAR_CAST<Eigen::VectorXd>(priors["shape"]);
 		_sig_scl = BVHAR_CAST<Eigen::VectorXd>(priors["scale"]).size() == 1
 			? Eigen::VectorXd::Constant(_size_factor, BVHAR_CAST_INT(priors["scale"]))
 			: BVHAR_CAST<Eigen::VectorXd>(priors["scale"]);
+	}
+};
+
+struct MatDfmVarParams : public MatDfmRwParams {
+	// Eigen::VectorXd _sig_shp, _sig_scl;
+	Eigen::VectorXd _mean, _prec;
+
+	MatDfmVarParams(int lag, int nrow_factor, int ncol_factor)
+	: MatDfmRwParams(lag, nrow_factor, ncol_factor),
+		// _sig_shp(Eigen::VectorXd::Constant(_size_factor, 2.0)),
+		// _sig_scl(Eigen::VectorXd::Ones(_size_factor)),
+		_mean(Eigen::VectorXd::Zero(_lag)), _prec(Eigen::VectorXd::Ones(_lag)) {}
+
+	MatDfmVarParams(BVHAR_LIST& priors)
+	: MatDfmRwParams(priors),
+		// _sig_shp(BVHAR_CAST<Eigen::VectorXd>(priors["shape"])),
+		// _sig_scl(BVHAR_CAST<Eigen::VectorXd>(priors["scale"])),
+		_mean(Eigen::VectorXd::Zero(_lag)), _prec(Eigen::VectorXd::Ones(_lag)) {
+		// _sig_shp = BVHAR_CAST<Eigen::VectorXd>(priors["shape"]).size() == 1
+		// 	? Eigen::VectorXd::Constant(_size_factor, BVHAR_CAST_INT(priors["shape"]))
+		// 	: BVHAR_CAST<Eigen::VectorXd>(priors["shape"]);
+		// _sig_scl = BVHAR_CAST<Eigen::VectorXd>(priors["scale"]).size() == 1
+		// 	? Eigen::VectorXd::Constant(_size_factor, BVHAR_CAST_INT(priors["scale"]))
+		// 	: BVHAR_CAST<Eigen::VectorXd>(priors["scale"]);
 	}
 };
 
@@ -68,17 +90,29 @@ struct MatDfmInits {
 	MatDfmInits() {}
 };
 
-struct MatDfmVarInits : public MatDfmInits {
-	Eigen::MatrixXd _init_factor_coef;
+struct MatDfmRwInits : public MatDfmInits {
 	Eigen::VectorXd _init_factor_prec;
 
+	MatDfmRwInits(int size_factor)
+	: _init_factor_prec(Eigen::VectorXd::Ones(size_factor)) {}
+
+	MatDfmRwInits(BVHAR_LIST& init)
+	: _init_factor_prec(BVHAR_CAST<Eigen::VectorXd>(init["factor_arprec_init"])) {}
+};
+
+struct MatDfmVarInits : public MatDfmRwInits {
+	Eigen::MatrixXd _init_factor_coef;
+	// Eigen::VectorXd _init_factor_prec;
+
 	MatDfmVarInits(int size_factor, int lag)
-	: _init_factor_coef(Eigen::MatrixXd::Zero(size_factor, lag)),
-		_init_factor_prec(Eigen::VectorXd::Ones(size_factor)) {}
+	: MatDfmRwInits(size_factor),
+		_init_factor_coef(Eigen::MatrixXd::Zero(size_factor, lag)) {}
+		// _init_factor_prec(Eigen::VectorXd::Ones(size_factor)) {}
 
 	MatDfmVarInits(BVHAR_LIST& init)
-	: _init_factor_coef(BVHAR_CAST<Eigen::MatrixXd>(init["factor_arcoef_init"])),
-		_init_factor_prec(BVHAR_CAST<Eigen::VectorXd>(init["factor_arprec_init"])) {}
+	: MatDfmRwInits(init),
+		_init_factor_coef(BVHAR_CAST<Eigen::MatrixXd>(init["factor_arcoef_init"])) {}
+		// _init_factor_prec(BVHAR_CAST<Eigen::VectorXd>(init["factor_arprec_init"])) {}
 };
 
 struct MatDfmMarInits : public MatDfmInits {
@@ -115,6 +149,15 @@ struct MatDfmRecords {
 	virtual void assignRecords(
 		int id,
 		std::vector<Eigen::MatrixXd>& factor_mat,
+		const Eigen::VectorXd& factor_prec,
+		int num_design, int size_factor
+	) {
+		assignRecords(id, factor_mat, num_design, size_factor);
+	}
+
+	virtual void assignRecords(
+		int id,
+		std::vector<Eigen::MatrixXd>& factor_mat,
 		const Eigen::MatrixXd& factor_coef, const Eigen::VectorXd& factor_prec,
 		int num_design, int size_factor
 	) {
@@ -142,6 +185,8 @@ struct MatDfmRecords {
 		list["F_record"] = factor_record;
 	}
 
+	virtual void updateParams(const int id, Eigen::Ref<Eigen::VectorXd> factor_sig) {}
+
 	virtual void updateParams(const int id, Eigen::Ref<Eigen::MatrixXd> factor_coef, Eigen::Ref<Eigen::VectorXd> factor_sig, const int lag) {}
 
 	virtual void updateParams(
@@ -155,6 +200,8 @@ struct MatDfmRecords {
 		);
 	}
 
+	virtual MatDfmRwRecords returnDfmRwRecords(int num_iter, int num_burn, int thin) const;
+
 	virtual MatDfmVarRecords returnDfmVarRecords(int num_iter, int num_burn, int thin) const;
 
 	virtual MatDfmMarRecords returnDfmMarRecords(int num_iter, int num_burn, int thin) const;
@@ -163,22 +210,68 @@ struct MatDfmRecords {
 	RecordType returnRecords(int num_iter, int num_burn, int thin) const;
 };
 
-struct MatDfmVarRecords : public MatDfmRecords {
-	Eigen::MatrixXd factor_coef_record;
+struct MatDfmRwRecords : public MatDfmRecords {
 	Eigen::MatrixXd factor_prec_record;
+
+	MatDfmRwRecords() {}
+
+	MatDfmRwRecords(int num_iter, int num_design, int size_factor)
+	: MatDfmRecords(num_iter, num_design, size_factor),
+		factor_prec_record(Eigen::MatrixXd::Zero(num_iter + 1, size_factor)) {}
+	
+	MatDfmRwRecords(const Eigen::MatrixXd& factor_record, const Eigen::MatrixXd& factor_prec_record)
+	: MatDfmRecords(factor_record), factor_prec_record(factor_prec_record) {}
+	
+	virtual ~MatDfmRwRecords() = default;
+
+	void assignRecords(
+		int id,
+		std::vector<Eigen::MatrixXd>& factor_mat,
+		const Eigen::VectorXd& factor_prec,
+		int num_design, int size_factor
+	) override {
+		MatDfmRecords::assignRecords(id, factor_mat, num_design, size_factor);
+		factor_prec_record.row(id) = factor_prec; // this is sigma, not precision -> change the name
+	}
+
+	void appendRecords(BVHAR_LIST& list) override {
+		list["F_record"] = factor_record;
+		list["Lambda_record"] = factor_prec_record;
+	}
+
+	void updateParams(const int id, Eigen::Ref<Eigen::VectorXd> factor_sig) override {
+		// factor_sig.array() = 1 / factor_prec_record.row(id).array();
+		factor_sig = factor_prec_record.row(id).transpose();
+	}
+
+	MatDfmRwRecords returnDfmRwRecords(int num_iter, int num_burn, int thin) const override {
+		return MatDfmRwRecords(
+			bvhar::thin_record(factor_record, num_iter, num_burn, thin).derived(),
+			bvhar::thin_record(factor_prec_record, num_iter, num_burn, thin).derived()
+		);
+	}
+};
+
+struct MatDfmVarRecords : public MatDfmRwRecords {
+	Eigen::MatrixXd factor_coef_record;
+	// Eigen::MatrixXd factor_prec_record;
 
 	MatDfmVarRecords() {}
 
 	MatDfmVarRecords(int num_iter, int num_design, int size_factor, int lag)
-	: MatDfmRecords(num_iter, num_design, size_factor),
-		factor_coef_record(Eigen::MatrixXd::Zero(num_iter + 1, size_factor * lag)),
-		factor_prec_record(Eigen::MatrixXd::Zero(num_iter + 1, size_factor)) {}
+	: MatDfmRwRecords(num_iter, num_design, size_factor),
+		factor_coef_record(Eigen::MatrixXd::Zero(num_iter + 1, size_factor * lag)) {}
+		// factor_coef_record(Eigen::MatrixXd::Zero(num_iter + 1, size_factor * lag)),
+		// factor_prec_record(Eigen::MatrixXd::Zero(num_iter + 1, size_factor)) {}
 	
 	MatDfmVarRecords(const Eigen::MatrixXd& factor_record, const Eigen::MatrixXd& factor_coef_record, const Eigen::MatrixXd& factor_prec_record)
-	: MatDfmRecords(factor_record),
-		factor_coef_record(factor_coef_record), factor_prec_record(factor_prec_record) {}
+	: MatDfmRwRecords(factor_record, factor_prec_record), factor_coef_record(factor_coef_record) {}
+		// factor_coef_record(factor_coef_record), factor_prec_record(factor_prec_record) {}
 	
 	virtual ~MatDfmVarRecords() = default;
+
+	using MatDfmRwRecords::assignRecords;
+  using MatDfmRwRecords::updateParams;
 	
 	void assignRecords(
 		int id,
@@ -186,9 +279,10 @@ struct MatDfmVarRecords : public MatDfmRecords {
 		const Eigen::MatrixXd& factor_coef, const Eigen::VectorXd& factor_prec,
 		int num_design, int size_factor
 	) override {
-		MatDfmRecords::assignRecords(id, factor_mat, num_design, size_factor);
+		// MatDfmRecords::assignRecords(id, factor_mat, num_design, size_factor);
+		MatDfmRwRecords::assignRecords(id, factor_mat, factor_prec, num_design, size_factor);
 		factor_coef_record.row(id) = factor_coef.reshaped();
-		factor_prec_record.row(id) = factor_prec; // this is sigma, not precision -> change the name
+		// factor_prec_record.row(id) = factor_prec; // this is sigma, not precision -> change the name
 	}
 
 	void appendRecords(BVHAR_LIST& list) override {
@@ -205,7 +299,8 @@ struct MatDfmVarRecords : public MatDfmRecords {
 			factor_coef.middleRows(i * size_factor, size_factor) = temp_coef.col(i).asDiagonal();
 		}
 		// factor_sig.array() = 1 / factor_prec_record.row(id).array();
-		factor_sig = factor_prec_record.row(id).transpose();
+		MatDfmRwRecords::updateParams(id, factor_sig);
+		// factor_sig = factor_prec_record.row(id).transpose();
 	}
 
 	MatDfmVarRecords returnDfmVarRecords(int num_iter, int num_burn, int thin) const override {
@@ -282,6 +377,10 @@ struct MatDfmMarRecords : public MatDfmRecords {
 	}
 };
 
+inline MatDfmRwRecords MatDfmRecords::returnDfmRwRecords(int num_iter, int num_burn, int thin) const {
+	return MatDfmRwRecords();
+}
+
 inline MatDfmVarRecords MatDfmRecords::returnDfmVarRecords(int num_iter, int num_burn, int thin) const {
 	return MatDfmVarRecords();
 }
@@ -293,6 +392,11 @@ inline MatDfmMarRecords MatDfmRecords::returnDfmMarRecords(int num_iter, int num
 template <>
 inline MatDfmRecords MatDfmRecords::returnRecords(int num_iter, int num_burn, int thin) const {
   return returnDfmRecords(num_iter, num_burn, thin);
+}
+
+template <>
+inline MatDfmRwRecords MatDfmRecords::returnRecords(int num_iter, int num_burn, int thin) const {
+  return returnDfmRwRecords(num_iter, num_burn, thin);
 }
 
 template <>
@@ -313,7 +417,13 @@ inline void initialize_matdfm_record(
 	BVHAR_OPTIONAL<BVHAR_STRING> omegar_name = BVHAR_NULLOPT, BVHAR_OPTIONAL<BVHAR_STRING> omegac_name = BVHAR_NULLOPT
 ) {
 	BVHAR_PY_LIST factor_list = dfm_record[factor_name];
-	if (rho_name && lambda_name) {
+	if (lambda_name && !rho_name) {
+		BVHAR_PY_LIST factor_prec_list = dfm_record[*lambda_name];
+		record = std::make_unique<MatDfmRwRecords>(
+			BVHAR_CAST<Eigen::MatrixXd>(factor_list[chain_id]),
+			BVHAR_CAST<Eigen::MatrixXd>(factor_prec_list[chain_id])
+		);
+	} else if (rho_name && lambda_name) {
 		BVHAR_PY_LIST factor_coef_list = dfm_record[*rho_name];
 		BVHAR_PY_LIST factor_prec_list = dfm_record[*lambda_name];
 		record = std::make_unique<MatDfmVarRecords>(
