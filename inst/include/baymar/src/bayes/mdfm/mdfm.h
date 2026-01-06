@@ -142,6 +142,7 @@ protected:
 	double row_iw_df, col_iw_df;
 
 	virtual void updateFactor() {
+		BVHAR_DEBUG_LOG(debug_logger, "updateFactor() called");
 		factor_updater->updateFactor(
 			row_coef, row_sig_lower,
 			col_coef, col_sig_lower,

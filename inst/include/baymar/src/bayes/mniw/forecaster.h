@@ -11,6 +11,7 @@ namespace baymar {
 
 class MatMniwExogenForecaster;
 class MatFactorForecaster;
+class MatFactorRwForecaster;
 class MatFactorVarForecaster;
 class MatFactorMarForecaster;
 class MatMniwForecaster;
@@ -93,6 +94,38 @@ protected:
 	// Eigen::VectorXd vec_normal;
 	// std::unique_ptr<bvhar::OlsSimulator> factor_generator;
 	std::unique_ptr<MatDfmRecords> mdfm_record;
+};
+
+class MatFactorRwForecaster : public MatFactorForecaster {
+public:
+	MatFactorRwForecaster(const MatDfmRwRecords& records, int step, int num_row, int num_col, int nrow_factor, int ncol_factor)
+	: MatFactorForecaster(step, 0, num_row, num_col, nrow_factor, ncol_factor),
+		factor_sig(Eigen::VectorXd::Ones(size_factor)) {
+		mdfm_record = std::make_unique<MatDfmRwRecords>(records);
+		num_design = mdfm_record->factor_record.cols() / size_factor;
+	}
+	virtual ~MatFactorRwForecaster() = default;
+	
+	void updateVarCoef(const int id, BVHAR_BHRNG& rng) override {
+		BVHAR_DEBUG_LOG(debug_logger, "updateVarCoef(id={}) called", id);
+		if (factor_lag == 0) {
+			updateDesign(id);
+			return;
+		}
+		mdfm_record->updateParams(id, factor_sig);
+		Eigen::VectorXd vec_normal(size_factor);
+		Eigen::VectorXd factor_pred = mdfm_record->factor_record.row(id).segment((num_design - 1) * size_factor, size_factor);
+		for (int h = 0; h < step; ++h) {
+			for (int i = 0; i < size_factor; ++i) {
+				vec_normal[i] = bvhar::normal_rand(rng) * sqrt(factor_sig[i]);
+			}
+			factor_pred.array() += vec_normal.array();
+			exogen.middleRows(h * nrow_exogen, nrow_exogen) = bvhar::unvectorize(factor_pred, ncol_exogen);
+		}
+	}
+
+private:
+	Eigen::VectorXd factor_sig;
 };
 
 class MatFactorVarForecaster : public MatFactorForecaster {
@@ -225,6 +258,11 @@ inline std::unique_ptr<MatFactorForecaster> initialize_matfactorforecaster(
 		initialize_matdfm_record(mdfm_record, chain_id, fit_record, f_name, rho_name, prec_name);
 		auto* mdfm_var_record = dynamic_cast<MatDfmVarRecords*>(mdfm_record.get());
 		factor_forecaster = std::make_unique<MatFactorVarForecaster>(*mdfm_var_record, step, factor_lag, num_row, num_col, nrow_factor, ncol_factor);
+	} else if (BVHAR_CONTAINS(fit_record, "Lambda_record")) {
+		BVHAR_STRING prec_name = "Lambda_record";
+		initialize_matdfm_record(mdfm_record, chain_id, fit_record, f_name, BVHAR_NULLOPT, prec_name);
+		auto* mdfm_rw_record = dynamic_cast<MatDfmRwRecords*>(mdfm_record.get());
+		factor_forecaster = std::make_unique<MatFactorRwForecaster>(*mdfm_rw_record, step, num_row, num_col, nrow_factor, ncol_factor);
 	} else if (BVHAR_CONTAINS(fit_record, "FA_record")) {
 		BVHAR_STRING fa_name = "FA_record";
 		BVHAR_STRING fb_name = "FB_record";
@@ -536,6 +574,8 @@ public:
 			BVHAR_STRING factor_model_nm = BVHAR_CAST<BVHAR_STRING>(param_coef_sig["factor_type"]);
 			if (factor_model_nm == "wn") {
 				factor_type = 1;
+			} else if (factor_model_nm == "rw") {
+				factor_type = 4;
 			} else if (factor_model_nm == "var") {
 				factor_type = 2;
 			} else if (factor_model_nm == "mar") {
@@ -746,6 +786,9 @@ protected:
 			} else if (*factor_type == 3) {
 				auto mdfm_mar_record = mcmc_mniw->returnFactorRecords<MatDfmMarRecords>(0, thin);
 				factor_updater = std::make_unique<MatFactorMarForecaster>(mdfm_mar_record, step, *factor_lag, num_row, num_col, *nrow_factor, *ncol_factor);
+			} else if (*factor_type == 4) {
+				auto mdfm_rw_record = mcmc_mniw->returnFactorRecords<MatDfmRwRecords>(0, thin);
+				factor_updater = std::make_unique<MatFactorRwForecaster>(mdfm_rw_record, step, num_row, num_col, *nrow_factor, *ncol_factor);
 			} else {
 				BVHAR_STOP("Wrong factor type");
 			}

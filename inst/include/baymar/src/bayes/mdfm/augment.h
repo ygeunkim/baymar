@@ -11,6 +11,7 @@ namespace baymar {
 
 class MatAugmenter;
 class MatFactorAugmenter;
+class MatFactorRwAugmenter;
 class MatFactorVarAugmenter;
 class MatFactorMarAugmenter;
 
@@ -199,6 +200,59 @@ protected:
 	std::vector<Eigen::MatrixXd> resid;
 	std::vector<Eigen::MatrixXd> factor_mat; // F_{p + 1}, ..., F_t
 	std::unique_ptr<MatDfmRecords> mdfm_record;
+};
+
+class MatFactorRwAugmenter : public MatFactorAugmenter {
+public:
+	MatFactorRwAugmenter(int num_iter, int num_design, const MatDfmRwParams& params, const MatDfmRwInits& inits)
+	: MatFactorAugmenter(num_iter, num_design, params),
+		dfm_sig(inits._init_factor_prec),
+		ig_shp(params._sig_shp), ig_scl(params._sig_scl) {
+		mdfm_record = std::make_unique<MatDfmRwRecords>(num_iter, num_design, size_factor);
+		need_restrict = true;
+	}
+	virtual ~MatFactorRwAugmenter() = default;
+	
+	void updateFactor(
+		Eigen::Ref<const Eigen::MatrixXd> row_coef, Eigen::Ref<const Eigen::MatrixXd> row_sig_lower,
+		Eigen::Ref<const Eigen::MatrixXd> col_coef, Eigen::Ref<const Eigen::MatrixXd> col_sig_lower,
+		BVHAR_BHRNG& rng
+	) override {
+		draw_rw_factor(
+			factor_mat, nrow_factor, ncol_factor,
+			dfm_sig, ig_shp, ig_scl,
+			row_coef.transpose(), row_sig_lower,
+			col_coef.transpose(), col_sig_lower,
+			resid, rng
+		);
+	}
+
+	void updateFactor(
+		Eigen::Ref<const Eigen::MatrixXd> row_coef, Eigen::Ref<const Eigen::MatrixXd> row_sig_lower,
+		Eigen::Ref<const Eigen::MatrixXd> col_coef, Eigen::Ref<const Eigen::MatrixXd> col_sig_lower,
+		std::vector<Eigen::MatrixXd>& y,
+		BVHAR_BHRNG& rng
+	) override {
+		draw_rw_factor(
+			factor_mat, nrow_factor, ncol_factor,
+			dfm_sig, ig_shp, ig_scl,
+			row_coef.transpose(), row_sig_lower,
+			col_coef.transpose(), col_sig_lower,
+			y, rng
+		);
+	}
+
+	void updateRecords(int id) override {
+		mdfm_record->assignRecords(
+			id,
+			factor_mat, dfm_sig,
+			num_design, size_factor
+		);
+	}
+
+private:
+	Eigen::VectorXd dfm_sig; // lambda_{1, 1}, ..., lambda_{p1, p2}
+	Eigen::VectorXd ig_shp, ig_scl;
 };
 
 class MatFactorVarAugmenter : public MatFactorAugmenter {
@@ -449,6 +503,8 @@ inline std::unique_ptr<MatFactorAugmenter> initialize_factoraugmenter(
 	int factor_type = 0;
 	if (factor_model_nm == "wn") {
 		factor_type = 1;
+	} else if (factor_model_nm == "rw") {
+		factor_type = 4;
 	} else if (factor_model_nm == "var") {
 		factor_type = 2;
 	} else if (factor_model_nm == "mar") {
@@ -481,6 +537,12 @@ inline std::unique_ptr<MatFactorAugmenter> initialize_factoraugmenter(
 			);
 			// MatDfmParams params(param_prior);
 			// augmenter_ptr = std::make_unique<MatFactorMarAugmenter>(num_iter, num_design, params);
+			return augmenter_ptr;
+		}
+		case 4: {
+			MatDfmRwParams params(param_prior);
+			MatDfmRwInits inits(param_init);
+			augmenter_ptr = std::make_unique<MatFactorRwAugmenter>(num_iter, num_design, params, inits);
 			return augmenter_ptr;
 		}
 		default: {
