@@ -6,3 +6,9 @@
 ^\.vscode$
 ^data-raw$
 ^\.github$
+^_pkgdown\.yml$
+^docs$
+^pkgdown$
+^doc$
+^Meta$
+^logo$

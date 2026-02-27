@@ -30,7 +30,6 @@ for (id in 1:num_series) {
         str_replace_all(" ", replacement = "_") |>
         str_replace_all("-", replacement = "_") |>
         str_remove_all("_\\(.*?\\)") |>
-        # str_remove("_$")
         str_remove_all("_by_state.*")
     ) |>
     mutate(
@@ -40,7 +39,7 @@ for (id in 1:num_series) {
 unlink(c(temp_file, temp_xlsx))
 ts_wide <-
   purrr::reduce(ts_mat, left_join, by = c("state", "code", "date")) |>
-  filter(date < "2019-01-01")
+  # filter(date < "2019-01-01") |> 
   arrange(date)
 state_code <-
   ts_wide |>
@@ -51,52 +50,32 @@ ts_long <-
   ts_wide |>
   pivot_longer(-c(state, date), names_to = "series", values_to = "values")
 # Transformation
+# Follow the matlab code choice instead of the paper
+# In matlab code of Chan: only log transformation vs no transformation were used
+# year-over-year growth rate produces -Inf in this dataset
 ts_transform <-
   ts_long |>
-  group_by(state, series) |>
   mutate(
-    values = case_when(
-      series == "initial_claims" ~ log(values),
-      series == "continued_claims" ~ log(values),
-      series == "total_nonfarm" ~ values / lag(values, 4),
-      series == "unemployment_rate" ~ values,
-      series == "new_private_housing_units_authorized_by_building_permits" ~ log(values),
-      series == "all_transactions_house_price_index" ~ values / lag(values, 4)
-    )
+    # values = case_when(
+    #   series %in% c("initial_claims", "continued_claims", "new_private_housing_units_authorized_by_building_permits") ~ log(values),
+    #   series %in% c("total_nonfarm", "all_transactions_house_price_index") ~ values / lag(values, 4),
+    #   series == "unemployment_rate" ~ values
+    # )
+    values = ifelse(
+      series %in% c("initial_claims", "continued_claims", "new_private_housing_units_authorized_by_building_permits"),
+      log(values),
+      values
+    ),
+    .by = c(state, series)
   ) |>
-  ungroup()
-# Remove NA by lag()
-date_na <-
-  ts_transform |>
-  group_by(date) |>
-  summarise(is_na = any(is.na(values)), .groups = "drop") |>
-  filter(is_na) |>
-  pull(date)
-ts_transform <-
-  ts_transform |>
-  filter(!(date %in% date_na)) |>
-  filter(date >= "2005-01-01")
-state_list <- state_code$state
-chanqi2025 <- array(
-  dim = c(
-    length(unique(ts_transform$series)),
-    length(state_list),
-    length(unique(ts_transform$date))
-  ),
-  dimnames = list(
-    unique(ts_transform$series),
-    state_list,
-    unique(ts_transform$date)
+  filter(
+    state != "District of Columbia",
+    date >= "1991-01-01"
   )
-)
-for (tid in seq_along(unique(ts_transform$date))) {
-  chanqi2025[, , tid] <-
-    ts_transform |>
-    filter(date == unique(ts_transform$date)[tid]) |>
-    pivot_wider(names_from = "series", values_from = "values") |>
-    arrange(state) |>
-    select(-state, -date) |>
-    # t() |>
-    as.matrix()
-}
+# 3d array: series x state x date
+chanqi2025 <-
+  xtabs(values ~ series + state + date, data = ts_transform) |>
+  unclass()
+attr(chanqi2025, "call") <- NULL
+names(dimnames(chanqi2025)) <- NULL
 usethis::use_data(chanqi2025, overwrite = TRUE)

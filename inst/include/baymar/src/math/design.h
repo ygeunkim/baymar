@@ -3,6 +3,7 @@
 
 #include <bvhar/utils>
 
+namespace baecon {
 namespace baymar {
 
 inline Eigen::SparseMatrix<double> build_blk_design(const std::vector<Eigen::MatrixXd>& y, int lag) {
@@ -29,12 +30,14 @@ inline std::vector<Eigen::MatrixXd> build_mar_response(const std::vector<Eigen::
 // diag(Y_{t - 1}, ..., Y_{t - p}), t = p + 1, ..., T
 // @param y Y_1, ..., Y_T
 // @param lag MAR lag
-inline std::vector<Eigen::SparseMatrix<double>> build_mar_design(const std::vector<Eigen::MatrixXd>& y, int lag) {
+inline std::vector<Eigen::SparseMatrix<double>> build_mar_design(const std::vector<Eigen::MatrixXd>& y, int lag,
+																																 int nrow_factor = 0, int ncol_factor = 0) {
 	int num_design = y.size() - lag;
 	int num_row = y[0].rows();
 	int num_col = y[0].cols();
 	std::vector<Eigen::SparseMatrix<double>> x(num_design); // t = p + 1, ..., T
-	Eigen::MatrixXd dense_x = Eigen::MatrixXd(num_row * lag, num_col * lag);
+	Eigen::MatrixXd dense_x = Eigen::MatrixXd::Zero(num_row * lag + nrow_factor, num_col * lag + ncol_factor);
+	// Eigen::MatrixXd dense_x = Eigen::MatrixXd::Zero(num_row * lag, num_col * lag);
 	for (int i = 0; i < num_design; ++i) {
 		for (int j = 0; j < lag; ++j) {
 			dense_x.block(j * num_row, j * num_col, num_row, num_col) = y[lag + i - j - 1]; // diag(Y_{t - 1}, ..., Y_{t - p})
@@ -49,14 +52,16 @@ inline std::vector<Eigen::SparseMatrix<double>> build_mar_design(const std::vect
 // @param exogen_lag s
 inline std::vector<Eigen::SparseMatrix<double>> build_mar_design(const std::vector<Eigen::MatrixXd>& y,
 																																 const std::vector<Eigen::MatrixXd>& exogen,
-																																 int lag, int exogen_lag) {
+																																 int lag, int exogen_lag,
+																																 int nrow_factor = 0, int ncol_factor = 0) {
 	int num_design = y.size() - lag;
 	int num_row = y[0].rows();
 	int num_col = y[0].cols();
 	int nrow_exogen = exogen[0].rows();
 	int ncol_exogen = exogen[0].cols();
 	std::vector<Eigen::SparseMatrix<double>> design(num_design); // t = p + 1, ..., T
-	Eigen::MatrixXd dense_x = Eigen::MatrixXd(num_row * lag + nrow_exogen * (exogen_lag + 1), num_col * lag + ncol_exogen * (exogen_lag + 1));
+	Eigen::MatrixXd dense_x = Eigen::MatrixXd::Zero(num_row * lag + nrow_exogen * (exogen_lag + 1) + nrow_factor, num_col * lag + ncol_exogen * (exogen_lag + 1) + ncol_factor);
+	// Eigen::MatrixXd dense_x = Eigen::MatrixXd::Zero(num_row * lag + nrow_exogen * (exogen_lag + 1), num_col * lag + ncol_exogen * (exogen_lag + 1));
 	for (int i = 0; i < num_design; ++i) {
 		for (int j = 0; j < lag; ++j) {
 			dense_x.block(j * num_row, j * num_col, num_row, num_col) = y[lag + i - j - 1]; // Y_{t - 1}, ..., Y_{t - p}
@@ -84,26 +89,48 @@ inline std::vector<Eigen::MatrixXd> marmatrix_to_vector(const Eigen::MatrixXd& y
 	return response;
 }
 
-// y is (Y_1^T, ..., Y_T^T)^T
-inline Eigen::MatrixXd build_dense_design(const Eigen::MatrixXd& y, int lag) {
-	int num_row = y.rows() / lag;
+// y is rbind(Y_1, ..., Y_T)
+// returns diag(Y_T, ..., Y_{T - p + 1})
+inline Eigen::MatrixXd build_dense_design(const Eigen::MatrixXd& y, int num_row, int lag) {
+	// int num_row = y.rows() / lag;
+	int num_data = y.rows() / num_row;
 	int num_col = y.cols();
 	Eigen::MatrixXd dense_x = Eigen::MatrixXd::Zero(num_row * lag, num_col * lag);
 	for (int i = 0; i < lag; ++i) {
-		dense_x.block(i * num_row, i * num_col, num_row, num_col) = y.middleRows(i * num_row, num_row);
+		// dense_x.block(i * num_row, i * num_col, num_row, num_col) = y.middleRows(i * num_row, num_row);
+		dense_x.block(i * num_row, i * num_col, num_row, num_col) = y.middleRows((num_data - 1 - i) * num_row, num_row);
 	}
 	return dense_x;
 }
 
+// Get LLT from the lower part of the symmetric matrix
 inline void fill_lower(Eigen::Ref<Eigen::MatrixXd> lower_matrix, Eigen::Ref<const Eigen::VectorXd> lower_vec) {
 	int dim = lower_matrix.cols();
-  int id = 0;
-	int len = 0;
-	for (int i = 0; i < dim; ++i) {
-		len = dim - i;
-		lower_matrix.col(i).segment(i, len) = lower_vec.segment(id, len);
-		id += len;
+  // int id = 0;
+	// int len = 0;
+	// for (int i = 0; i < dim; ++i) {
+	// 	len = dim - i;
+	// 	lower_matrix.col(i).segment(i, len) = lower_vec.segment(id, len);
+	// 	id += len;
+	// }
+	lower_matrix(0, 0) = sqrt(lower_vec[0]);
+	int lower_id = 1;
+	// for (int i = 1; i < dim; ++i) {
+	// 	lower_matrix(i, 0) = lower_vec[lower_id++] / lower_matrix(0, 0);
+	// 	for (int j = 1; j < i; ++j) {
+	// 		lower_matrix(i, j) = (lower_vec[lower_id++] - lower_matrix.row(i).head(j).dot(lower_matrix.row(j).head(j))) / lower_matrix(j, j);
+	// 	}
+	// 	lower_matrix(i, i) = sqrt(lower_vec[lower_id++] - lower_matrix.row(i).head(i).squaredNorm());
+	// }
+	for (int i = 1; i < dim; ++i) {
+		lower_matrix(i, 0) = lower_vec[lower_id++] / lower_matrix(0, 0);
 	}
+	for (int j = 1; j < dim; ++j) {
+		lower_matrix(j, j) = sqrt(lower_vec[lower_id++] - lower_matrix.row(j).head(j).squaredNorm());
+    for (int i = j + 1; i < dim; ++i) {
+      lower_matrix(i, j) = (lower_vec[lower_id++] - lower_matrix.row(i).head(j).dot(lower_matrix.row(j).head(j))) / lower_matrix(j, j);
+    }
+  }
 }
 
 // Get Y_{p + 1} = A^T X B
@@ -133,6 +160,13 @@ inline void update_x(Eigen::SparseMatrix<double>& x, Eigen::Ref<Eigen::MatrixXd>
 	x = dense_x.sparseView();
 }
 
+inline void append_x(Eigen::SparseMatrix<double>& x, Eigen::Ref<Eigen::MatrixXd> new_x, int num_row, int num_col) {
+	Eigen::MatrixXd dense_x = x.toDense();
+	dense_x.bottomRightCorner(num_row, num_col) = new_x;
+	x = dense_x.sparseView();
+}
+
 } // namespace baymar
+} // namespace baecon
 
 #endif // BAYMAR_MATH_DESIGN_H

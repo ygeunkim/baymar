@@ -2,42 +2,97 @@
 # Generator token: 10BE3573-1514-4C36-9D1C-5A225CD40393
 
 #' @noRd
-estimate_bmar_mniw <- function(num_chains, num_iter, num_burn, thin, x, y, param_coef_sig, coef_sig_init, row_prior, row_init, row_prior_type, col_prior, col_init, col_prior_type, exogen_row_prior, exogen_row_init, exogen_row_prior_type, exogen_rows, exogen_col_prior, exogen_col_init, exogen_col_prior_type, exogen_cols, seed_chain, display_progress, nthreads) {
-    .Call(`_baymar_estimate_bmar_mniw`, num_chains, num_iter, num_burn, thin, x, y, param_coef_sig, coef_sig_init, row_prior, row_init, row_prior_type, col_prior, col_init, col_prior_type, exogen_row_prior, exogen_row_init, exogen_row_prior_type, exogen_rows, exogen_col_prior, exogen_col_init, exogen_col_prior_type, exogen_cols, seed_chain, display_progress, nthreads)
+estimate_bmdfm <- function(num_chains, num_iter, num_burn, thin, y, factor_lag, param_dfm, dfm_init, row_prior, row_init, row_prior_type, col_prior, col_init, col_prior_type, seed_chain, display_progress, nthreads) {
+    .Call(`_baymar_estimate_bmdfm`, num_chains, num_iter, num_burn, thin, y, factor_lag, param_dfm, dfm_init, row_prior, row_init, row_prior_type, col_prior, col_init, col_prior_type, seed_chain, display_progress, nthreads)
 }
 
 #' @noRd
-forecast_bmar_mniw <- function(num_chains, lag, step, response_mat, num_data, fit_record, seed_chain, nthreads) {
-    .Call(`_baymar_forecast_bmar_mniw`, num_chains, lag, step, response_mat, num_data, fit_record, seed_chain, nthreads)
+forecast_bdfm_mniw <- function(num_chains, step, nrow_factor, ncol_factor, factor_lag, fit_record, seed_chain, nthreads, insample) {
+    .Call(`_baymar_forecast_bdfm_mniw`, num_chains, step, nrow_factor, ncol_factor, factor_lag, fit_record, seed_chain, nthreads, insample)
 }
 
 #' @noRd
-forecast_bmarx_mniw <- function(num_chains, lag, step, response_mat, num_data, fit_record, seed_chain, exogen, exogen_lag, nthreads) {
-    .Call(`_baymar_forecast_bmarx_mniw`, num_chains, lag, step, response_mat, num_data, fit_record, seed_chain, exogen, exogen_lag, nthreads)
+roll_bdfm_mniw <- function(y, num_data, num_chains, num_iter, num_burn, thin, fit_record, run_mcmc, param_coef_sig, coef_sig_init, row_prior, row_init, row_prior_type, col_prior, col_init, col_prior_type, factor_rows, factor_cols, factor_lag, step, y_test, get_lpl, use_fit, seed_chain, seed_forecast, display_progress, nthreads) {
+    .Call(`_baymar_roll_bdfm_mniw`, y, num_data, num_chains, num_iter, num_burn, thin, fit_record, run_mcmc, param_coef_sig, coef_sig_init, row_prior, row_init, row_prior_type, col_prior, col_init, col_prior_type, factor_rows, factor_cols, factor_lag, step, y_test, get_lpl, use_fit, seed_chain, seed_forecast, display_progress, nthreads)
 }
 
 #' @noRd
-roll_bmar_mniw <- function(y, lag, num_data, num_chains, num_iter, num_burn, thin, fit_record, run_mcmc, param_coef_sig, coef_sig_init, row_prior, row_init, row_prior_type, col_prior, col_init, col_prior_type, step, y_test, seed_chain, seed_forecast, display_progress, nthreads) {
-    .Call(`_baymar_roll_bmar_mniw`, y, lag, num_data, num_chains, num_iter, num_burn, thin, fit_record, run_mcmc, param_coef_sig, coef_sig_init, row_prior, row_init, row_prior_type, col_prior, col_init, col_prior_type, step, y_test, seed_chain, seed_forecast, display_progress, nthreads)
+expand_bdfm_mniw <- function(y, num_data, num_chains, num_iter, num_burn, thin, fit_record, run_mcmc, param_coef_sig, coef_sig_init, row_prior, row_init, row_prior_type, col_prior, col_init, col_prior_type, factor_rows, factor_cols, factor_lag, step, y_test, get_lpl, use_fit, seed_chain, seed_forecast, display_progress, nthreads) {
+    .Call(`_baymar_expand_bdfm_mniw`, y, num_data, num_chains, num_iter, num_burn, thin, fit_record, run_mcmc, param_coef_sig, coef_sig_init, row_prior, row_init, row_prior_type, col_prior, col_init, col_prior_type, factor_rows, factor_cols, factor_lag, step, y_test, get_lpl, use_fit, seed_chain, seed_forecast, display_progress, nthreads)
 }
 
 #' @noRd
-roll_bmarx_mniw <- function(y, lag, num_data, num_chains, num_iter, num_burn, thin, fit_record, run_mcmc, param_coef_sig, coef_sig_init, row_prior, row_init, row_prior_type, col_prior, col_init, col_prior_type, step, y_test, seed_chain, seed_forecast, display_progress, nthreads, exogen, exogen_lag, exogen_row_prior, exogen_row_init, exogen_row_prior_type, exogen_col_prior, exogen_col_init, exogen_col_prior_type) {
-    .Call(`_baymar_roll_bmarx_mniw`, y, lag, num_data, num_chains, num_iter, num_burn, thin, fit_record, run_mcmc, param_coef_sig, coef_sig_init, row_prior, row_init, row_prior_type, col_prior, col_init, col_prior_type, step, y_test, seed_chain, seed_forecast, display_progress, nthreads, exogen, exogen_lag, exogen_row_prior, exogen_row_init, exogen_row_prior_type, exogen_col_prior, exogen_col_init, exogen_col_prior_type)
+estimate_bmar_mniw <- function(num_chains, num_iter, num_burn, thin, x, y, param_coef_sig, coef_sig_init, row_prior, row_init, row_prior_type, col_prior, col_init, col_prior_type, exogen_row_prior, exogen_row_init, exogen_row_prior_type, exogen_rows, exogen_col_prior, exogen_col_init, exogen_col_prior_type, exogen_cols, exogen_lag, factor_row_prior, factor_row_init, factor_row_prior_type, factor_rows, factor_col_prior, factor_col_init, factor_col_prior_type, factor_cols, factor_lag, seed_chain, display_progress, nthreads) {
+    .Call(`_baymar_estimate_bmar_mniw`, num_chains, num_iter, num_burn, thin, x, y, param_coef_sig, coef_sig_init, row_prior, row_init, row_prior_type, col_prior, col_init, col_prior_type, exogen_row_prior, exogen_row_init, exogen_row_prior_type, exogen_rows, exogen_col_prior, exogen_col_init, exogen_col_prior_type, exogen_cols, exogen_lag, factor_row_prior, factor_row_init, factor_row_prior_type, factor_rows, factor_col_prior, factor_col_init, factor_col_prior_type, factor_cols, factor_lag, seed_chain, display_progress, nthreads)
 }
 
 #' @noRd
-expand_bmar_mniw <- function(y, lag, num_data, num_chains, num_iter, num_burn, thin, fit_record, run_mcmc, param_coef_sig, coef_sig_init, row_prior, row_init, row_prior_type, col_prior, col_init, col_prior_type, step, y_test, seed_chain, seed_forecast, display_progress, nthreads) {
-    .Call(`_baymar_expand_bmar_mniw`, y, lag, num_data, num_chains, num_iter, num_burn, thin, fit_record, run_mcmc, param_coef_sig, coef_sig_init, row_prior, row_init, row_prior_type, col_prior, col_init, col_prior_type, step, y_test, seed_chain, seed_forecast, display_progress, nthreads)
+forecast_bmar_mniw <- function(num_chains, lag, step, response_mat, num_data, nrow_factor, ncol_factor, factor_lag, fit_record, seed_chain, nthreads, insample) {
+    .Call(`_baymar_forecast_bmar_mniw`, num_chains, lag, step, response_mat, num_data, nrow_factor, ncol_factor, factor_lag, fit_record, seed_chain, nthreads, insample)
 }
 
 #' @noRd
-expand_bmarx_mniw <- function(y, lag, num_data, num_chains, num_iter, num_burn, thin, fit_record, run_mcmc, param_coef_sig, coef_sig_init, row_prior, row_init, row_prior_type, col_prior, col_init, col_prior_type, step, y_test, seed_chain, seed_forecast, display_progress, nthreads, exogen, exogen_lag, exogen_row_prior, exogen_row_init, exogen_row_prior_type, exogen_col_prior, exogen_col_init, exogen_col_prior_type) {
-    .Call(`_baymar_expand_bmarx_mniw`, y, lag, num_data, num_chains, num_iter, num_burn, thin, fit_record, run_mcmc, param_coef_sig, coef_sig_init, row_prior, row_init, row_prior_type, col_prior, col_init, col_prior_type, step, y_test, seed_chain, seed_forecast, display_progress, nthreads, exogen, exogen_lag, exogen_row_prior, exogen_row_init, exogen_row_prior_type, exogen_col_prior, exogen_col_init, exogen_col_prior_type)
+forecast_bmarx_mniw <- function(num_chains, lag, step, response_mat, num_data, nrow_factor, ncol_factor, factor_lag, fit_record, seed_chain, exogen, exogen_lag, nthreads, insample) {
+    .Call(`_baymar_forecast_bmarx_mniw`, num_chains, lag, step, response_mat, num_data, nrow_factor, ncol_factor, factor_lag, fit_record, seed_chain, exogen, exogen_lag, nthreads, insample)
 }
 
 #' @noRd
-sim_mar_export <- function(num_sim, num_burn, init, row_coef, col_coef, row_sig, col_sig) {
-    .Call(`_baymar_sim_mar_export`, num_sim, num_burn, init, row_coef, col_coef, row_sig, col_sig)
+roll_bmar_mniw <- function(y, lag, num_data, num_chains, num_iter, num_burn, thin, fit_record, run_mcmc, param_coef_sig, coef_sig_init, row_prior, row_init, row_prior_type, col_prior, col_init, col_prior_type, factor_row_prior, factor_row_init, factor_row_prior_type, factor_rows, factor_col_prior, factor_col_init, factor_col_prior_type, factor_cols, factor_lag, step, y_test, get_lpl, use_fit, seed_chain, seed_forecast, display_progress, nthreads) {
+    .Call(`_baymar_roll_bmar_mniw`, y, lag, num_data, num_chains, num_iter, num_burn, thin, fit_record, run_mcmc, param_coef_sig, coef_sig_init, row_prior, row_init, row_prior_type, col_prior, col_init, col_prior_type, factor_row_prior, factor_row_init, factor_row_prior_type, factor_rows, factor_col_prior, factor_col_init, factor_col_prior_type, factor_cols, factor_lag, step, y_test, get_lpl, use_fit, seed_chain, seed_forecast, display_progress, nthreads)
+}
+
+#' @noRd
+roll_bmarx_mniw <- function(y, lag, num_data, num_chains, num_iter, num_burn, thin, fit_record, run_mcmc, param_coef_sig, coef_sig_init, row_prior, row_init, row_prior_type, col_prior, col_init, col_prior_type, factor_row_prior, factor_row_init, factor_row_prior_type, factor_rows, factor_col_prior, factor_col_init, factor_col_prior_type, factor_cols, factor_lag, step, y_test, get_lpl, use_fit, seed_chain, seed_forecast, display_progress, nthreads, exogen, exogen_lag, exogen_row_prior, exogen_row_init, exogen_row_prior_type, exogen_col_prior, exogen_col_init, exogen_col_prior_type) {
+    .Call(`_baymar_roll_bmarx_mniw`, y, lag, num_data, num_chains, num_iter, num_burn, thin, fit_record, run_mcmc, param_coef_sig, coef_sig_init, row_prior, row_init, row_prior_type, col_prior, col_init, col_prior_type, factor_row_prior, factor_row_init, factor_row_prior_type, factor_rows, factor_col_prior, factor_col_init, factor_col_prior_type, factor_cols, factor_lag, step, y_test, get_lpl, use_fit, seed_chain, seed_forecast, display_progress, nthreads, exogen, exogen_lag, exogen_row_prior, exogen_row_init, exogen_row_prior_type, exogen_col_prior, exogen_col_init, exogen_col_prior_type)
+}
+
+#' @noRd
+expand_bmar_mniw <- function(y, lag, num_data, num_chains, num_iter, num_burn, thin, fit_record, run_mcmc, param_coef_sig, coef_sig_init, row_prior, row_init, row_prior_type, col_prior, col_init, col_prior_type, factor_row_prior, factor_row_init, factor_row_prior_type, factor_rows, factor_col_prior, factor_col_init, factor_col_prior_type, factor_cols, factor_lag, step, y_test, get_lpl, use_fit, seed_chain, seed_forecast, display_progress, nthreads) {
+    .Call(`_baymar_expand_bmar_mniw`, y, lag, num_data, num_chains, num_iter, num_burn, thin, fit_record, run_mcmc, param_coef_sig, coef_sig_init, row_prior, row_init, row_prior_type, col_prior, col_init, col_prior_type, factor_row_prior, factor_row_init, factor_row_prior_type, factor_rows, factor_col_prior, factor_col_init, factor_col_prior_type, factor_cols, factor_lag, step, y_test, get_lpl, use_fit, seed_chain, seed_forecast, display_progress, nthreads)
+}
+
+#' @noRd
+expand_bmarx_mniw <- function(y, lag, num_data, num_chains, num_iter, num_burn, thin, fit_record, run_mcmc, param_coef_sig, coef_sig_init, row_prior, row_init, row_prior_type, col_prior, col_init, col_prior_type, factor_row_prior, factor_row_init, factor_row_prior_type, factor_rows, factor_col_prior, factor_col_init, factor_col_prior_type, factor_cols, factor_lag, step, y_test, get_lpl, use_fit, seed_chain, seed_forecast, display_progress, nthreads, exogen, exogen_lag, exogen_row_prior, exogen_row_init, exogen_row_prior_type, exogen_col_prior, exogen_col_init, exogen_col_prior_type) {
+    .Call(`_baymar_expand_bmarx_mniw`, y, lag, num_data, num_chains, num_iter, num_burn, thin, fit_record, run_mcmc, param_coef_sig, coef_sig_init, row_prior, row_init, row_prior_type, col_prior, col_init, col_prior_type, factor_row_prior, factor_row_init, factor_row_prior_type, factor_rows, factor_col_prior, factor_col_init, factor_col_prior_type, factor_cols, factor_lag, step, y_test, get_lpl, use_fit, seed_chain, seed_forecast, display_progress, nthreads, exogen, exogen_lag, exogen_row_prior, exogen_row_init, exogen_row_prior_type, exogen_col_prior, exogen_col_init, exogen_col_prior_type)
+}
+
+#' @noRd
+sim_mar_process <- function(num_sim, num_burn, lag, init, row_coef, col_coef, row_sig, col_sig, seed) {
+    .Call(`_baymar_sim_mar_process`, num_sim, num_burn, lag, init, row_coef, col_coef, row_sig, col_sig, seed)
+}
+
+#' @noRd
+sim_mar_t_process <- function(num_sim, num_burn, lag, init, row_coef, col_coef, sigma, omega, nu, seed) {
+    .Call(`_baymar_sim_mar_t_process`, num_sim, num_burn, lag, init, row_coef, col_coef, sigma, omega, nu, seed)
+}
+
+#' @noRd
+sim_mdfm_process <- function(num_sim, num_burn, lag, row_coef, col_coef, row_sig, col_sig, factor_init, factor_row_coef, factor_col_coef, factor_row_sig, factor_col_sig, seed) {
+    .Call(`_baymar_sim_mdfm_process`, num_sim, num_burn, lag, row_coef, col_coef, row_sig, col_sig, factor_init, factor_row_coef, factor_col_coef, factor_row_sig, factor_col_sig, seed)
+}
+
+#' @noRd
+sim_mdfm_vec_process <- function(num_sim, num_burn, lag, row_coef, col_coef, row_sig, col_sig, factor_init, factor_coef, factor_sig, seed) {
+    .Call(`_baymar_sim_mdfm_vec_process`, num_sim, num_burn, lag, row_coef, col_coef, row_sig, col_sig, factor_init, factor_coef, factor_sig, seed)
+}
+
+#' @noRd
+sim_mdfm_vec_t_process <- function(num_sim, num_burn, lag, row_coef, col_coef, sigma, omega, nu, factor_init, factor_coef, factor_sig, seed) {
+    .Call(`_baymar_sim_mdfm_vec_t_process`, num_sim, num_burn, lag, row_coef, col_coef, sigma, omega, nu, factor_init, factor_coef, factor_sig, seed)
+}
+
+#' @noRd
+sim_famar_vec_process <- function(num_sim, num_burn, lag, init, row_coef, col_coef, row_sig, col_sig, factor_lag, factor_init, factor_row_coef, factor_col_coef, factor_coef, factor_sig, seed) {
+    .Call(`_baymar_sim_famar_vec_process`, num_sim, num_burn, lag, init, row_coef, col_coef, row_sig, col_sig, factor_lag, factor_init, factor_row_coef, factor_col_coef, factor_coef, factor_sig, seed)
+}
+
+#' @noRd
+sim_famar_vec_t_process <- function(num_sim, num_burn, lag, init, row_coef, col_coef, sigma, omega, nu, factor_lag, factor_init, factor_row_coef, factor_col_coef, factor_coef, factor_sig, seed) {
+    .Call(`_baymar_sim_famar_vec_t_process`, num_sim, num_burn, lag, init, row_coef, col_coef, sigma, omega, nu, factor_lag, factor_init, factor_row_coef, factor_col_coef, factor_coef, factor_sig, seed)
+}
+
+#' @noRd
+ar_ols_sd <- function(y, p, include_mean, penalty) {
+    .Call(`_baymar_ar_ols_sd`, y, p, include_mean, penalty)
 }
 

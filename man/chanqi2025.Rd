@@ -5,7 +5,7 @@
 \alias{chanqi2025}
 \title{Dataset used by Chan and Qi (2025)}
 \format{
-51 (states) x 6 (variables) x 125 (time points) array.
+6 (variables) x 50 (states) x 129 (time points) array.
 }
 \source{
 Source: \url{https://joshuachan.org/code/code_BMAR.html}

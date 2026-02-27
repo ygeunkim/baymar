@@ -3,10 +3,13 @@
 
 #include "./config.h"
 
+namespace baecon {
 namespace baymar {
 
 class MatShrinkageUpdater;
 class MatMinnUpdater;
+class MatHierMinnUpdater;
+class MatSsvsUpdater;
 class MatHsUpdater;
 
 class MatShrinkageUpdater {
@@ -16,10 +19,18 @@ public:
 	virtual void initPrec(Eigen::Ref<Eigen::VectorXd> prior_prec) {}
 	virtual void updatePrec(
 		Eigen::Ref<Eigen::VectorXd> prior_prec,
-		Eigen::Ref<Eigen::MatrixXd> coef, Eigen::Ref<Eigen::MatrixXd> sig_lower,
-		Eigen::Ref<Eigen::MatrixXd> prior_mean,
-		BHRNG& rng
+		Eigen::Ref<const Eigen::MatrixXd> coef, Eigen::Ref<const Eigen::MatrixXd> sig_lower,
+		Eigen::Ref<const Eigen::MatrixXd> prior_mean,
+		BVHAR_BHRNG& rng
 	) {}
+	virtual void updateRecords(int id) {}
+	virtual void appendRecords(BVHAR_LIST& list, const BVHAR_STRING& prefix = "") {}
+	// virtual void appendRowRecords(BVHAR_LIST& list) {}
+	// virtual void appendColRecords(BVHAR_LIST& list) {}
+	// virtual void appendExogenRowRecords(BVHAR_LIST& list) {}
+	// virtual void appendExogenColRecords(BVHAR_LIST& list) {}
+	// virtual void appendFactorRowRecords(BVHAR_LIST& list) {}
+	// virtual void appendFactorColRecords(BVHAR_LIST& list) {}
 };
 
 class MatMinnUpdater : public MatShrinkageUpdater {
@@ -39,23 +50,124 @@ class MatHierMinnUpdater : public MatShrinkageUpdater {
 	public:
 		MatHierMinnUpdater(int num_iter, const MatHierMinnParams& params, const MatHierMinnInits& inits)
 		: MatShrinkageUpdater(num_iter, params, inits),
-			shp(params._shp), rate(params._rate), kappa(inits._kappa) {}
+			shp(params._shp), rate(params._rate), kappa(inits._kappa),
+			kappa_record(Eigen::VectorXd::Zero(num_iter + 1)) {}
 		virtual ~MatHierMinnUpdater() = default;
 		void initPrec(Eigen::Ref<Eigen::VectorXd> prior_prec) override {
 			prior_prec.array() /= kappa;
 		}
+
 		void updatePrec(
 			Eigen::Ref<Eigen::VectorXd> prior_prec,
-			Eigen::Ref<Eigen::MatrixXd> coef, Eigen::Ref<Eigen::MatrixXd> sig_lower,
-			Eigen::Ref<Eigen::MatrixXd> prior_mean,
-			BHRNG& rng
+			Eigen::Ref<const Eigen::MatrixXd> coef, Eigen::Ref<const Eigen::MatrixXd> sig_lower,
+			Eigen::Ref<const Eigen::MatrixXd> prior_mean,
+			BVHAR_BHRNG& rng
 		) override {
 			minnesota_kappa(kappa, prior_mean, prior_prec, coef, sig_lower, shp, rate, rng);
 		}
+
+		void updateRecords(int id) override {
+			kappa_record[id] = kappa;
+		}
+
+		void appendRecords(BVHAR_LIST& list, const BVHAR_STRING& prefix = "") override {
+			list["kappa" + prefix + "_record"] = kappa_record;
+		}
+
+		// void appendRowRecords(BVHAR_LIST& list) override {
+		// 	list["kappaR_record"] = kappa_record;
+		// }
+
+		// void appendColRecords(BVHAR_LIST& list) override {
+		// 	list["kappaC_record"] = kappa_record;
+		// }
+
+		// void appendExogenRowRecords(BVHAR_LIST& list) override {
+		// 	list["kappaXr_record"] = kappa_record;
+		// }
+
+		// void appendExogenColRecords(BVHAR_LIST& list) override {
+		// 	list["kappaXc_record"] = kappa_record;
+		// }
+
+		// void appendFactorRowRecords(BVHAR_LIST& list) override {
+		// 	list["kappaFr_record"] = kappa_record;
+		// }
+
+		// void appendFactorColRecords(BVHAR_LIST& list) override {
+		// 	list["kappaFc_record"] = kappa_record;
+		// }
 	
 	private:
 		double shp, rate, kappa;
-	};
+		Eigen::VectorXd kappa_record;
+};
+
+class MatSsvsUpdater : public MatShrinkageUpdater {
+public:
+	MatSsvsUpdater(int num_iter, const MatSsvsParams& params, const MatSsvsInits& inits)
+	: MatShrinkageUpdater(num_iter, params, inits),
+		grid_size(params._grid_size),
+		ig_shape(params._slab_shape), ig_scl(params._slab_scl), s1(params._s1), s2(params._s2),
+		spike_scl(inits._spike_scl), dummy(inits._dummy), weight(inits._weight), slab(inits._slab),
+		slab_weight(Eigen::VectorXd::Ones(slab.size())),
+		// slab_weight(Eigen::VectorXd::Ones(weight.size())),
+		scl_record(Eigen::VectorXd::Ones(num_iter + 1)),
+		slab_record(Eigen::MatrixXd::Ones(num_iter + 1, slab.size())),
+		dummy_record(Eigen::MatrixXd::Ones(num_iter + 1, dummy.size())),
+		weight_record(Eigen::MatrixXd::Zero(num_iter + 1, weight.size())) {
+	}
+
+	virtual ~MatSsvsUpdater() = default;
+	
+	void initPrec(Eigen::Ref<Eigen::VectorXd> prior_prec) override {
+		prior_prec = 1 / (dummy.array() * slab.array() + (1 - dummy.array()) * slab.array() * spike_scl);
+	}
+
+	void updatePrec(
+		Eigen::Ref<Eigen::VectorXd> prior_prec,
+		Eigen::Ref<const Eigen::MatrixXd> coef, Eigen::Ref<const Eigen::MatrixXd> sig_lower,
+		Eigen::Ref<const Eigen::MatrixXd> prior_mean,
+		BVHAR_BHRNG& rng
+	) override {
+		ssvs_sparsity(
+			slab, dummy, weight, prior_mean, coef, sig_lower,
+			ig_shape, ig_scl,
+			s1, s2,
+			spike_scl, grid_size,
+			rng
+		);
+		prior_prec = 1 / (dummy.array() * slab.array() + (1 - dummy.array()) * slab.array() * spike_scl);
+	}
+
+	void updateRecords(int id) override {
+		slab_record.row(id) = slab;
+		scl_record[id] = spike_scl;
+		dummy_record.row(id) = dummy;
+		weight_record.row(id) = weight;
+	}
+
+	void appendRecords(BVHAR_LIST& list, const BVHAR_STRING& prefix = "") override {
+		list["tau" + prefix + "_record"] = slab_record;
+		list["ctau" + prefix + "_record"] = scl_record;
+		list["gamma" + prefix + "_record"] = dummy_record;
+		list["p" + prefix + "_record"] = weight_record;
+	}
+
+private:
+	int grid_size;
+	double ig_shape, ig_scl; // IG hyperparameter for spike sd
+	// Eigen::VectorXd s1, s2; // Beta hyperparameter
+	double s1, s2;
+	double spike_scl; // scaling factor between 0 and 1: spike_sd = c * slab_sd
+	Eigen::VectorXd dummy;
+	Eigen::VectorXd weight;
+	Eigen::VectorXd slab;
+	// double slab;
+	Eigen::VectorXd slab_weight; // pij vector
+	Eigen::VectorXd scl_record;
+	Eigen::MatrixXd slab_record, dummy_record, weight_record;
+};
 
 class MatHsUpdater : public MatShrinkageUpdater {
 public:
@@ -63,33 +175,91 @@ public:
 	: MatShrinkageUpdater(num_iter, params, inits),
 		local_lev(inits._local), global_lev(inits._global),
 		latent_local(Eigen::VectorXd::Zero(local_lev.size())),
-		latent_global(0.0) {}
+		latent_global(0.0),
+		global_record(Eigen::VectorXd::Zero(num_iter + 1)),
+		local_record(Eigen::MatrixXd::Zero(num_iter + 1, local_lev.size())) {}
 	virtual ~MatHsUpdater() = default;
 	
 	void initPrec(Eigen::Ref<Eigen::VectorXd> prior_prec) override {
-		prior_prec.array() /= (global_lev * local_lev.array());
+		prior_prec = global_lev * local_lev;
 	}
 
 	void updatePrec(
 		Eigen::Ref<Eigen::VectorXd> prior_prec,
-		Eigen::Ref<Eigen::MatrixXd> coef, Eigen::Ref<Eigen::MatrixXd> sig_lower,
-		Eigen::Ref<Eigen::MatrixXd> prior_mean,
-		BHRNG& rng
+		Eigen::Ref<const Eigen::MatrixXd> coef, Eigen::Ref<const Eigen::MatrixXd> sig_lower,
+		Eigen::Ref<const Eigen::MatrixXd> prior_mean,
+		BVHAR_BHRNG& rng
 	) override {
-		bvhar::horseshoe_latent(latent_local, local_lev, rng);
-		bvhar::horseshoe_latent(latent_global, global_lev, rng);
-		horseshoe_sparsity(local_lev, global_lev, prior_prec, coef, sig_lower, latent_local, latent_global, rng);
+		// bvhar::horseshoe_latent(latent_local, local_lev, rng);
+		// bvhar::horseshoe_latent(latent_global, global_lev, rng);
+		horseshoe_sparsity(local_lev, global_lev, prior_mean, coef, sig_lower, latent_local, latent_global, rng);
+		prior_prec = global_lev * local_lev;
 	}
+
+	void updateRecords(int id) override {
+		local_record.row(id) = local_lev;
+		global_record[id] = global_lev;
+	}
+
+	void appendRecords(BVHAR_LIST& list, const BVHAR_STRING& prefix = "") override {
+			list["lambda" + prefix + "_record"] = local_record;
+			list["tau" + prefix + "_record"] = global_record;
+		}
+
+	// void appendRowRecords(BVHAR_LIST& list) override {
+	// 	list["lambdaR_record"] = local_record;
+	// 	list["tauR_record"] = global_record;
+	// }
+
+	// void appendColRecords(BVHAR_LIST& list) override {
+	// 	list["lambdaC_record"] = local_record;
+	// 	list["tauC_record"] = global_record;
+	// }
+
+	// void appendExogenRowRecords(BVHAR_LIST& list) override {
+	// 	list["lambdaXr_record"] = local_record;
+	// 	list["tauXr_record"] = global_record;
+	// }
+
+	// void appendExogenColRecords(BVHAR_LIST& list) override {
+	// 	list["lambdaXc_record"] = local_record;
+	// 	list["tauXc_record"] = global_record;
+	// }
+
+	// void appendFactorRowRecords(BVHAR_LIST& list) override {
+	// 	list["lambdaFr_record"] = local_record;
+	// 	list["tauFr_record"] = global_record;
+	// }
+	
+	// void appendFactorColRecords(BVHAR_LIST& list) override {
+	// 	list["lambdaFc_record"] = local_record;
+	// 	list["tauFc_record"] = global_record;
+	// }
 
 private:
 	Eigen::VectorXd local_lev;
 	double global_lev;
 	Eigen::VectorXd latent_local;
 	double latent_global;
+	Eigen::VectorXd global_record;
+	Eigen::MatrixXd local_record;
 };
 
-inline std::unique_ptr<MatShrinkageUpdater> initialize_matshrinkageupdater(int num_iter, LIST& param_prior, LIST& param_init, int prior_type) {
+inline std::unique_ptr<MatShrinkageUpdater> initialize_matshrinkageupdater(
+	int num_iter, BVHAR_LIST& param_prior, BVHAR_LIST& param_init, int prior_type,
+	const BVHAR_STRING& prefix = "", const BVHAR_STRING& suffix = ""
+) {
 	std::unique_ptr<MatShrinkageUpdater> shrinkage_ptr;
+	if (prior_type == 0) {
+		// Should check when using pybind11: BVHAR_STRING is py::str -> change this to std::string?
+		if (BVHAR_CONTAINS(param_init, (prefix + "local_sparsity" + suffix).c_str())) {
+			prior_type = 3;
+		} else if (BVHAR_CONTAINS(param_init, (prefix + "slab" + suffix).c_str())) {
+			prior_type = 2;
+		} else if (BVHAR_CONTAINS(param_init, (prefix + "kappa" + suffix).c_str())) {
+			prior_type = 4;
+		}
+	}
 	switch (prior_type) {
 		case 1: {
 			MatMinnParams params(param_prior);
@@ -97,25 +267,32 @@ inline std::unique_ptr<MatShrinkageUpdater> initialize_matshrinkageupdater(int n
 			shrinkage_ptr = std::make_unique<MatMinnUpdater>(num_iter, params, inits);
 			return shrinkage_ptr;
 		}
+		case 2: {
+			MatSsvsParams params(param_prior);
+			MatSsvsInits inits(param_init);
+			shrinkage_ptr = std::make_unique<MatSsvsUpdater>(num_iter, params, inits);
+			return shrinkage_ptr;
+		}
 		case 3: {
 			MatShrinkageParams params(param_prior);
-			MatGlInits inits(param_init);
+			MatGlInits inits(param_init, prefix, suffix);
 			shrinkage_ptr = std::make_unique<MatHsUpdater>(num_iter, params, inits);
 			return shrinkage_ptr;
 		}
 		case 4: {
-			MatHierMinnParams params(param_prior);
-			MatHierMinnInits inits(param_init);
+			MatHierMinnParams params(param_prior, prefix, suffix);
+			MatHierMinnInits inits(param_init, prefix, suffix);
 			shrinkage_ptr = std::make_unique<MatHierMinnUpdater>(num_iter, params, inits);
 			return shrinkage_ptr;
 		}
 		default: {
-			STOP("Not defined yet");
+			BVHAR_STOP("Not defined yet");
 		}
 	}
 	return shrinkage_ptr;
 }
 
 } // namespace baymar
+} // namespace baecon
 
 #endif // BAYMAR_BAYES_SHRINKAGE_SHRINKAGE_H

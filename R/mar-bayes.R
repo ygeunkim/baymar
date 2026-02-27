@@ -6,6 +6,7 @@
 #' @param p VAR lag (Default: 1)
 #' @param exogen Unmodeled matrices
 #' @param s Lag of exogeneous matrices in MARX(p, s). By default, `s = 0`.
+#' @param factor_spec Augmented factor matrix specification.
 #' @param num_chains Number of MCMC chains
 #' @param num_iter MCMC iteration number
 #' @param num_burn Number of burn-in (warm-up). Half of the iteration is the default choice.
@@ -14,12 +15,15 @@
 #' @param col_spec Column coefficient specification
 #' @param exogen_row_spec Exogenous row coefficient prior specification.
 #' @param exogen_col_spec Exogenous column coefficient prior specification.
+#' @param factor_row_spec Factor row coefficient prior specification.
+#' @param factor_col_spec Factor column coefficient prior specification.
 #' @param verbose Progress log
 #' @param num_thread Number of threads
 #' 
 #' @references
-#' Chan, J. C. C. & Qi, Y. (2024). Large Bayesian Tensor VARs with Stochastic Volatility. arXiv.
+#' Chan, J. C. C. & Qi, Y. (2025). Large Bayesian matrix autoregressions. Journal of Econometrics, 105955.
 #' 
+#' Zhang, W. (2025). Bayesian Dynamic Factor Models for High-Dimensional Matrix-Valued Time Series. SSRN Electronic Journal.
 #' @importFrom Matrix bdiag
 #' @importFrom utils tail
 #' @importFrom posterior as_draws_df bind_draws summarise_draws
@@ -29,6 +33,7 @@ mar_bayes <- function(y,
                       p = 1,
                       exogen = NULL,
                       s = 0,
+                      factor_spec = set_matfactor(),
                       num_chains = 1,
                       num_iter = 1000,
                       num_burn = floor(num_iter / 2),
@@ -37,6 +42,8 @@ mar_bayes <- function(y,
                       col_spec = row_spec,
                       exogen_row_spec = row_spec,
                       exogen_col_spec = row_spec,
+                      factor_row_spec = row_spec,
+                      factor_col_spec = col_spec,
                       verbose = FALSE,
                       num_thread = 1) {
   if (!is.array(y)) {
@@ -85,6 +92,25 @@ mar_bayes <- function(y,
   col_exogen_prior <- list()
   row_exogen_init <- list()
   col_exogen_init <- list()
+  nrow_factor <- 0
+  ncol_factor <- 0
+  lag_factor <- 0
+  row_factor_prior_type <- 0
+  col_factor_prior_type <- 0
+  row_factor_prior <- list()
+  col_factor_prior <- list()
+  row_factor_init <- list()
+  col_factor_init <- list()
+  is_famar <- FALSE
+  if (!is.matfactorspec(factor_spec)) {
+    stop("Wrong 'factor_spec'")
+  }
+  if (factor_spec$nrow_factor > 0 && factor_spec$ncol_factor > 0) {
+    nrow_factor <- factor_spec$nrow_factor
+    ncol_factor <- factor_spec$ncol_factor
+    lag_factor <- factor_spec$lag
+    is_famar <- TRUE
+  }
   if (!is.null(exogen)) {
     if (!is.array(exogen)) {
       stop("Provide array.")
@@ -158,8 +184,8 @@ mar_bayes <- function(y,
     num_chains = num_chains,
     nrow_data = nrow_data,
     ncol_data = ncol_data,
-    nrow_row_coef = nrow_row_coef + nrow_exogen_row_coef,
-    nrow_col_coef = nrow_col_coef + nrow_exogen_col_coef
+    nrow_row_coef = nrow_row_coef + nrow_exogen_row_coef + nrow_factor,
+    nrow_col_coef = nrow_col_coef + nrow_exogen_col_coef + ncol_factor
   )
   row_prior <- validate_bmar_prior(row_spec)
   col_prior <- validate_bmar_prior(col_spec)
@@ -189,6 +215,84 @@ mar_bayes <- function(y,
     row_exogen_init <- get_bmar_init(exogen_row_spec, num_chains, nrow_exogen_row_coef)
     col_exogen_init <- get_bmar_init(exogen_col_spec, num_chains, nrow_exogen_col_coef)
   }
+  if (is_famar) {
+    factor_spec <- validate_factor_spec(factor_spec)
+    row_factor_prior <- validate_bmar_prior(factor_row_spec)
+    col_factor_prior <- validate_bmar_prior(factor_col_spec)
+    row_factor_prior_type <- get_prior_id(factor_row_spec$prior)
+    col_factor_prior_type <- get_prior_id(factor_col_spec$prior)
+    param_prior$row_prior_mean <- rbind(
+      param_prior$row_prior_mean,
+      matrix(0L, nrow = nrow_factor, ncol = nrow_data)
+    )
+    param_prior$row_prior_prec <- c(param_prior$row_prior_prec, rep(1, nrow_factor))
+    param_prior$col_prior_mean <- rbind(
+      param_prior$col_prior_mean,
+      matrix(0L, nrow = ncol_factor, ncol = ncol_data)
+    )
+    param_prior$col_prior_prec <- c(param_prior$col_prior_prec, rep(1, ncol_factor))
+    row_factor_init <- get_bmar_init(factor_row_spec, num_chains, nrow_factor)
+    col_factor_init <- get_bmar_init(factor_col_spec, num_chains, ncol_factor)
+    for (i in (seq_along(response) + p)) {
+      design[[i - p]] <- bdiag(append(
+        design[[i - p]],
+        list(matrix(1L, nrow = nrow_factor, ncol = ncol_factor))
+      ))
+    }
+    name_factor_row <- paste("factor_row", seq_len(nrow_factor), sep = "_")
+    name_factor_col <- paste("factor_col", seq_len(ncol_factor), sep = "_")
+    name_row_lag <- c(name_row_lag, name_factor_row)
+    name_col_lag <- c(name_col_lag, name_factor_col)
+    # param_init <- lapply(
+    #   param_init,
+    #   function(init) {
+    #     size_factor <- nrow_factor * ncol_factor
+    #     append(
+    #       init,
+    #       list(
+    #         factor_arcoef_init = matrix(runif(size_factor * lag_factor, -1, 1), ncol = lag_factor),
+    #         factor_arprec_init = exp(runif(size_factor, -1, 0))
+    #       )
+    #     )
+    #   }
+    # )
+    size_factor <- nrow_factor * ncol_factor
+    param_prior <- append(
+      param_prior,
+      # list(
+      #   nrow_factor = nrow_factor,
+      #   ncol_factor = ncol_factor,
+      #   size_factor = size_factor,
+      #   lag = lag_factor,
+      #   factor_type = factor_spec$model,
+      #   shape = factor_spec$arsig$shape,
+      #   scale = factor_spec$arsig$scale
+      # )
+      factor_spec
+    )
+    if (factor_spec$factor_type == "rw") {
+      param_init <- get_fac_rw_init(param_init, size_factor)
+    } else if (factor_spec$factor_type == "var") {
+      param_init <- get_fac_var_coef_init(param_init, size_factor, lag_factor)
+    } else if (factor_spec$factor_type == "mar") {
+      param_prior <- append(
+        param_prior,
+        append(
+          validate_factor_row_spec(factor_spec),
+          validate_factor_col_spec(factor_spec)
+        )
+      )
+      param_init <- get_fac_mar_coef_init(param_init, nrow_factor, ncol_factor, lag_factor)
+      for (i in seq_len(num_chains)) {
+        marfactor_row_init <- get_bmar_init(factor_spec$row_spec, 1, nrow_factor * lag_factor)[[1]]
+        names(marfactor_row_init) <- paste("factor", names(marfactor_row_init), sep = "_")
+        row_init[[i]] <- append(row_init[[i]], marfactor_row_init)
+        marfactor_col_init <- get_bmar_init(factor_spec$col_spec, 1, ncol_factor * lag_factor)[[1]]
+        names(marfactor_col_init) <- paste("factor", names(marfactor_col_init), sep = "_")
+        col_init[[i]] <- append(col_init[[i]], marfactor_col_init)
+      }
+    }
+  }
   res <- estimate_bmar_mniw(
     num_chains = num_chains, num_iter = num_iter, num_burn = num_burn, thin = thinning,
     x = design, y = response,
@@ -197,6 +301,10 @@ mar_bayes <- function(y,
     col_prior = col_prior, col_init = col_init, col_prior_type = col_prior_type,
     exogen_row_prior = row_exogen_prior, exogen_row_init = row_exogen_init, exogen_row_prior_type = row_exogen_prior_type, exogen_rows = nrow_exogen_row_coef,
     exogen_col_prior = col_exogen_prior, exogen_col_init = col_exogen_init, exogen_col_prior_type = col_exogen_prior_type, exogen_cols = nrow_exogen_col_coef,
+    exogen_lag = s,
+    factor_row_prior = row_factor_prior, factor_row_init = row_factor_init, factor_row_prior_type = row_factor_prior_type, factor_rows = nrow_factor,
+    factor_col_prior = col_factor_prior, factor_col_init = col_factor_init, factor_col_prior_type = col_factor_prior_type, factor_cols = ncol_factor,
+    factor_lag = lag_factor,
     seed_chain = sample.int(.Machine$integer.max, size = num_chains),
     display_progress = verbose, nthreads = num_thread
   )
@@ -226,15 +334,144 @@ mar_bayes <- function(y,
       matrix(colMeans(res$D_record), ncol = ncol_data)
     )
   }
+  if (is_famar) {
+    row_coef <- rbind(
+      row_coef,
+      matrix(colMeans(res$G_record), ncol = nrow_data)
+    )
+    col_coef <- rbind(
+      col_coef,
+      matrix(colMeans(res$H_record), ncol = ncol_data)
+    )
+    fac_series <- array(colMeans(res$F_record), dim = c(nrow_factor, ncol_factor, length(y_list) - p))
+  }
   row_sig <- diag(nrow_data)
   row_sig[lower.tri(row_sig, diag = TRUE)] <- colMeans(res$SigmaR_record)
   row_sig[upper.tri(row_sig, diag = FALSE)] <- row_sig[lower.tri(row_sig, diag = FALSE)]
   col_sig <- diag(ncol_data)
   col_sig[lower.tri(col_sig, diag = TRUE)] <- colMeans(res$SigmaC_record)
   col_sig[upper.tri(col_sig, diag = FALSE)] <- col_sig[lower.tri(col_sig, diag = FALSE)]
-  is_symm <- grepl(pattern = "^Sigma", x = param_names)
-  num_col <- c(nrow_data, nrow_data, ncol_data, ncol_data, nrow_data, ncol_data)
-  num_row <- c(nrow_row_coef, nrow_data, nrow_col_coef, ncol_data, nrow_exogen_row_coef, nrow_exogen_col_coef)
+  is_symm <- grepl(pattern = "^Sigma|^Omega", x = param_names)
+  num_col <- c(nrow_data, nrow_data, ncol_data, ncol_data)
+  num_row <- c(nrow_row_coef, nrow_data, nrow_col_coef, ncol_data)
+  num_matrix <- rep(0, 4)
+  if (!is.null(exogen)) {
+    num_col <- c(num_col, nrow_data, ncol_data)
+    num_row <- c(num_row, nrow_exogen_row_coef, nrow_exogen_col_coef)
+    num_matrix <- c(num_matrix, rep(0, 2))
+  }
+  if (is_famar) {
+    if (factor_spec$factor_type == "wn") {
+      num_col <- c(num_col, nrow_data, ncol_data, ncol_factor)
+      num_row <- c(num_row, nrow_factor, ncol_factor, nrow_factor)
+      num_matrix <- c(num_matrix, rep(0, 2), length(y_list) - p)
+    } else if (factor_spec$factor_type == "mar") {
+      # Factor ~ MAR
+      num_col <- c(
+        num_col, nrow_data, ncol_data,
+        ncol_factor, nrow_factor, nrow_factor, ncol_factor, ncol_factor
+      )
+      nrow_factor_row_coef <- nrow_factor * lag_factor
+      nrow_factor_col_coef <- ncol_factor * lag_factor
+      num_row <- c(
+        num_row, nrow_factor, ncol_factor,
+        nrow_factor, nrow_factor_row_coef, nrow_factor, nrow_factor_col_coef, ncol_factor
+      )
+      num_matrix <- c(num_matrix, rep(0, 2), length(y_list) - p, rep(0, 4))
+    } else if (factor_spec$factor_type == "var") {
+      # Factor ~ VAR
+      num_col <- c(num_col, nrow_data, ncol_data, ncol_factor, ncol_factor, ncol_factor)
+      num_row <- c(num_row, nrow_factor, ncol_factor, nrow_factor, nrow_factor, nrow_factor)
+      num_matrix <- c(num_matrix, rep(0, 2), length(y_list) - p, lag_factor, 0)
+    } else if (factor_spec$factor_type == "rw") {
+      # Factor ~ RW
+      num_col <- c(num_col, nrow_data, ncol_data, ncol_factor, ncol_factor)
+      num_row <- c(num_row, nrow_factor, ncol_factor, nrow_factor, nrow_factor)
+      num_matrix <- c(num_matrix, rep(0, 2), length(y_list) - p, 0)
+    }
+  }
+  if (is.matmnspec(row_spec)) {
+    num_col <- c(num_col, 1)
+    num_row <- c(num_row, 0)
+    num_matrix <- c(num_matrix, 0)
+  } else if (is.mathsspec(row_spec)) {
+    num_col <- c(num_col, nrow_row_coef, 1)
+    num_row <- c(num_row, rep(0, 2))
+    num_matrix <- c(num_matrix, rep(0, 2))
+  } else if (inherits(row_spec, "matssvsspec")) {
+    num_col <- c(num_col, nrow_row_coef, 1, rep(nrow_row_coef, 2))
+    num_row <- c(num_row, rep(0, 4))
+    num_matrix <- c(num_matrix, rep(0, 4))
+  }
+  if (is.matmnspec(col_spec)) {
+    num_col <- c(num_col, 1)
+    num_row <- c(num_row, 0)
+    num_matrix <- c(num_matrix, 0)
+  } else if (is.mathsspec(col_spec)) {
+    num_col <- c(num_col, nrow_col_coef, 1)
+    num_row <- c(num_row, rep(0, 2))
+    num_matrix <- c(num_matrix, rep(0, 2))
+  } else if (inherits(col_spec, "matssvsspec")) {
+    num_col <- c(num_col, nrow_col_coef, 1, rep(nrow_col_coef, 2))
+    num_row <- c(num_row, rep(0, 4))
+    num_matrix <- c(num_matrix, rep(0, 4))
+  }
+  if (!is.null(exogen)) {
+    if (is.matmnspec(exogen_row_spec)) {
+      num_col <- c(num_col, 1)
+      num_row <- c(num_row, 0)
+      num_matrix <- c(num_matrix, 0)
+    } else if (is.mathsspec(exogen_row_spec)) {
+      num_col <- c(num_col, nrow_exogen_row_coef, 1)
+      num_row <- c(num_row, rep(0, 2))
+      num_matrix <- c(num_matrix, rep(0, 2))
+    } else if (inherits(exogen_row_spec, "matssvsspec")) {
+      num_col <- c(num_col, nrow_exogen_row_coef, 1, rep(nrow_exogen_row_coef, 2))
+      num_row <- c(num_row, rep(0, 4))
+      num_matrix <- c(num_matrix, rep(0, 4))
+    }
+    if (is.matmnspec(exogen_col_spec)) {
+      num_col <- c(num_col, 1)
+      num_row <- c(num_row, 0)
+      num_matrix <- c(num_matrix, 0)
+    } else if (is.mathsspec(exogen_col_spec)) {
+      num_col <- c(num_col, nrow_exogen_col_coef, 1)
+      num_row <- c(num_row, rep(0, 2))
+      num_matrix <- c(num_matrix, rep(0, 2))
+    } else if (inherits(exogen_col_spec, "matssvsspec")) {
+      num_col <- c(num_col, nrow_exogen_col_coef, 1, rep(nrow_exogen_col_coef, 2))
+      num_row <- c(num_row, rep(0, 4))
+      num_matrix <- c(num_matrix, rep(0, 4))
+    }
+  }
+  if (is_famar) {
+    if (is.matmnspec(factor_row_spec)) {
+      num_col <- c(num_col, 1)
+      num_row <- c(num_row, 0)
+      num_matrix <- c(num_matrix, 0)
+    } else if (is.mathsspec(factor_row_spec)) {
+      num_col <- c(num_col, nrow_factor, 1)
+      num_row <- c(num_row, rep(0, 2))
+      num_matrix <- c(num_matrix, rep(0, 2))
+    } else if (inherits(factor_row_spec, "matssvsspec")) {
+      num_col <- c(num_col, nrow_factor, 1, rep(nrow_factor, 2))
+      num_row <- c(num_row, rep(0, 4))
+      num_matrix <- c(num_matrix, rep(0, 4))
+    }
+    if (is.matmnspec(factor_col_spec)) {
+      num_col <- c(num_col, 1)
+      num_row <- c(num_row, 0)
+      num_matrix <- c(num_matrix, 0)
+    } else if (is.mathsspec(factor_col_spec)) {
+      num_col <- c(num_col, ncol_factor, 1)
+      num_row <- c(num_row, rep(0, 2))
+      num_matrix <- c(num_matrix, rep(0, 2))
+    } else if (inherits(factor_col_spec, "matssvsspec")) {
+      num_col <- c(num_col, ncol_factor, 1, rep(ncol_factor, 2))
+      num_row <- c(num_row, rep(0, 4))
+      num_matrix <- c(num_matrix, rep(0, 4))
+    }
+  }
   # num_row <- c(nrow_row_coef + nrow_exogen_row_coef, nrow_data, nrow_col_coef + nrow_exogen_col_coef, ncol_data)
   res[rec_names] <- lapply(
     seq_along(res[rec_names]),
@@ -242,24 +479,13 @@ mar_bayes <- function(y,
       split_matrix_chain(
         res[rec_names][[id]],
         chain = num_chains, varname = param_names[id],
-        num_row = num_row[id], num_col = num_col[id], is_symm = is_symm[id]
+        num_row = num_row[id], num_col = num_col[id], is_symm = is_symm[id],
+        num_design = num_matrix[id]
       )
     }
   )
   res[rec_names] <- lapply(res[rec_names], as_draws_df)
-  res$param <- bind_draws(
-    res$A_record,
-    res$SigmaR_record,
-    res$B_record,
-    res$SigmaC_record
-  )
-  if (!is.null(exogen)) {
-    res$param <- bind_draws(
-      res$param,
-      res$C_record,
-      res$D_record
-    )
-  }
+  res$param <- Reduce(bind_draws, res[rec_names])
   res[rec_names] <- NULL
   res$param_names <- param_names
   rownames(row_coef) <- name_row_lag
@@ -300,6 +526,18 @@ mar_bayes <- function(y,
     res$s <- s
     res$exogen_row_id <- row_exogen_id
     res$exogen_col_id <- col_exogen_id
+  }
+  if (is_famar) {
+    res$spec <- append(
+      res$spec,
+      list(factor_row = factor_row_spec, factor_col = factor_col_spec, factor = factor_spec)
+    )
+    res$init <- append(
+      res$init,
+      list(factor_row = row_factor_init, factor_col = col_factor_init)
+    )
+    dimnames(fac_series) <- list(name_factor_row, name_factor_col, seq_len(length(y_list) - p) + p)
+    res$factor <- fac_series
   }
   res$call <- match.call()
   res$y <- y

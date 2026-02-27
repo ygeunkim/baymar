@@ -12,7 +12,9 @@
   newxreg,
   num_thread = 1,
   med = FALSE,
+  lpl = FALSE,
   mcmc = TRUE,
+  use_fit = TRUE,
   verbose = FALSE,
   ...
 )
@@ -32,7 +34,11 @@
 
 \item{med}{\ifelse{html}{\href{https://lifecycle.r-lib.org/articles/stages.html#experimental}{\figure{lifecycle-experimental.svg}{options: alt='[Experimental]'}}}{\strong{[Experimental]}} If \code{TRUE}, use median of forecast draws instead of mean (default).}
 
+\item{lpl}{\ifelse{html}{\href{https://lifecycle.r-lib.org/articles/stages.html#experimental}{\figure{lifecycle-experimental.svg}{options: alt='[Experimental]'}}}{\strong{[Experimental]}} Compute log-predictive likelihood (LPL). By default, \code{FALSE}.}
+
 \item{mcmc}{\ifelse{html}{\href{https://lifecycle.r-lib.org/articles/stages.html#experimental}{\figure{lifecycle-experimental.svg}{options: alt='[Experimental]'}}}{\strong{[Experimental]}} If \code{TRUE}, run new MCMC in new windows. By default, \code{TRUE}.}
+
+\item{use_fit}{\ifelse{html}{\href{https://lifecycle.r-lib.org/articles/stages.html#experimental}{\figure{lifecycle-experimental.svg}{options: alt='[Experimental]'}}}{\strong{[Experimental]}} Use \code{object} result for the first window. By default, \code{TRUE}.}
 
 \item{verbose}{Print the progress bar in the console. By default, \code{FALSE}.}
 
