@@ -254,8 +254,8 @@ public:
 		roll_mat.resize(num_horizon);
 		model.resize(num_horizon);
 		out_forecast.resize(num_horizon);
-		lpl_record.resize(num_horizon, num_chains);
-		lpl_record = Eigen::MatrixXd::Zero(num_horizon, num_chains);
+		lpl_record.resize(num_horizon, step);
+		lpl_record = Eigen::MatrixXd::Zero(num_horizon, step);
 	}
 	virtual ~MatDfmOutForecastRun() = default;
 

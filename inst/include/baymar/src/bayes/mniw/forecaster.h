@@ -234,8 +234,9 @@ public:
 			for (int i = 0; i < size_factor; ++i) {
 				vec_normal[i] = bvhar::normal_rand(rng) * sqrt(factor_sig[i]);
 			}
-			factor_mean[h] = factor_coef.transpose() * factor_x;
-			factor_pred = factor_mean[h] + vec_normal;
+			factor_pred = factor_coef.transpose() * factor_x;
+			factor_mean[h] = bvhar::unvectorize(factor_pred, ncol_exogen);;
+			factor_pred.array() += vec_normal.array();
 			tmp_x = factor_x.head((factor_lag - 1) * size_factor);
 			// exogen.middleRows((factor_lag + h) * nrow_exogen, nrow_exogen) = bvhar::unvectorize(factor_pred, ncol_exogen);
 			exogen.middleRows(h * nrow_exogen, nrow_exogen) = bvhar::unvectorize(factor_pred, ncol_exogen);
@@ -308,12 +309,12 @@ public:
 			}
 			error_mat = row_sig_lower * error_mat * col_sig_lower.transpose();
 			factor_mean[h].setZero();
-			for (int i = 0; i < lag; ++i) {
-				factor_mean[h] += mar_row_coef.middleRows(i * nrow_exogen, nrow_exogen).transpose() * factor_x.block(i * num_row, i * num_col, num_row, num_col) * mar_col_coef.middleRows(i * ncol_exogen, ncol_exogen);
+			for (int i = 0; i < factor_lag; ++i) {
+				factor_mean[h] += mar_row_coef.middleRows(i * nrow_exogen, nrow_exogen).transpose() * factor_x.block(i * nrow_exogen, i * ncol_exogen, nrow_exogen, ncol_exogen) * mar_col_coef.middleRows(i * ncol_exogen, ncol_exogen);
 			}
 			factor_pred = factor_mean[h] + error_mat;
-			tmp_x = factor_x.bottomRightCorner(nrow_exogen * (factor_lag - 1), ncol_exogen * (factor_lag - 1));
-			exogen.middleRows(h * nrow_exogen, nrow_exogen) = bvhar::unvectorize(factor_pred, ncol_exogen);
+			tmp_x = factor_x.topLeftCorner(nrow_exogen * (factor_lag - 1), ncol_exogen * (factor_lag - 1));
+			exogen.middleRows(h * nrow_exogen, nrow_exogen) = factor_pred;
 		}
 	}
 
@@ -680,8 +681,8 @@ public:
 		roll_mat.resize(num_horizon);
 		model.resize(num_horizon);
 		out_forecast.resize(num_horizon);
-		lpl_record.resize(num_horizon, num_chains);
-		lpl_record = Eigen::MatrixXd::Zero(num_horizon, num_chains);
+		// lpl_record.resize(num_horizon, num_chains);
+		// lpl_record = Eigen::MatrixXd::Zero(num_horizon, num_chains);
 		if (factor_lag) {
 			BVHAR_STRING factor_model_nm = BVHAR_CAST<BVHAR_STRING>(param_coef_sig["factor_type"]);
 			if (factor_model_nm == "wn") {
