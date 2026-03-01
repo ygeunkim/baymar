@@ -45,12 +45,14 @@ public:
 	MatFactorForecaster(int step, int factor_lag, int num_row, int num_col, int nrow_factor, int ncol_factor)
 	// : MatMniwExogenForecaster(0, Eigen::MatrixXd::Zero((factor_lag + step) * nrow_factor, ncol_factor), factor_lag + step, num_row, num_col),
 	: MatMniwExogenForecaster(0, Eigen::MatrixXd::Zero(step * nrow_factor, ncol_factor), step, num_row, num_col),
-		step(step), factor_lag(factor_lag), size_factor(nrow_factor * ncol_factor) {}
+		step(step), factor_lag(factor_lag), size_factor(nrow_factor * ncol_factor),
+		factor_mean(step, Eigen::MatrixXd::Zero(nrow_factor, ncol_factor)) {}
 
 	MatFactorForecaster(const MatDfmRecords& records, int step, int factor_lag, int num_row, int num_col, int nrow_factor, int ncol_factor)
 	// : MatMniwExogenForecaster(0, Eigen::MatrixXd::Zero((factor_lag + step) * nrow_factor, ncol_factor), factor_lag + step, num_row, num_col),
 	: MatMniwExogenForecaster(0, Eigen::MatrixXd::Zero(step * nrow_factor, ncol_factor), step, num_row, num_col),
-		step(step), factor_lag(factor_lag), size_factor(nrow_factor * ncol_factor) {
+		step(step), factor_lag(factor_lag), size_factor(nrow_factor * ncol_factor),
+		factor_mean(step, Eigen::MatrixXd::Zero(nrow_factor, ncol_factor)) {
 		mdfm_record = std::make_unique<MatDfmRecords>(records);
 		num_design = mdfm_record->factor_record.cols() / size_factor;
 	}
@@ -118,7 +120,7 @@ protected:
 	int size_factor, num_design;
 	// Eigen::VectorXd vec_normal;
 	// std::unique_ptr<bvhar::OlsSimulator> factor_generator;
-	Eigen::MatrixXd factor_mean;
+	std::vector<Eigen::MatrixXd> factor_mean;
 	std::unique_ptr<MatDfmRecords> mdfm_record;
 
 	double computeDensity(
@@ -160,8 +162,8 @@ public:
 		mdfm_record->updateParams(id, factor_sig);
 		Eigen::VectorXd vec_normal(size_factor);
 		Eigen::VectorXd factor_pred = mdfm_record->factor_record.row(id).segment((num_design - 1) * size_factor, size_factor);
-		factor_mean = bvhar::unvectorize(factor_pred, ncol_exogen);
 		for (int h = 0; h < step; ++h) {
+			factor_mean[h] = bvhar::unvectorize(factor_pred, ncol_exogen);
 			for (int i = 0; i < size_factor; ++i) {
 				vec_normal[i] = bvhar::normal_rand(rng) * sqrt(factor_sig[i]);
 			}
@@ -175,12 +177,12 @@ public:
 		Eigen::Ref<const Eigen::MatrixXd> forecast_mean,
 		Eigen::Ref<const Eigen::MatrixXd> mar_row_lower, Eigen::Ref<const Eigen::MatrixXd> mar_col_lower
 	) override {
-		// N(vec(A^T X_{T + h} B + R F_{T + h} C^T), (C otimes R) Lambda (C otimes R)^T + Sigma_c otimes Sigma_r)
-		Eigen::MatrixXd mean_mat = forecast_mean + row_coef.transpose() * factor_mean * col_coef;
+		// N(vec(A^T X_{T + h} B + R F_{T + h - 1} C^T), (C otimes R) Lambda (C otimes R)^T + Sigma_c otimes Sigma_r)
+		Eigen::MatrixXd mean_mat = forecast_mean + row_coef.transpose() * factor_mean[h] * col_coef;
 		Eigen::MatrixXd var_coef = bvhar::kronecker_eigen(col_coef.transpose(), row_coef.transpose());
 		Eigen::MatrixXd noise_lower = bvhar::kronecker_eigen(mar_col_lower, mar_row_lower);
 		Eigen::MatrixXd factor_cov = var_coef * factor_sig.asDiagonal() * var_coef.transpose() + noise_lower * noise_lower.transpose();
-		return computeDensity(valid_vec, forecast_mean, factor_cov);
+		return computeDensity(valid_vec, mean_mat, factor_cov);
 	}
 
 private:
@@ -232,7 +234,8 @@ public:
 			for (int i = 0; i < size_factor; ++i) {
 				vec_normal[i] = bvhar::normal_rand(rng) * sqrt(factor_sig[i]);
 			}
-			factor_pred = factor_coef.transpose() * factor_x + vec_normal;
+			factor_mean[h] = factor_coef.transpose() * factor_x;
+			factor_pred = factor_mean[h] + vec_normal;
 			tmp_x = factor_x.head((factor_lag - 1) * size_factor);
 			// exogen.middleRows((factor_lag + h) * nrow_exogen, nrow_exogen) = bvhar::unvectorize(factor_pred, ncol_exogen);
 			exogen.middleRows(h * nrow_exogen, nrow_exogen) = bvhar::unvectorize(factor_pred, ncol_exogen);
@@ -253,11 +256,11 @@ public:
 	) override {
 		// N(vec(A^T X_{T + h} B + R E(F_{T + h}) C^T), (C otimes R) Lambda (C otimes R)^T + Sigma_c otimes Sigma_r)
 		// E(vec(F_{T + h})) = sum H_i vec(F_{T + h - i})
-		Eigen::MatrixXd mean_mat = forecast_mean + row_coef.transpose() * factor_mean * col_coef;
+		Eigen::MatrixXd mean_mat = forecast_mean + row_coef.transpose() * factor_mean[h] * col_coef;
 		Eigen::MatrixXd var_coef = bvhar::kronecker_eigen(col_coef.transpose(), row_coef.transpose());
 		Eigen::MatrixXd noise_lower = bvhar::kronecker_eigen(mar_col_lower, mar_row_lower);
 		Eigen::MatrixXd factor_cov = var_coef * factor_sig.asDiagonal() * var_coef.transpose() + noise_lower * noise_lower.transpose();
-		return computeDensity(valid_vec, forecast_mean, factor_cov);
+		return computeDensity(valid_vec, mean_mat, factor_cov);
 	}
 
 private:
@@ -304,10 +307,11 @@ public:
 				}
 			}
 			error_mat = row_sig_lower * error_mat * col_sig_lower.transpose();
-			factor_pred = error_mat;
+			factor_mean[h].setZero();
 			for (int i = 0; i < lag; ++i) {
-				factor_pred += mar_row_coef.middleRows(i * nrow_exogen, nrow_exogen).transpose() * last_pvec.block(i * num_row, i * num_col, num_row, num_col) * mar_col_coef.middleRows(i * ncol_exogen, ncol_exogen);
+				factor_mean[h] += mar_row_coef.middleRows(i * nrow_exogen, nrow_exogen).transpose() * factor_x.block(i * num_row, i * num_col, num_row, num_col) * mar_col_coef.middleRows(i * ncol_exogen, ncol_exogen);
 			}
+			factor_pred = factor_mean[h] + error_mat;
 			tmp_x = factor_x.bottomRightCorner(nrow_exogen * (factor_lag - 1), ncol_exogen * (factor_lag - 1));
 			exogen.middleRows(h * nrow_exogen, nrow_exogen) = bvhar::unvectorize(factor_pred, ncol_exogen);
 		}
@@ -320,12 +324,12 @@ public:
 	) override {
 		// N(vec(A^T X_{T + h} B + R E(F_{T + h}) C^T), (C Sig_{fc} C^T) otimes (R Sig_{fr} R^T) + Sigma_c otimes Sigma_r)
 		// E(F_{T + h}) = G^T diag(F_{T + h - 1}, ..., F_{T + h - p_f}) H
-		Eigen::MatrixXd mean_mat = forecast_mean + row_coef.transpose() * factor_mean * col_coef;
+		Eigen::MatrixXd mean_mat = forecast_mean + row_coef.transpose() * factor_mean[h] * col_coef;
 		Eigen::MatrixXd var_coef = bvhar::kronecker_eigen(col_coef.transpose(), row_coef.transpose());
 		Eigen::MatrixXd factor_mar_lower = bvhar::kronecker_eigen(col_sig_lower, row_sig_lower);
 		Eigen::MatrixXd noise_lower = bvhar::kronecker_eigen(mar_col_lower, mar_row_lower);
 		Eigen::MatrixXd factor_cov = var_coef * factor_mar_lower * factor_mar_lower.transpose() * var_coef.transpose() + noise_lower * noise_lower.transpose();
-		return computeDensity(valid_vec, forecast_mean, factor_cov);
+		return computeDensity(valid_vec, mean_mat, factor_cov);
 	}
 
 private:
