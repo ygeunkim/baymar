@@ -24,7 +24,7 @@ public:
 		// int nrow_factor, int ncol_factor,
 		unsigned int seed
 	)
-	: bvhar::BayesForecaster<Eigen::MatrixXd, Eigen::MatrixXd>(step, Eigen::MatrixXd(), 1, mniw_records.row_coef_record.rows(), seed),
+	: bvhar::BayesForecaster<Eigen::MatrixXd, Eigen::MatrixXd>(step, Eigen::MatrixXd(), 1, mniw_records.row_coef_record.rows(), seed, false),
 		mat_record(std::make_unique<MatMniwRecords>(mniw_records)),
 		factor_updater(std::move(factor_forecaster)),
 		// nrow_factor(nrow_factor), ncol_factor(ncol_factor),
@@ -124,11 +124,14 @@ protected:
 		error_mat = row_sig_lower * error_mat * col_sig_lower.transpose();
 	}
 
-	void updateLpl(int h, const Eigen::MatrixXd& valid_vec) override {
+	void updateLpl(int h, int i, const Eigen::MatrixXd& valid_vec) override {
 		BVHAR_DEBUG_LOG(debug_logger, "updateLpl(h={}, valid_vec) called", h);
-		lpl[h] -= col_sig_lower.transpose().triangularView<Eigen::Upper>().solve<Eigen::OnTheRight>(
-			row_sig_lower.triangularView<Eigen::Lower>().solve(valid_vec - point_forecast)
-		).squaredNorm() / 2 + num_row * num_col * log(2 * M_PI) / 2 + num_col * row_sig_lower.diagonal().array().log().sum() + num_row * col_sig_lower.diagonal().array().log().sum();
+		// lpl(h, i) = (
+		// 	col_sig_lower.transpose().triangularView<Eigen::Upper>().solve<Eigen::OnTheRight>(
+		// 		row_sig_lower.triangularView<Eigen::Lower>().solve(valid_vec - point_forecast)
+		// 	).squaredNorm() / 2 + num_row * num_col * log(2 * M_PI) / 2 + num_col * row_sig_lower.diagonal().array().log().sum() + num_row * col_sig_lower.diagonal().array().log().sum()
+		// );
+		lpl(h, i) = factor_updater->getLpl(h, i, valid_vec, Eigen::MatrixXd::Zero(num_row, num_col), row_sig_lower, col_sig_lower);
 	}
 
 	Eigen::MatrixXd getDesign() override {

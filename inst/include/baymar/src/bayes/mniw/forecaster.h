@@ -88,6 +88,30 @@ public:
 		}
 	}
 
+	virtual double getLpl(
+		int h, int i, Eigen::Ref<const Eigen::MatrixXd> valid_vec,
+		Eigen::Ref<const Eigen::MatrixXd> forecast_mean,
+		Eigen::Ref<const Eigen::MatrixXd> mar_row_lower, Eigen::Ref<const Eigen::MatrixXd> mar_col_lower
+	) {
+		// N(vec(A^T X_t B), CC^T otimes RR^T + Sigma_c otimes Sigma_r)
+		Eigen::MatrixXd var_coef = bvhar::kronecker_eigen(col_coef.transpose(), row_coef.transpose());
+		Eigen::MatrixXd noise_lower = bvhar::kronecker_eigen(mar_col_lower, mar_row_lower);
+		Eigen::MatrixXd factor_cov = var_coef * var_coef.transpose() + noise_lower * noise_lower.transpose();
+		int var_dim = factor_cov.cols();
+		Eigen::LLT<Eigen::MatrixXd> llt_of_cov;
+		double temp_penalty = 0;
+		do {
+			llt_of_cov.compute((
+				factor_cov + temp_penalty * Eigen::MatrixXd::Identity(var_coef.rows(), var_coef.cols())
+			).selfadjointView<Eigen::Lower>());
+			temp_penalty += .01;
+		} while (llt_of_cov.info() == Eigen::NumericalIssue && temp_penalty < .1);
+		Eigen::VectorXd point_error = bvhar::vectorize_eigen(valid_vec - forecast_mean);
+		return -(
+			var_dim * log(2 * M_PI) + 2 * llt_of_cov.matrixL().toDenseMatrix().diagonal().array().log().sum() + llt_of_cov.solve(point_error).dot(point_error)
+		) / 2;
+	}
+
 protected:
 	int step, factor_lag;
 	int size_factor, num_design;
@@ -196,9 +220,9 @@ class MatFactorMarForecaster : public MatFactorForecaster {
 public:
 	MatFactorMarForecaster(const MatDfmMarRecords& records, int step, int factor_lag, int num_row, int num_col, int nrow_factor, int ncol_factor)
 	: MatFactorForecaster(step, factor_lag, num_row, num_col, nrow_factor, ncol_factor),
-		row_coef(Eigen::MatrixXd::Zero(nrow_factor * factor_lag, nrow_factor)),
+		mar_row_coef(Eigen::MatrixXd::Zero(nrow_factor * factor_lag, nrow_factor)),
 		row_sig_lower(Eigen::MatrixXd::Ones(nrow_factor, nrow_factor)),
-		col_coef(Eigen::MatrixXd::Zero(ncol_factor * factor_lag, ncol_factor)),
+		mar_col_coef(Eigen::MatrixXd::Zero(ncol_factor * factor_lag, ncol_factor)),
 		col_sig_lower(Eigen::MatrixXd::Ones(ncol_factor, ncol_factor)) {
 		mdfm_record = std::make_unique<MatDfmMarRecords>(records);
 		num_design = mdfm_record->factor_record.cols() / size_factor;
@@ -211,7 +235,7 @@ public:
 			updateDesign(id);
 			return;
 		}
-		mdfm_record->updateParams(id, row_coef, row_sig_lower, col_coef, col_sig_lower);
+		mdfm_record->updateParams(id, mar_row_coef, row_sig_lower, mar_col_coef, col_sig_lower);
 		Eigen::MatrixXd factor_x = Eigen::MatrixXd::Zero(factor_lag * nrow_exogen, factor_lag * ncol_exogen);
 		for (int i = 0; i < factor_lag; ++i) {
 			factor_x.block(i * nrow_exogen, i * ncol_exogen, nrow_exogen, ncol_exogen) = bvhar::unvectorize(
@@ -233,7 +257,7 @@ public:
 			error_mat = row_sig_lower * error_mat * col_sig_lower.transpose();
 			factor_pred = error_mat;
 			for (int i = 0; i < lag; ++i) {
-				factor_pred += row_coef.middleRows(i * nrow_exogen, nrow_exogen).transpose() * last_pvec.block(i * num_row, i * num_col, num_row, num_col) * col_coef.middleRows(i * ncol_exogen, ncol_exogen);
+				factor_pred += mar_row_coef.middleRows(i * nrow_exogen, nrow_exogen).transpose() * last_pvec.block(i * num_row, i * num_col, num_row, num_col) * mar_col_coef.middleRows(i * ncol_exogen, ncol_exogen);
 			}
 			tmp_x = factor_x.bottomRightCorner(nrow_exogen * (factor_lag - 1), ncol_exogen * (factor_lag - 1));
 			exogen.middleRows(h * nrow_exogen, nrow_exogen) = bvhar::unvectorize(factor_pred, ncol_exogen);
@@ -241,7 +265,7 @@ public:
 	}
 
 private:
-	Eigen::MatrixXd row_coef, row_sig_lower, col_coef, col_sig_lower;
+	Eigen::MatrixXd mar_row_coef, row_sig_lower, mar_col_coef, col_sig_lower;
 };
 
 inline std::unique_ptr<MatFactorForecaster> initialize_matfactorforecaster(
@@ -288,10 +312,11 @@ class MatMniwForecaster : public bvhar::BayesForecaster<Eigen::MatrixXd, Eigen::
 public:
 	MatMniwForecaster(
 		const MatMniwRecords& records, int step, const Eigen::MatrixXd& y, int num_data, int lag, unsigned int seed,
+		bool save_mean = false,
 		BVHAR_OPTIONAL<std::unique_ptr<MatMniwExogenForecaster>> exogen_forecaster = BVHAR_NULLOPT,
 		BVHAR_OPTIONAL<std::unique_ptr<MatFactorForecaster>> famar_forecaster = BVHAR_NULLOPT
 	)
-	: bvhar::BayesForecaster<Eigen::MatrixXd, Eigen::MatrixXd>(step, y, lag, records.row_coef_record.rows(), seed),
+	: bvhar::BayesForecaster<Eigen::MatrixXd, Eigen::MatrixXd>(step, y, lag, records.row_coef_record.rows(), seed, save_mean),
 		mat_record(std::make_unique<MatMniwRecords>(records)),
 		num_row(y.rows() / num_data), num_col(y.cols()), nrow_row_coef(num_row * lag), nrow_col_coef(num_col * lag),
 		nrow_row_exogen(0), nrow_col_exogen(0),
@@ -332,6 +357,10 @@ protected:
 		BVHAR_DEBUG_LOG(debug_logger, "initLagged() called");
 		last_pvec = build_dense_design(response, num_row, lag);
 		point_forecast = Eigen::MatrixXd::Zero(num_row, num_col);
+		forecast_mean = Eigen::MatrixXd::Zero(num_row, num_col);
+		if (save_mean) {
+			mean_save = Eigen::MatrixXd::Zero(step * num_row, num_sim * num_col);
+		}
 		pred_save = Eigen::MatrixXd::Zero(step * num_row, num_sim * num_col);
 		tmp_vec = last_pvec.block(num_row, num_col, num_row * (lag - 1), num_col * (lag - 1));
 	}
@@ -353,6 +382,10 @@ protected:
 	void updatePred(const int h, const int i) override {
 		BVHAR_DEBUG_LOG(debug_logger, "updatePred(h={}, i={}) called", h, i);
 		computeMean();
+		if (save_mean) {
+			mean_save.block(h * num_row, i * num_col, num_row, num_col) = point_forecast;
+		}
+		forecast_mean = point_forecast;
 		updateVariance();
 		// point_forecast += error_mat;
 		if (exogen_updater) {
@@ -411,11 +444,17 @@ protected:
 		error_mat = row_sig_lower * error_mat * col_sig_lower.transpose();
 	}
 
-	void updateLpl(int h, const Eigen::MatrixXd& valid_vec) override {
+	void updateLpl(int h, int i, const Eigen::MatrixXd& valid_vec) override {
 		BVHAR_DEBUG_LOG(debug_logger, "updateLpl(h={}, valid_vec) called", h);
-		lpl[h] -= col_sig_lower.transpose().triangularView<Eigen::Upper>().solve<Eigen::OnTheRight>(
-			row_sig_lower.triangularView<Eigen::Lower>().solve(valid_vec - point_forecast)
-		).squaredNorm() / 2 + num_row * num_col * log(2 * M_PI) / 2 + num_col * row_sig_lower.diagonal().array().log().sum() + num_row * col_sig_lower.diagonal().array().log().sum();
+		if (famar_updater) {
+			lpl(h, i) = famar_updater->getLpl(h, i, valid_vec, forecast_mean, row_sig_lower, col_sig_lower);
+		} else {
+			lpl(h, i) = -(
+				col_sig_lower.transpose().triangularView<Eigen::Upper>().solve<Eigen::OnTheRight>(
+					row_sig_lower.triangularView<Eigen::Lower>().solve(valid_vec - point_forecast)
+				).squaredNorm() / 2 + num_row * num_col * log(2 * M_PI) / 2 + num_col * row_sig_lower.diagonal().array().log().sum() + num_row * col_sig_lower.diagonal().array().log().sum()
+			);
+		}
 	}
 
 	Eigen::MatrixXd getDesign() override {
@@ -434,6 +473,9 @@ protected:
 			for (int j = 0; j < lag; ++j) {
 				point_forecast += row_coef.middleRows(j * num_row, num_row).transpose() * response.middleRows((lag + h - j - 1) * num_row, num_row) * col_coef.middleRows(j * num_col, num_col);
 			}
+			if (save_mean) {
+				mean_save.block(h * num_row, i * num_col, num_row, num_col) = point_forecast;
+			}
 			if (exogen_updater) {
 				exogen_updater->appendForecast(point_forecast, lag + h - exogen_updater->getLag());
 			}
@@ -449,6 +491,7 @@ protected:
 inline std::vector<std::unique_ptr<MatMniwForecaster>> initialize_matmniwforecaster(
 	int num_chains, int lag, int step, const Eigen::MatrixXd& y, int num_data,
 	BVHAR_LIST& fit_record, Eigen::Ref<const Eigen::VectorXi> seed_chain, int nthreads,
+	bool save_mean = false,
 	BVHAR_OPTIONAL<Eigen::MatrixXd> exogen = BVHAR_NULLOPT, BVHAR_OPTIONAL<int> exogen_lag = BVHAR_NULLOPT,
 	BVHAR_OPTIONAL<int> nrow_factor = BVHAR_NULLOPT, BVHAR_OPTIONAL<int> ncol_factor = BVHAR_NULLOPT,
 	BVHAR_OPTIONAL<int> factor_lag = BVHAR_NULLOPT, BVHAR_OPTIONAL<bool> factor_insample = BVHAR_NULLOPT
@@ -503,7 +546,7 @@ inline std::vector<std::unique_ptr<MatMniwForecaster>> initialize_matmniwforecas
 			);
 		}
 		forecaster[i] = std::make_unique<MatMniwForecaster>(
-			*mat_record, step, y, num_data, lag, static_cast<unsigned int>(seed_chain[i]),
+			*mat_record, step, y, num_data, lag, static_cast<unsigned int>(seed_chain[i]), save_mean,
 			std::move(exogen_updater), std::move(factor_updater)
 		);
 	}
@@ -515,6 +558,7 @@ public:
 	MatMniwForecastRun(
 		int num_chains, int lag, int step, const Eigen::MatrixXd& y, int num_data,
 		BVHAR_LIST& fit_record, const Eigen::VectorXi& seed_chain, int nthreads,
+		bool save_mean = false,
 		BVHAR_OPTIONAL<Eigen::MatrixXd> exogen = BVHAR_NULLOPT, BVHAR_OPTIONAL<int> exogen_lag = BVHAR_NULLOPT,
 		BVHAR_OPTIONAL<int> nrow_factor = BVHAR_NULLOPT, BVHAR_OPTIONAL<int> ncol_factor = BVHAR_NULLOPT,
 		BVHAR_OPTIONAL<int> factor_lag = BVHAR_NULLOPT, BVHAR_OPTIONAL<bool> factor_insample = BVHAR_NULLOPT
@@ -526,7 +570,7 @@ public:
 			num_chains, lag, step, num_data, nthreads
 		);
 		auto temp_forecaster = initialize_matmniwforecaster(
-			num_chains, lag, step, y, num_data, fit_record, seed_chain, nthreads,
+			num_chains, lag, step, y, num_data, fit_record, seed_chain, nthreads, save_mean,
 			exogen, exogen_lag,
 			nrow_factor, ncol_factor, factor_lag, factor_insample
 		);
@@ -629,7 +673,7 @@ protected:
 		using is_mcmc = std::integral_constant<bool, isUpdate>;
 		if (is_mcmc::value) {
 			auto temp_forecaster = initialize_matmniwforecaster(
-				num_chains, lag, step, roll_mat[0], num_window, fit_record, seed_forecast, nthreads,
+				num_chains, lag, step, roll_mat[0], num_window, fit_record, seed_forecast, nthreads, false,
 				roll_exogen[0], lag_exogen,
 				nrow_factor, ncol_factor, factor_lag
 			);
@@ -639,7 +683,7 @@ protected:
 		} else {
 			for (int window = 0; window < num_horizon; ++window) {
 				auto temp_forecaster = initialize_matmniwforecaster(
-					num_chains, lag, step, roll_mat[window], num_window, fit_record, seed_forecast, nthreads,
+					num_chains, lag, step, roll_mat[window], num_window, fit_record, seed_forecast, nthreads, false,
 					roll_exogen[window], lag_exogen,
 					nrow_factor, ncol_factor, factor_lag
 				);

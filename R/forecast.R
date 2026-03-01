@@ -419,9 +419,9 @@ forecast_roll.marbayes <- function(object, n_ahead, y_test,
   num_draw <- nrow(object$param)
   if (lpl) {
     if (med) {
-      lpl_val <- apply(pred_res$lpl, 1, median)
+      lpl_val <- apply(pred_res$lpl, 2, median)
     } else {
-      lpl_val <- rowMeans(pred_res$lpl)
+      lpl_val <- colMeans(pred_res$lpl)
     }
     pred_res$lpl <- NULL
   }
@@ -572,9 +572,9 @@ forecast_roll.mdfmbayes <- function(object, n_ahead, y_test,
   num_draw <- nrow(object$param)
   if (lpl) {
     if (med) {
-      lpl_val <- apply(pred_res$lpl, 1, median)
+      lpl_val <- apply(pred_res$lpl, 2, median)
     } else {
-      lpl_val <- rowMeans(pred_res$lpl)
+      lpl_val <- colMeans(pred_res$lpl)
     }
     pred_res$lpl <- NULL
   }
@@ -848,9 +848,9 @@ forecast_expand.marbayes <- function(object, n_ahead, y_test,
   num_draw <- nrow(object$param)
   if (lpl) {
     if (med) {
-      lpl_val <- apply(pred_res$lpl, 1, median)
+      lpl_val <- apply(pred_res$lpl, 2, median)
     } else {
-      lpl_val <- rowMeans(pred_res$lpl)
+      lpl_val <- colMeans(pred_res$lpl)
     }
     pred_res$lpl <- NULL
   }
@@ -1037,9 +1037,9 @@ forecast_expand.mdfmbayes <- function(object, n_ahead, y_test,
   num_draw <- nrow(object$param)
   if (lpl) {
     if (med) {
-      lpl_val <- apply(pred_res$lpl, 1, median)
+      lpl_val <- apply(pred_res$lpl, 2, median)
     } else {
-      lpl_val <- rowMeans(pred_res$lpl)
+      lpl_val <- colMeans(pred_res$lpl)
     }
     pred_res$lpl <- NULL
   }
