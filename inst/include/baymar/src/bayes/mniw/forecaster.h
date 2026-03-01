@@ -90,6 +90,10 @@ public:
 		}
 	}
 
+	virtual void appendMean(Eigen::MatrixXd& mean_forecast, const int h) {
+		BVHAR_DEBUG_LOG(debug_logger, "appendMean(mean_forecast, h) called");
+	}
+
 	virtual double getLpl(
 		int h, int i, Eigen::Ref<const Eigen::MatrixXd> valid_vec,
 		Eigen::Ref<const Eigen::MatrixXd> forecast_mean,
@@ -172,17 +176,23 @@ public:
 		}
 	}
 
+	void appendMean(Eigen::MatrixXd& mean_forecast, const int h) override {
+		BVHAR_DEBUG_LOG(debug_logger, "appendMean(mean_forecast, h) called");
+		mean_forecast += row_coef.transpose() * factor_mean[h] * col_coef;
+	}
+
 	double getLpl(
 		int h, int i, Eigen::Ref<const Eigen::MatrixXd> valid_vec,
 		Eigen::Ref<const Eigen::MatrixXd> forecast_mean,
 		Eigen::Ref<const Eigen::MatrixXd> mar_row_lower, Eigen::Ref<const Eigen::MatrixXd> mar_col_lower
 	) override {
 		// N(vec(A^T X_{T + h} B + R F_{T + h - 1} C^T), (C otimes R) Lambda (C otimes R)^T + Sigma_c otimes Sigma_r)
-		Eigen::MatrixXd mean_mat = forecast_mean + row_coef.transpose() * factor_mean[h] * col_coef;
+		// Eigen::MatrixXd mean_mat = forecast_mean + row_coef.transpose() * factor_mean[h] * col_coef;
 		Eigen::MatrixXd var_coef = bvhar::kronecker_eigen(col_coef.transpose(), row_coef.transpose());
 		Eigen::MatrixXd noise_lower = bvhar::kronecker_eigen(mar_col_lower, mar_row_lower);
 		Eigen::MatrixXd factor_cov = var_coef * factor_sig.asDiagonal() * var_coef.transpose() + noise_lower * noise_lower.transpose();
-		return computeDensity(valid_vec, mean_mat, factor_cov);
+		// return computeDensity(valid_vec, mean_mat, factor_cov);
+		return computeDensity(valid_vec, forecast_mean, factor_cov);
 	}
 
 private:
@@ -250,6 +260,11 @@ public:
 		// factor_generator.reset();
 	}
 
+	void appendMean(Eigen::MatrixXd& mean_forecast, const int h) override {
+		BVHAR_DEBUG_LOG(debug_logger, "appendMean(mean_forecast, h) called");
+		mean_forecast += row_coef.transpose() * factor_mean[h] * col_coef;
+	}
+
 	double getLpl(
 		int h, int i, Eigen::Ref<const Eigen::MatrixXd> valid_vec,
 		Eigen::Ref<const Eigen::MatrixXd> forecast_mean,
@@ -257,11 +272,12 @@ public:
 	) override {
 		// N(vec(A^T X_{T + h} B + R E(F_{T + h}) C^T), (C otimes R) Lambda (C otimes R)^T + Sigma_c otimes Sigma_r)
 		// E(vec(F_{T + h})) = sum H_i vec(F_{T + h - i})
-		Eigen::MatrixXd mean_mat = forecast_mean + row_coef.transpose() * factor_mean[h] * col_coef;
+		// Eigen::MatrixXd mean_mat = forecast_mean + row_coef.transpose() * factor_mean[h] * col_coef;
 		Eigen::MatrixXd var_coef = bvhar::kronecker_eigen(col_coef.transpose(), row_coef.transpose());
 		Eigen::MatrixXd noise_lower = bvhar::kronecker_eigen(mar_col_lower, mar_row_lower);
 		Eigen::MatrixXd factor_cov = var_coef * factor_sig.asDiagonal() * var_coef.transpose() + noise_lower * noise_lower.transpose();
-		return computeDensity(valid_vec, mean_mat, factor_cov);
+		// return computeDensity(valid_vec, mean_mat, factor_cov);
+		return computeDensity(valid_vec, forecast_mean, factor_cov);
 	}
 
 private:
@@ -318,6 +334,11 @@ public:
 		}
 	}
 
+	void appendMean(Eigen::MatrixXd& mean_forecast, const int h) override {
+		BVHAR_DEBUG_LOG(debug_logger, "appendMean(mean_forecast, h) called");
+		mean_forecast += row_coef.transpose() * factor_mean[h] * col_coef;
+	}
+
 	double getLpl(
 		int h, int i, Eigen::Ref<const Eigen::MatrixXd> valid_vec,
 		Eigen::Ref<const Eigen::MatrixXd> forecast_mean,
@@ -325,12 +346,13 @@ public:
 	) override {
 		// N(vec(A^T X_{T + h} B + R E(F_{T + h}) C^T), (C Sig_{fc} C^T) otimes (R Sig_{fr} R^T) + Sigma_c otimes Sigma_r)
 		// E(F_{T + h}) = G^T diag(F_{T + h - 1}, ..., F_{T + h - p_f}) H
-		Eigen::MatrixXd mean_mat = forecast_mean + row_coef.transpose() * factor_mean[h] * col_coef;
+		// Eigen::MatrixXd mean_mat = forecast_mean + row_coef.transpose() * factor_mean[h] * col_coef;
 		Eigen::MatrixXd var_coef = bvhar::kronecker_eigen(col_coef.transpose(), row_coef.transpose());
 		Eigen::MatrixXd factor_mar_lower = bvhar::kronecker_eigen(col_sig_lower, row_sig_lower);
 		Eigen::MatrixXd noise_lower = bvhar::kronecker_eigen(mar_col_lower, mar_row_lower);
 		Eigen::MatrixXd factor_cov = var_coef * factor_mar_lower * factor_mar_lower.transpose() * var_coef.transpose() + noise_lower * noise_lower.transpose();
-		return computeDensity(valid_vec, mean_mat, factor_cov);
+		// return computeDensity(valid_vec, mean_mat, factor_cov);
+		return computeDensity(valid_vec, forecast_mean, factor_cov);
 	}
 
 private:
@@ -451,9 +473,6 @@ protected:
 	void updatePred(const int h, const int i) override {
 		BVHAR_DEBUG_LOG(debug_logger, "updatePred(h={}, i={}) called", h, i);
 		computeMean();
-		if (save_mean) {
-			mean_save.block(h * num_row, i * num_col, num_row, num_col) = point_forecast;
-		}
 		forecast_mean = point_forecast;
 		updateVariance();
 		// point_forecast += error_mat;
@@ -462,6 +481,10 @@ protected:
 		}
 		if (famar_updater) {
 			famar_updater->appendForecast(point_forecast, h);
+			famar_updater->appendMean(forecast_mean, h);
+		}
+		if (save_mean) {
+			mean_save.block(h * num_row, i * num_col, num_row, num_col) = forecast_mean;
 		}
 		pred_save.block(h * num_row, i * num_col, num_row, num_col) = point_forecast + error_mat;
 	}
@@ -542,14 +565,16 @@ protected:
 			for (int j = 0; j < lag; ++j) {
 				point_forecast += row_coef.middleRows(j * num_row, num_row).transpose() * response.middleRows((lag + h - j - 1) * num_row, num_row) * col_coef.middleRows(j * num_col, num_col);
 			}
-			if (save_mean) {
-				mean_save.block(h * num_row, i * num_col, num_row, num_col) = point_forecast;
-			}
+			forecast_mean = point_forecast;
 			if (exogen_updater) {
 				exogen_updater->appendForecast(point_forecast, lag + h - exogen_updater->getLag());
 			}
 			if (famar_updater) {
 				famar_updater->appendForecast(point_forecast, h);
+				famar_updater->appendMean(forecast_mean, h);
+			}
+			if (save_mean) {
+				mean_save.block(h * num_row, i * num_col, num_row, num_col) = forecast_mean;
 			}
 			updateVariance();
 			pred_save.block(h * num_row, i * num_col, num_row, num_col) = point_forecast + error_mat;
