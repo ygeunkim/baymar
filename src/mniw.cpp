@@ -135,17 +135,25 @@ Rcpp::List forecast_bmar_mniw(int num_chains, int lag, int step, Eigen::MatrixXd
 	auto forecaster = [&]() -> std::unique_ptr<baecon::baymar::MatMniwForecastRun> {
 		if (nrow_factor > 0 && ncol_factor > 0) {
 			return std::make_unique<baecon::baymar::MatMniwForecastRun>(
-				num_chains, lag, step, response_mat, num_data, fit_record, seed_chain, nthreads, false,
+				num_chains, lag, step, response_mat, num_data, fit_record, seed_chain, nthreads, true,
 				BVHAR_NULLOPT, BVHAR_NULLOPT,
 				nrow_factor, ncol_factor, factor_lag, insample
 			);
 		}
-		return std::make_unique<baecon::baymar::MatMniwForecastRun>(num_chains, lag, step, response_mat, num_data, fit_record, seed_chain, nthreads, false);
+		return std::make_unique<baecon::baymar::MatMniwForecastRun>(num_chains, lag, step, response_mat, num_data, fit_record, seed_chain, nthreads, true);
 	}();
 	if (insample) {
-		return Rcpp::wrap(forecaster->returnPredict());
+		return Rcpp::List::create(
+			Rcpp::Named("forecast") = Rcpp::wrap(forecaster->returnPredict()),
+			Rcpp::Named("mean") = Rcpp::wrap(forecaster->returnMean())
+		);
+		// return Rcpp::wrap(forecaster->returnPredict());
 	}
-	return Rcpp::wrap(forecaster->returnForecast());
+	return Rcpp::List::create(
+		Rcpp::Named("forecast") = Rcpp::wrap(forecaster->returnForecast()),
+		Rcpp::Named("mean") = Rcpp::wrap(forecaster->returnMean())
+	);
+	// return Rcpp::wrap(forecaster->returnForecast());
 }
 
 //' @noRd
@@ -158,20 +166,28 @@ Rcpp::List forecast_bmarx_mniw(int num_chains, int lag, int step, Eigen::MatrixX
 	auto forecaster = [&]() -> std::unique_ptr<baecon::baymar::MatMniwForecastRun> {
 		if (nrow_factor > 0 && ncol_factor > 0) {
 			return std::make_unique<baecon::baymar::MatMniwForecastRun>(
-				num_chains, lag, step, response_mat, num_data, fit_record, seed_chain, nthreads, false,
+				num_chains, lag, step, response_mat, num_data, fit_record, seed_chain, nthreads, true,
 				exogen, exogen_lag,
 				nrow_factor, ncol_factor, factor_lag, insample
 			);
 		}
 		return std::make_unique<baecon::baymar::MatMniwForecastRun>(
-			num_chains, lag, step, response_mat, num_data, fit_record, seed_chain, nthreads, false,
+			num_chains, lag, step, response_mat, num_data, fit_record, seed_chain, nthreads, true,
 			exogen, exogen_lag
 		);
 	}();
 	if (insample) {
-		return Rcpp::wrap(forecaster->returnPredict());
+		return Rcpp::List::create(
+			Rcpp::Named("forecast") = Rcpp::wrap(forecaster->returnPredict()),
+			Rcpp::Named("mean") = Rcpp::wrap(forecaster->returnMean())
+		);
+		// return Rcpp::wrap(forecaster->returnPredict());
 	}
-	return Rcpp::wrap(forecaster->returnForecast());
+	return Rcpp::List::create(
+		Rcpp::Named("forecast") = Rcpp::wrap(forecaster->returnForecast()),
+		Rcpp::Named("mean") = Rcpp::wrap(forecaster->returnMean())
+	);
+	// return Rcpp::wrap(forecaster->returnForecast());
 }
 
 //' @noRd

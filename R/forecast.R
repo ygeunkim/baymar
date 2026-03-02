@@ -88,7 +88,7 @@ predict.marbayes <- function(object, n_ahead, level = .05, newxreg, num_thread =
   #   ) |>
   #   lapply(simplify2array)
   y_distn <- process_mar_forecast_draws(
-    x = pred_res,
+    x = pred_res$forecast,
     n_ahead = n_ahead,
     nrow_data = nrow_data,
     ncol_data = ncol_data,
@@ -117,7 +117,8 @@ predict.marbayes <- function(object, n_ahead, level = .05, newxreg, num_thread =
   dimnames(upper_quantile) <- var_names
   dimnames(est_se) <- var_names
   res <- list(
-    draws = pred_res,
+    draws = pred_res$forecast,
+    mean_draws = pred_res$mean,
     forecast = pred_mean,
     se = est_se,
     lower = lower_quantile,
@@ -171,7 +172,7 @@ predict.mdfmbayes <- function(object, n_ahead, level = .05, num_thread = 1, med 
   )
   num_draw <- nrow(object$param)
   y_distn <- process_mar_forecast_draws(
-    x = pred_res,
+    x = pred_res$forecast,
     n_ahead = n_ahead,
     nrow_data = nrow_data,
     ncol_data = ncol_data,
@@ -200,7 +201,8 @@ predict.mdfmbayes <- function(object, n_ahead, level = .05, num_thread = 1, med 
   dimnames(upper_quantile) <- var_names
   dimnames(est_se) <- var_names
   res <- list(
-    draws = pred_res,
+    draws = pred_res$forecast,
+    mean_draws = pred_res$mean,
     forecast = pred_mean,
     se = est_se,
     lower = lower_quantile,
