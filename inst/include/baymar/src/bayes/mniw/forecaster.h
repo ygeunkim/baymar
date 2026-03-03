@@ -706,8 +706,14 @@ public:
 		roll_mat.resize(num_horizon);
 		model.resize(num_horizon);
 		out_forecast.resize(num_horizon);
-		// lpl_record.resize(num_horizon, num_chains);
-		// lpl_record = Eigen::MatrixXd::Zero(num_horizon, num_chains);
+		lpl_record.resize(num_horizon, step);
+		lpl_record = Eigen::MatrixXd::Zero(num_horizon, step);
+		lpl_draws.resize(num_horizon);
+		for (auto& lpl_mat : lpl_draws) {
+			lpl_mat = Eigen::MatrixXd::Zero(step, num_chains * this->num_sim);
+		}
+		roll_exogen_mat.resize(num_horizon);
+		roll_exogen.resize(num_horizon);
 		if (factor_lag) {
 			BVHAR_STRING factor_model_nm = BVHAR_CAST<BVHAR_STRING>(param_coef_sig["factor_type"]);
 			if (factor_model_nm == "wn") {
@@ -752,6 +758,7 @@ protected:
 	using bvhar::McmcOutForecastRun<Eigen::MatrixXd, Eigen::MatrixXd, isPath, isUpdate>::forecaster;
 	using bvhar::McmcOutForecastRun<Eigen::MatrixXd, Eigen::MatrixXd, isPath, isUpdate>::out_forecast;
 	using bvhar::McmcOutForecastRun<Eigen::MatrixXd, Eigen::MatrixXd, isPath, isUpdate>::lpl_record;
+	using bvhar::McmcOutForecastRun<Eigen::MatrixXd, Eigen::MatrixXd, isPath, isUpdate>::lpl_draws;
 	using bvhar::McmcOutForecastRun<Eigen::MatrixXd, Eigen::MatrixXd, isPath, isUpdate>::roll_exogen_mat;
 	using bvhar::McmcOutForecastRun<Eigen::MatrixXd, Eigen::MatrixXd, isPath, isUpdate>::roll_exogen;
 	using bvhar::McmcOutForecastRun<Eigen::MatrixXd, Eigen::MatrixXd, isPath, isUpdate>::lag_exogen;

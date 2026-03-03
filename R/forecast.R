@@ -425,6 +425,7 @@ forecast_roll.marbayes <- function(object, n_ahead, y_test,
     } else {
       lpl_val <- colMeans(pred_res$lpl)
     }
+    lpl_draws <- pred_res$lpl
     pred_res$lpl <- NULL
   }
   y_distn <- process_mar_pathforecast_draws(
@@ -450,6 +451,7 @@ forecast_roll.marbayes <- function(object, n_ahead, y_test,
   )
   if (lpl) {
     res$lpl <- lpl_val
+    res$lpl_draws <- lpl_draws
   }
   class(res) <- c("predmarbayes_roll", "predmarcv")
   res
@@ -578,6 +580,7 @@ forecast_roll.mdfmbayes <- function(object, n_ahead, y_test,
     } else {
       lpl_val <- colMeans(pred_res$lpl)
     }
+    lpl_draws <- pred_res$lpl
     pred_res$lpl <- NULL
   }
   # y_distn <-
@@ -639,6 +642,7 @@ forecast_roll.mdfmbayes <- function(object, n_ahead, y_test,
   )
   if (lpl) {
     res$lpl <- lpl_val
+    res$lpl_draws <- lpl_draws
   }
   class(res) <- c("predmarbayes_roll", "predmarcv")
   res
@@ -854,6 +858,7 @@ forecast_expand.marbayes <- function(object, n_ahead, y_test,
     } else {
       lpl_val <- colMeans(pred_res$lpl)
     }
+    lpl_draws <- pred_res$lpl
     pred_res$lpl <- NULL
   }
   # y_distn <-
@@ -915,6 +920,7 @@ forecast_expand.marbayes <- function(object, n_ahead, y_test,
   )
   if (lpl) {
     res$lpl <- lpl_val
+    res$lpl_draws <- lpl_draws
   }
   class(res) <- c("predmarbayes_expand", "predmarcv")
   res
@@ -1043,6 +1049,7 @@ forecast_expand.mdfmbayes <- function(object, n_ahead, y_test,
     } else {
       lpl_val <- colMeans(pred_res$lpl)
     }
+    lpl_draws <- pred_res$lpl
     pred_res$lpl <- NULL
   }
   # y_distn <-
@@ -1104,6 +1111,7 @@ forecast_expand.mdfmbayes <- function(object, n_ahead, y_test,
   )
   if (lpl) {
     res$lpl <- lpl_val
+    res$lpl_draws <- lpl_draws
   }
   class(res) <- c("predmarbayes_expand", "predmarcv")
   res
