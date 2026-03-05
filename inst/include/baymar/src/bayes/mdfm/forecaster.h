@@ -61,6 +61,7 @@ protected:
 		BVHAR_DEBUG_LOG(debug_logger, "initLagged() called");
 		// last_pvec = build_dense_design(response, lag);
 		point_forecast = Eigen::MatrixXd::Zero(num_row, num_col);
+		forecast_mean = Eigen::MatrixXd::Zero(num_row, num_col);
 		pred_save = Eigen::MatrixXd::Zero(step * num_row, num_sim * num_col);
 		if (save_mean) {
 			mean_save = Eigen::MatrixXd::Zero(step * num_row, num_sim * num_col);
@@ -85,8 +86,13 @@ protected:
 		BVHAR_DEBUG_LOG(debug_logger, "updatePred(h={}, i={}) called", h, i);
 		// computeMean();
 		point_forecast.setZero();
+		forecast_mean.setZero();
 		updateVariance();
 		factor_updater->appendForecast(point_forecast, h);
+		factor_updater->appendMean(forecast_mean, h);
+		if (save_mean) {
+			mean_save.block(h * num_row, i * num_col, num_row, num_col) = forecast_mean;
+		}
 		pred_save.block(h * num_row, i * num_col, num_row, num_col) = point_forecast + error_mat;
 	}
 
@@ -135,7 +141,7 @@ protected:
 		// 		row_sig_lower.triangularView<Eigen::Lower>().solve(valid_vec - point_forecast)
 		// 	).squaredNorm() / 2 + num_row * num_col * log(2 * M_PI) / 2 + num_col * row_sig_lower.diagonal().array().log().sum() + num_row * col_sig_lower.diagonal().array().log().sum()
 		// );
-		lpl(h, i) = factor_updater->getLpl(h, i, valid_vec, Eigen::MatrixXd::Zero(num_row, num_col), row_sig_lower, col_sig_lower);
+		lpl(h, i) = factor_updater->getLpl(h, i, valid_vec, forecast_mean, row_sig_lower, col_sig_lower);
 	}
 
 	Eigen::MatrixXd getDesign() override {
@@ -147,8 +153,13 @@ protected:
 		BVHAR_DEBUG_LOG(debug_logger, "forecastIn(i={}, design) called", i);
 		for (int h = 0; h < step; ++h) {
 			point_forecast.setZero();
+			forecast_mean.setZero();
 			updateVariance();
 			factor_updater->appendForecast(point_forecast, 0);
+			factor_updater->appendMean(forecast_mean, h);
+			if (save_mean) {
+				mean_save.block(h * num_row, i * num_col, num_row, num_col) = forecast_mean;
+			}
 			pred_save.block(h * num_row, i * num_col, num_row, num_col) = point_forecast + error_mat;
 		}
 	}
