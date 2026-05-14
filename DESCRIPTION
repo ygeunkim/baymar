@@ -7,10 +7,7 @@ Authors@R:
              family = "Kim",
              email = "ygeunkimstat@gmail.com",
              role = c("aut", "cre", "cph"),
-             comment = c(ORCID = "0000-0001-8651-1167")),
-      person(given = "Taeyoung",
-             family = "Park",
-             role = "ctb"))
+             comment = c(ORCID = "0000-0001-8651-1167")))
 Description: Tools to model and forecast matrix-valued time series
     including Bayesian Matrix autoregressive (BMAR) model.
 License: MIT + file LICENSE
@@ -24,7 +21,7 @@ Imports:
     utils
 LinkingTo: 
     BH (>= 1.87.0-0),
-    bvhar (>= 2.4.0.9003),
+    bvhar (>= 2.4.0.9005),
     Rcpp (>= 0.10.0),
     RcppEigen (>= 0.3.4.0.0),
     RcppNumerical,
