@@ -246,15 +246,15 @@ inline void initialize_matmniw_record(
 	BVHAR_OPTIONAL<BVHAR_STRING> c_name = BVHAR_NULLOPT, BVHAR_OPTIONAL<BVHAR_STRING> d_name = BVHAR_NULLOPT,
 	BVHAR_OPTIONAL<BVHAR_STRING> g_name = BVHAR_NULLOPT, BVHAR_OPTIONAL<BVHAR_STRING> h_name = BVHAR_NULLOPT
 ) {
-	BVHAR_PY_LIST row_coef_list = fit_record[a_name];
-	BVHAR_PY_LIST row_sigma_list = fit_record[sigr_name];
-	BVHAR_PY_LIST col_coef_list = fit_record[b_name];
-	BVHAR_PY_LIST col_sigma_list = fit_record[sigc_name];
+	BVHAR_PY_LIST row_coef_list = BVHAR_CAST_PY_LIST(fit_record[a_name]);
+	BVHAR_PY_LIST row_sigma_list = BVHAR_CAST_PY_LIST(fit_record[sigr_name]);
+	BVHAR_PY_LIST col_coef_list = BVHAR_CAST_PY_LIST(fit_record[b_name]);
+	BVHAR_PY_LIST col_sigma_list = BVHAR_CAST_PY_LIST(fit_record[sigc_name]);
 	if ((c_name && d_name) && (g_name && h_name)) {
-		BVHAR_PY_LIST exogen_row_list = fit_record[*c_name];
-		BVHAR_PY_LIST exogen_col_list = fit_record[*d_name];
-		BVHAR_PY_LIST factor_row_list = fit_record[*g_name];
-		BVHAR_PY_LIST factor_col_list = fit_record[*h_name];
+		BVHAR_PY_LIST exogen_row_list = BVHAR_CAST_PY_LIST(fit_record[*c_name]);
+		BVHAR_PY_LIST exogen_col_list = BVHAR_CAST_PY_LIST(fit_record[*d_name]);
+		BVHAR_PY_LIST factor_row_list = BVHAR_CAST_PY_LIST(fit_record[*g_name]);
+		BVHAR_PY_LIST factor_col_list = BVHAR_CAST_PY_LIST(fit_record[*h_name]);
 		record = std::make_unique<MatMniwRecords>(
 			BVHAR_CAST<Eigen::MatrixXd>(row_coef_list[chain_id]),
 			BVHAR_CAST<Eigen::MatrixXd>(row_sigma_list[chain_id]),
@@ -266,8 +266,8 @@ inline void initialize_matmniw_record(
 			BVHAR_CAST<Eigen::MatrixXd>(factor_col_list[chain_id])
 		);
 	} else if (c_name && d_name) {
-		BVHAR_PY_LIST exogen_row_list = fit_record[*c_name];
-		BVHAR_PY_LIST exogen_col_list = fit_record[*d_name];
+		BVHAR_PY_LIST exogen_row_list = BVHAR_CAST_PY_LIST(fit_record[*c_name]);
+		BVHAR_PY_LIST exogen_col_list = BVHAR_CAST_PY_LIST(fit_record[*d_name]);
 		record = std::make_unique<MatMniwRecords>(
 			BVHAR_CAST<Eigen::MatrixXd>(row_coef_list[chain_id]),
 			BVHAR_CAST<Eigen::MatrixXd>(row_sigma_list[chain_id]),

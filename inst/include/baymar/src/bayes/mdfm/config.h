@@ -416,26 +416,26 @@ inline void initialize_matdfm_record(
 	BVHAR_OPTIONAL<BVHAR_STRING> fa_name = BVHAR_NULLOPT, BVHAR_OPTIONAL<BVHAR_STRING> fb_name = BVHAR_NULLOPT,
 	BVHAR_OPTIONAL<BVHAR_STRING> omegar_name = BVHAR_NULLOPT, BVHAR_OPTIONAL<BVHAR_STRING> omegac_name = BVHAR_NULLOPT
 ) {
-	BVHAR_PY_LIST factor_list = dfm_record[factor_name];
+	BVHAR_PY_LIST factor_list = BVHAR_CAST_PY_LIST(dfm_record[factor_name]);
 	if (lambda_name && !rho_name) {
-		BVHAR_PY_LIST factor_prec_list = dfm_record[*lambda_name];
+		BVHAR_PY_LIST factor_prec_list = BVHAR_CAST_PY_LIST(dfm_record[*lambda_name]);
 		record = std::make_unique<MatDfmRwRecords>(
 			BVHAR_CAST<Eigen::MatrixXd>(factor_list[chain_id]),
 			BVHAR_CAST<Eigen::MatrixXd>(factor_prec_list[chain_id])
 		);
 	} else if (rho_name && lambda_name) {
-		BVHAR_PY_LIST factor_coef_list = dfm_record[*rho_name];
-		BVHAR_PY_LIST factor_prec_list = dfm_record[*lambda_name];
+		BVHAR_PY_LIST factor_coef_list = BVHAR_CAST_PY_LIST(dfm_record[*rho_name]);
+		BVHAR_PY_LIST factor_prec_list = BVHAR_CAST_PY_LIST(dfm_record[*lambda_name]);
 		record = std::make_unique<MatDfmVarRecords>(
 			BVHAR_CAST<Eigen::MatrixXd>(factor_list[chain_id]),
 			BVHAR_CAST<Eigen::MatrixXd>(factor_coef_list[chain_id]),
 			BVHAR_CAST<Eigen::MatrixXd>(factor_prec_list[chain_id])
 		);
 	} else if (fa_name && fb_name && omegar_name && omegac_name) {
-		BVHAR_PY_LIST row_coef_list = dfm_record[*fa_name];
-		BVHAR_PY_LIST col_coef_list = dfm_record[*fb_name];
-		BVHAR_PY_LIST row_sig_list = dfm_record[*omegar_name];
-		BVHAR_PY_LIST col_sig_list = dfm_record[*omegac_name];
+		BVHAR_PY_LIST row_coef_list = BVHAR_CAST_PY_LIST(dfm_record[*fa_name]);
+		BVHAR_PY_LIST col_coef_list = BVHAR_CAST_PY_LIST(dfm_record[*fb_name]);
+		BVHAR_PY_LIST row_sig_list = BVHAR_CAST_PY_LIST(dfm_record[*omegar_name]);
+		BVHAR_PY_LIST col_sig_list = BVHAR_CAST_PY_LIST(dfm_record[*omegac_name]);
 		record = std::make_unique<MatDfmMarRecords>(
 			BVHAR_CAST<Eigen::MatrixXd>(factor_list[chain_id]),
 			BVHAR_CAST<Eigen::MatrixXd>(row_coef_list[chain_id]),

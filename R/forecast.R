@@ -88,7 +88,7 @@ predict.marbayes <- function(object, n_ahead, level = .05, newxreg, num_thread =
   #   ) |>
   #   lapply(simplify2array)
   y_distn <- process_mar_forecast_draws(
-    x = pred_res,
+    x = pred_res$forecast,
     n_ahead = n_ahead,
     nrow_data = nrow_data,
     ncol_data = ncol_data,
@@ -117,7 +117,8 @@ predict.marbayes <- function(object, n_ahead, level = .05, newxreg, num_thread =
   dimnames(upper_quantile) <- var_names
   dimnames(est_se) <- var_names
   res <- list(
-    draws = pred_res,
+    draws = pred_res$forecast,
+    mean_draws = pred_res$mean,
     forecast = pred_mean,
     se = est_se,
     lower = lower_quantile,
@@ -171,7 +172,7 @@ predict.mdfmbayes <- function(object, n_ahead, level = .05, num_thread = 1, med 
   )
   num_draw <- nrow(object$param)
   y_distn <- process_mar_forecast_draws(
-    x = pred_res,
+    x = pred_res$forecast,
     n_ahead = n_ahead,
     nrow_data = nrow_data,
     ncol_data = ncol_data,
@@ -200,7 +201,8 @@ predict.mdfmbayes <- function(object, n_ahead, level = .05, num_thread = 1, med 
   dimnames(upper_quantile) <- var_names
   dimnames(est_se) <- var_names
   res <- list(
-    draws = pred_res,
+    draws = pred_res$forecast,
+    mean_draws = pred_res$mean,
     forecast = pred_mean,
     se = est_se,
     lower = lower_quantile,
@@ -419,10 +421,11 @@ forecast_roll.marbayes <- function(object, n_ahead, y_test,
   num_draw <- nrow(object$param)
   if (lpl) {
     if (med) {
-      lpl_val <- apply(pred_res$lpl, 1, median)
+      lpl_val <- apply(pred_res$lpl, 2, median)
     } else {
-      lpl_val <- rowMeans(pred_res$lpl)
+      lpl_val <- colMeans(pred_res$lpl)
     }
+    lpl_draws <- pred_res$lpl
     pred_res$lpl <- NULL
   }
   y_distn <- process_mar_pathforecast_draws(
@@ -448,6 +451,7 @@ forecast_roll.marbayes <- function(object, n_ahead, y_test,
   )
   if (lpl) {
     res$lpl <- lpl_val
+    res$lpl_draws <- lpl_draws
   }
   class(res) <- c("predmarbayes_roll", "predmarcv")
   res
@@ -572,10 +576,11 @@ forecast_roll.mdfmbayes <- function(object, n_ahead, y_test,
   num_draw <- nrow(object$param)
   if (lpl) {
     if (med) {
-      lpl_val <- apply(pred_res$lpl, 1, median)
+      lpl_val <- apply(pred_res$lpl, 2, median)
     } else {
-      lpl_val <- rowMeans(pred_res$lpl)
+      lpl_val <- colMeans(pred_res$lpl)
     }
+    lpl_draws <- pred_res$lpl
     pred_res$lpl <- NULL
   }
   # y_distn <-
@@ -637,6 +642,7 @@ forecast_roll.mdfmbayes <- function(object, n_ahead, y_test,
   )
   if (lpl) {
     res$lpl <- lpl_val
+    res$lpl_draws <- lpl_draws
   }
   class(res) <- c("predmarbayes_roll", "predmarcv")
   res
@@ -848,10 +854,11 @@ forecast_expand.marbayes <- function(object, n_ahead, y_test,
   num_draw <- nrow(object$param)
   if (lpl) {
     if (med) {
-      lpl_val <- apply(pred_res$lpl, 1, median)
+      lpl_val <- apply(pred_res$lpl, 2, median)
     } else {
-      lpl_val <- rowMeans(pred_res$lpl)
+      lpl_val <- colMeans(pred_res$lpl)
     }
+    lpl_draws <- pred_res$lpl
     pred_res$lpl <- NULL
   }
   # y_distn <-
@@ -913,6 +920,7 @@ forecast_expand.marbayes <- function(object, n_ahead, y_test,
   )
   if (lpl) {
     res$lpl <- lpl_val
+    res$lpl_draws <- lpl_draws
   }
   class(res) <- c("predmarbayes_expand", "predmarcv")
   res
@@ -1037,10 +1045,11 @@ forecast_expand.mdfmbayes <- function(object, n_ahead, y_test,
   num_draw <- nrow(object$param)
   if (lpl) {
     if (med) {
-      lpl_val <- apply(pred_res$lpl, 1, median)
+      lpl_val <- apply(pred_res$lpl, 2, median)
     } else {
-      lpl_val <- rowMeans(pred_res$lpl)
+      lpl_val <- colMeans(pred_res$lpl)
     }
+    lpl_draws <- pred_res$lpl
     pred_res$lpl <- NULL
   }
   # y_distn <-
@@ -1102,6 +1111,7 @@ forecast_expand.mdfmbayes <- function(object, n_ahead, y_test,
   )
   if (lpl) {
     res$lpl <- lpl_val
+    res$lpl_draws <- lpl_draws
   }
   class(res) <- c("predmarbayes_expand", "predmarcv")
   res

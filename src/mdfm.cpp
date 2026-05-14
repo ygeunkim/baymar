@@ -35,12 +35,20 @@ Rcpp::List forecast_bdfm_mniw(int num_chains, int step,
 															bool insample) {
 	auto forecaster = std::make_unique<baecon::baymar::MatDfmForecastRun>(
 		num_chains, step, nrow_factor, ncol_factor, factor_lag,
-		fit_record, seed_chain, nthreads, insample
+		fit_record, seed_chain, nthreads, true, insample
 	);
 	if (insample) {
-		return Rcpp::wrap(forecaster->returnPredict());
+		return Rcpp::List::create(
+			Rcpp::Named("forecast") = Rcpp::wrap(forecaster->returnPredict()),
+			Rcpp::Named("mean") = Rcpp::wrap(forecaster->returnMean())
+		);
+		// return Rcpp::wrap(forecaster->returnPredict());
 	}
-	return Rcpp::wrap(forecaster->returnForecast());
+	return Rcpp::List::create(
+		Rcpp::Named("forecast") = Rcpp::wrap(forecaster->returnForecast()),
+		Rcpp::Named("mean") = Rcpp::wrap(forecaster->returnMean())
+	);
+	// return Rcpp::wrap(forecaster->returnForecast());
 }
 
 //' @noRd
