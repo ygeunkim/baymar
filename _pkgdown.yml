@@ -52,9 +52,12 @@ reference:
 - title: Forecasting
   desc: ~
   contents:
-  - predict
-  - forecast_roll
-  - forecast_expand
+  - predict.marbayes
+  - predict.mdfmbayes
+  - forecast_roll.marbayes
+  - forecast_roll.mdfmbayes
+  - forecast_expand.marbayes
+  - forecast_expand.mdfmbayes
 
 - title: Simulation and Random Generation
   desc: ~
