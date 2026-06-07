@@ -1,0 +1,73 @@
+template:
+  bootstrap: 5
+  bootswatch: journal
+  bslib:
+    bg: "#272935"
+    fg: "#f8f8f2"
+    primary: "#ff3860"
+    secondary: "#23252f"
+    base_font: {google: "Noto Sans"}
+    code_font: {google: "Anonymous Pro"}
+    code-bg: "#44475a"
+    code-color: "#f8f8f2"
+  theme: github-dark
+
+home:
+  links:
+  # see the configuration in .github/workflows/pkgdown.yaml
+  - text: VERSION_TEXT
+    href: VERSION_REF
+  - text: C++ headers
+    href: CPP_REF
+  - text: baymar for Python
+    href: PY_REF
+
+development:
+  mode: auto
+
+reference:
+- title: Package
+  desc: >
+    The baymar package
+  contents:
+  - baymar-package
+
+- title: Prior specification
+  desc: >
+    Prior settings for Bayesian models.
+  contents:
+  - set_mar_minnesota
+  - set_kappa
+  - set_mar_horseshoe
+  - set_mar_ssvs
+  - set_matfactor
+
+- title: Bayesian modeling
+  desc: >
+    Bayesian MAR and others.
+  contents:
+  - mar_bayes
+  - mdfm_bayes
+
+- title: Forecasting
+  desc: ~
+  contents:
+  - predict
+  - divide_ts
+  - forecast_roll
+  - forecast_expand
+
+- title: Simulation and Random Generation
+  desc: ~
+  contents:
+  - sim_mar
+
+- title: Data
+  desc: ~
+  contents:
+  - chanqi2025
+
+navbar:
+  structure:
+    left: [intro, reference, articles, tutorials]
+    right: [github]
