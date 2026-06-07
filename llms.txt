@@ -1,0 +1,83 @@
+# baymar
+
+## Overview
+
+`baymar` is a research tool to analyze and forecast matrix-valued time
+series.
+
+## Installation
+
+``` r
+
+# install.packages("remotes")
+remotes::install_github("ygeunkim/baymar")
+```
+
+### Development version
+
+You can install the development version from [develop
+branch](https://github.com/ygeunkim/baymar/tree/develop).
+
+``` r
+
+# install.packages("remotes")
+remotes::install_github("ygeunkim/baymar@develop")
+```
+
+# Package index
+
+## Package
+
+The baymar package
+
+- [`baymar`](baymar-package.md) [`baymar-package`](baymar-package.md) :
+  baymar: Bayesian Matrix Autoregressions
+
+## Prior specification
+
+Prior settings for Bayesian models.
+
+- [`set_mar_minnesota()`](set_mar_minnesota.md)
+  [`is.matmnspec()`](set_mar_minnesota.md)
+  [`is.bmarspec()`](set_mar_minnesota.md)
+  [`is.kappaspec()`](set_mar_minnesota.md) **\[experimental\]** :
+  Minnesota Prior Specification
+- [`set_kappa()`](set_kappa.md) : Hyperprior for kappa of Minnesota
+  prior
+- [`set_mar_horseshoe()`](set_mar_horseshoe.md)
+  [`is.mathsspec()`](set_mar_horseshoe.md) : Horseshoe Prior
+  Specification
+- [`set_mar_ssvs()`](set_mar_ssvs.md) : SSVS Prior Specification
+- [`set_matfactor()`](set_matfactor.md)
+  [`is.matfactorspec()`](set_matfactor.md) : Factor prior specification
+
+## Bayesian modeling
+
+Bayesian MAR and others.
+
+- [`mar_bayes()`](mar_bayes.md) : Fitting Bayesian MAR
+- [`mdfm_bayes()`](mdfm_bayes.md) : Fitting Bayesian Matrix DFM
+
+## Forecasting
+
+- [`predict(`*`<marbayes>`*`)`](predict.marbayes.md) : Forecasting MAR
+- [`predict(`*`<mdfmbayes>`*`)`](predict.mdfmbayes.md) : Forecasting
+  MDFM
+- [`forecast_roll(`*`<marbayes>`*`)`](forecast_roll.marbayes.md) :
+  Pseudo out-of-sample Forecasting based on Rolling Window
+- [`forecast_roll(`*`<mdfmbayes>`*`)`](forecast_roll.mdfmbayes.md) :
+  Pseudo out-of-sample Forecasting for MDFM based on Rolling Window
+- [`forecast_expand(`*`<marbayes>`*`)`](forecast_expand.marbayes.md) :
+  Pseudo out-of-sample Forecasting based on Expanding Window
+- [`forecast_expand(`*`<mdfmbayes>`*`)`](forecast_expand.mdfmbayes.md) :
+  Pseudo out-of-sample Forecasting for MDFM based on Expanding Window
+
+## Simulation and Random Generation
+
+- [`sim_mar()`](sim_mar.md) : Generate Matrix Time Series following
+  MAR(p)
+
+## Data
+
+- [`chanqi2025`](chanqi2025.md) : Dataset used by Chan and Qi (2025)
+

@@ -1,0 +1,27 @@
+<urlset xmlns = 'http://www.sitemaps.org/schemas/sitemap/0.9'>
+<url><loc>/404.html</loc></url>
+<url><loc>/LICENSE-text.html</loc></url>
+<url><loc>/LICENSE.html</loc></url>
+<url><loc>/authors.html</loc></url>
+<url><loc>/index.html</loc></url>
+<url><loc>/news/index.html</loc></url>
+<url><loc>/reference/baymar-package.html</loc></url>
+<url><loc>/reference/chanqi2025.html</loc></url>
+<url><loc>/reference/forecast_expand.marbayes.html</loc></url>
+<url><loc>/reference/forecast_expand.mdfmbayes.html</loc></url>
+<url><loc>/reference/forecast_roll.marbayes.html</loc></url>
+<url><loc>/reference/forecast_roll.mdfmbayes.html</loc></url>
+<url><loc>/reference/index.html</loc></url>
+<url><loc>/reference/mar_bayes.html</loc></url>
+<url><loc>/reference/mdfm_bayes.html</loc></url>
+<url><loc>/reference/predict.marbayes.html</loc></url>
+<url><loc>/reference/predict.mdfmbayes.html</loc></url>
+<url><loc>/reference/reexports.html</loc></url>
+<url><loc>/reference/set_kappa.html</loc></url>
+<url><loc>/reference/set_mar_horseshoe.html</loc></url>
+<url><loc>/reference/set_mar_minnesota.html</loc></url>
+<url><loc>/reference/set_mar_ssvs.html</loc></url>
+<url><loc>/reference/set_matfactor.html</loc></url>
+<url><loc>/reference/sim_mar.html</loc></url>
+</urlset>
+
