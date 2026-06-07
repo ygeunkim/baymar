@@ -44,7 +44,7 @@ sticker(
   package = c("bay", "mar"),
   p_family = "Noto Sans",
   p_fontface = "plain",
-  p_size = 30,
+  p_size = 10,
   p_x = c(.65, 1.35),
   p_y = 1.35,
   p_color = c("#748DAE", "#9ECAD6"),
@@ -60,12 +60,12 @@ sticker(
   l_height = 3,
   l_alpha = 0.4,
   # URL
-  url = "ygeunkim.github.io/package/baymar",
+  url = "baymar.baeconverse.org",
   u_x = 1,
   u_y = 0.08,
   u_color = "black",
   u_family = "Noto Sans",
-  u_size = 2.5,
+  u_size = 1,
   u_angle = 30,
   # Save
   white_around_sticker = FALSE,
