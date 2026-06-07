@@ -53,7 +53,6 @@ reference:
   desc: ~
   contents:
   - predict
-  - divide_ts
   - forecast_roll
   - forecast_expand
 
