@@ -1,0 +1,23 @@
+comment: false
+
+coverage:
+  status:
+    project:
+      default:
+        target: auto
+        threshold: 1%
+        informational: true
+    patch:
+      default:
+        target: auto
+        threshold: 1%
+        informational: true
+
+codecov:
+  token: token
+
+flags:
+  r-package:
+    default: true
+    paths:
+      - .

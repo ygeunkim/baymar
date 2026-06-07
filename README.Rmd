@@ -17,6 +17,7 @@ knitr::opts_chunk$set(
 
 <!-- badges: start -->
 [![R-CMD-check](https://github.com/ygeunkim/baymar/actions/workflows/R-CMD-check.yaml/badge.svg)](https://github.com/ygeunkim/baymar/actions/workflows/R-CMD-check.yaml)
+[![Codecov test coverage](https://codecov.io/gh/ygeunkim/baymar/graph/badge.svg?flag=r-package)](https://app.codecov.io/gh/ygeunkim/baymar)
 [![CRAN status](https://www.r-pkg.org/badges/version/baymar)](https://CRAN.R-project.org/package=baymar)
 <!-- badges: end -->
 
@@ -35,6 +36,7 @@ remotes::install_github("ygeunkim/baymar")
 
 <!-- dev badges: start -->
 [![dev-r-cmd-check](https://github.com/ygeunkim/baymar/actions/workflows/R-CMD-check.yaml/badge.svg?branch=develop)](https://github.com/ygeunkim/baymar/actions/workflows/R-CMD-check.yaml?query=branch%3Adevelop)
+[![dev-codecov](https://codecov.io/github/ygeunkim/baymar/branch/develop/graph/badge.svg?flag=r-package)](https://app.codecov.io/gh/ygeunkim/baymar/tree/develop)
 [![Development version updated](https://img.shields.io/github/last-commit/ygeunkim/baymar/develop?label=dev%20updated)](https://github.com/ygeunkim/baymar/tree/develop)
 <!-- dev badges: end -->
 
