@@ -13,3 +13,7 @@
 ^Meta$
 ^logo$
 ^codecov\.yml$
+CMakeLists.txt
+inst/examples
+^cmake$
+^cmake-build$
